@@ -84,18 +84,24 @@ margin重叠时margin值计算方法：
 **解决方案：清除浮动流**
 
 - 块级元素清除浮动
-  1. 最后一个子元素添加
+1. 最后一个子元素添加
 ```css
 p{
 clear:both;
 }
 ```
-  2. 伪元素清除浮动：
+2. 伪元素清除浮动：
 ```css
 .father::after {
     content: '';
     display: block;
     clear: both;
+    width: 0;
+    height: 0;
+    visibility:hidden;//允许浏览器渲染它，但是不显示出来，这样才能实现清楚浮动。
+}
+.father{
+     zoom:1;  /*==for IE6/7 Maxthon2==*/
 }
 ```
 > 解释一下为什么要用`display:block`?
