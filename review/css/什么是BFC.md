@@ -1,8 +1,4 @@
-### 什么是BFC
-
-BFC全称是Block Formatting Context，即块格式化上下文。首先来看看什么是视觉格式化模型(FC)。
-
-### 视觉格式模型
+### 视觉格式模型（FC）
 
 视觉格式化模型(visual formatting model)是用来**处理文档并将它显示在视觉媒体上的机制**，它也是CSS中的一个概念。
 
@@ -19,46 +15,15 @@ BFC全称是Block Formatting Context，即块格式化上下文。首先来看�
 - 生成额外的盒来放置项目符号，不过多数元素只生成一个主要块级盒。
 - 块状元素排斥其他元素与其位于同一行，可以设定元素的宽（width）和高（height），块级元素一般是其他元素的容器，可容纳块级元素和行内元素
 
-### 行内盒（inline box）
-
-特性：
-
-- 当元素的CSS属性display的计算值为inline，inline-block或inline-table时，称它为行内级元素；
-- 视觉上它将内容与其它行内级元素排列为多行；典型的如段落内容，有文本(可以有多种格式譬如着重)，或图片，都是行内级元素；
-- 行内级元素生成行内级盒(inline-level boxes)，参与行内格式化上下文(inline formatting context)。同时参与生成行内格式化上下文的行内级盒称为行内盒(inline boxes)。所有display:inline的非替换元素生成的盒是行内盒；
-- 不参与生成行内格式化上下文的行内级盒称为原子行内级盒(atomic inline-level boxes)。这些盒由可替换行内元素，或 display 值为 inline-block 或 inline-table 的元素生成，不能拆分成多个盒；
-- 行内元素不可设置宽高，但可以与其他行内元素位于同一行，行内元素内一般不可以包含块级元素。行内元素的高度一般由元素内部的字体大小决定，宽度由内容的长度控制。
-
-### 三个定位方案
-
-在定位的时候，浏览器会根据元素的盒类型和上下文对这些元素进行定位，可以说盒就是定位的基本单位。定位时，有三种定位方案，分别是常规流，浮动、绝对定位。
-
-#### 常规流
-
-- 在常规流中，盒一个接着一个排列;
-- **在块级格式化上下文里面， 它们竖着排列**；
-- **在行内格式化上下文里面， 它们横着排列**;
-- 当position为static或relative，并且float为none时会触发常规流；
-- 对于**静态定位**(static positioning)，position: static，盒的位置是**常规流布局**里的位置；
-- 对于**相对定位**(relative positioning)，position: relative，盒偏移位置由这些属性定义top，bottom，left，right。即使**有偏移**，仍然**保留原有的位置**，**其它常规流不能占用这个位置。**
-
-#### 浮动
-
-- 盒称为浮动盒(floating boxes)；
-- 它位于当前行的开头或末尾；
-- 这导致常规流环绕在它的周边，除非设置 clear 属性；或者触发BFC
-- 浮动会导致父级坍塌 [解决办法](https://github.com/zyg1999/Note/blob/master/review/css/margin塌陷、浮动模型.md)
-
-#### 绝对定位
-
-- 如果元素的属性position为absolute或fixed，它是绝对定位元素；
-- 绝对定位方案，盒从常规流中被移除，不影响常规流的布局；
-- 它的定位相对于它的包含块，相关CSS属性：top，bottom，left及right；
-- 对于position: absolute，元素定位将相对于最近的一个非static的父元素，如果没有则相对于body；
+- 
 
 ### 块格式化上下文(BFC)
 
-块格式上下文是页面CSS 视觉渲染的一部分，用于**决定块盒子的布局及浮动相互影响范围的一个区域。**
+BFC全称是Block Formatting Context，即块格式化上下文。首先来看看什么是视觉格式化模型(FC)。快级格式化上下文是Web页面的可视化css渲染的一部分，是块盒子的布局过程发生的区域，也是浮动元素与其他元素交互的区域，快级格式化上下文包含创建它的元素内部的所有内容
+
+浮动
+
+是一个独立的渲染区域，只有`Block-level Box`参与， 它规定了内部的`Block-level Box`如何布局，并且与这个区域外部毫不相干。**
 
 #### BFC创建方法
 
