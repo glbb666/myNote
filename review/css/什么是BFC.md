@@ -15,28 +15,40 @@
 - 生成额外的盒来放置项目符号，不过多数元素只生成一个主要块级盒。
 - 块状元素排斥其他元素与其位于同一行，可以设定元素的宽（width）和高（height），块级元素一般是其他元素的容器，可容纳块级元素和行内元素
 
-- 
-
 ### 块格式化上下文(BFC)
 
 BFC全称是Block Formatting Context，即块格式化上下文。首先来看看什么是视觉格式化模型(FC)。快级格式化上下文是Web页面的可视化css渲染的一部分，是块盒子的布局过程发生的区域，也是浮动元素与其他元素交互的区域，快级格式化上下文包含创建它的元素内部的所有内容
 
-浮动
-
-是一个独立的渲染区域，只有`Block-level Box`参与， 它规定了内部的`Block-level Box`如何布局，并且与这个区域外部毫不相干。**
-
-#### BFC创建方法
+### BFC创建方法
 
 - 根元素或包含根元素的元素
+
 - 浮动 (元素的 float 不为 none)
+
 - 绝对定位元素 (元素的 position 为 absolute 或 fixed)
+
 - `display:inline-block / table-cells / table-caption.`
+
 - 匿名表格单元格元素（元素的 display为 table、table-row、 table-row-group、table-header-group、table-footer-group（分别是HTML table、row、tbody、thead、tfoot的默认属性）或 inline-table`）
+
 - overflow 的值不为 visible 的元素
-- display 的值为 float-root的元素
+
+- display 的值为 flow-root的元素(`该元素会生成一个块级容器框，并且使用的是流布局。为里面内容创建新的块级格式化上下文。`)
+
 - 弹性元素（display为 flex 或 inline-flex元素的直接子元素）
+
 - 网格元素（display为 grid 或 inline-grid 元素的直接子元素）
+
 - 多列容器（元素的 column-count 或 column-width 不为 auto，包括 column-count为1`）
+
+#### display:flow-root的生效条件
+
+- `float` 的值`不是none`。
+-  `overflow`的使用值`不是 visible`
+- `display`的值为`table-cell`，`table-caption`（见 [CSS3TBL]），`inline-- block`或`inline-table`。
+- `position`的值既`不是static`也`不relative`（参见[CSS3POS]）。
+-  `block-progression`值为`lr`或 `rl`，其父框的`block-progression`的值为`tb`
+-  `block-progression`的 `tb`的值为' '，其父框的`block-progression`的值为`lr`或`rl`。
 
 ### BFC范围
 
