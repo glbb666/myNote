@@ -154,9 +154,11 @@ background-image 跟border-image的方法一样，你要先准备一张符合你
 ## 使用box-shadow模拟边框
 利用css 对阴影处理的方式实现0.5px的效果
 样式设置：
+
 ```css
 .box-shadow-1px {
   box-shadow: inset 0px -1px 1px -1px #c8c7cc;
+  //x偏移 y偏移 阴影模糊半径 阴影扩散半径 阴影颜色
 }
 ```
 **优点：**
