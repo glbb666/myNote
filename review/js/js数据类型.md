@@ -153,21 +153,157 @@ JavaScript 使用的是64位双精度浮点数编码，所以它的符号位占1
 所以我们通常看到的二进制，其实是计算机实际存储的尾数位.
 
 由于限制,有效数字第 53 位及以后的数字是不能存储的，它遵循，如果是1就向前一位进1，如果是0就舍弃的原则。所以0.1会发生精度丢失，0.2也是。导致了`0.1+0.2!=0.3`
-#### JavaScript能表示的最大数字
-由与IEEE 754双精度64位规范的限制：
+## BigInt类型
+**BigInt** 是一种内置对象，可以表示大于 2^53 的整数。而在Javascript中，[`Number`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Number) 基本类型可以精确表示的最大整数是 253。**BigInt** 可以表示任意大的整数。
 
-指数位能表示的最大数字：1023(十进制)
+可以用在一个整数字面量后面加 `n` 的方式定义一个 `BigInt` ，如：`10n`，或者调用函数`BigInt()`。
 
-尾数位能表达的最大数字即尾数位都位1的情况
+>注意， `BigInt()` 不是构造函数，因此不能使用 [`new`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Operators/new) 操作符。
 
-所以JavaScript能表示的最大数字即位
+它在某些方面类似于 [`Number`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Number) ，但是也有几个关键的不同点：不能用与 [`Math`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Math) 对象中的方法；不能和任何 [`Number`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Number) 实例混合运算，两者必须转换成同一种类型。在两种类型来回转换时要小心，因为 `BigInt` 变量在转换成 [`Number`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Number) 变量时可能会丢失精度。
 
-1.111...X 2^1023 这个结果转换成十进制是`1.7976931348623157e+308`,这个结果即为Number.MAX_VALUE
-#### 最大安全数字
-JavaScript中Number.MAX_SAFE_INTEGER表示最大安全数字,计算结果是9007199254740991，即在这个数范围内不会出现精度丢失（小数除外）,这个数实际上是1.111...X 2^52.
-官方也考虑到了这个问题，bigInt类型在es10中被提出，现在Chrome中已经可以使用，使用**bigInt可以操作超过最大安全数字的数字**
+#### 类型信息
+
+使用 `typeof` 测试时， `BigInt` 对象返回 "bigint" ：
+
+```js
+typeof 1n === 'bigint'; // true
+typeof BigInt('1') === 'bigint'; // true
+```
+
+使用 `Object` 包装后， `BigInt` 被认为时一个普通 "object" ：
+
+```js
+typeof Object(1n) === 'object'; // true
+```
+
+#### 运算
+
+以下操作符可以和 `BigInt` 一起使用： `+`、``*``、``-``、``**``、``%`` 。除 `>>>` （无符号右移）之外的 [位操作](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Bitwise_Operators) 也可以支持。因为 BigInt 都是有符号的 `>>>` （无符号右移）不能用于 BigInt。[为了兼容 asm.js ](https://github.com/tc39/proposal-bigint/blob/master/ADVANCED.md#dont-break-asmjs)，.BigInt 不支持单目 (`+`) 运算符。
+
+```js
+const previousMaxSafe = BigInt(Number.MAX_SAFE_INTEGER);
+// ↪ 9007199254740991n
+
+const maxPlusOne = previousMaxSafe + 1n;
+// ↪ 9007199254740992n
+ 
+const theFuture = previousMaxSafe + 2n;
+// ↪ 9007199254740993n, this works now!
+
+const multi = previousMaxSafe * 2n;
+// ↪ 18014398509481982n
+
+const subtr = multi – 10n;
+// ↪ 18014398509481972n
+
+const mod = multi % 10n;
+// ↪ 2n
+
+const bigN = 2n ** 54n;
+// ↪ 18014398509481984n
+
+bigN * -1n
+// ↪ –18014398509481984n
+```
+
+`/` 操作符对于整数的运算也没问题。可是因为这些变量是 `BigInt` 而不是 `BigDecimal` ，该操作符结果会向零取整，也就是说不会返回小数部分。
+
+当使用 `BigInt` 时，带小数的运算会被取整。
+
+```js
+const expected = 4n / 2n;
+// ↪ 2n
+
+const rounded = 5n / 2n;
+// ↪ 2n, not 2.5n
+```
+
+#### 比较
+
+`BigInt` 和 [`Number`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Number) 不是严格相等的，但是宽松相等的。
+
+```js
+0n === 0
+// ↪ false
+
+0n == 0
+// ↪ true
+```
+
+[`Number`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Number) 和 `BigInt` 可以进行比较。
+
+```js
+1n < 2
+// ↪ true
+
+2n > 1
+// ↪ true
+
+2 > 2
+// ↪ false
+
+2n > 2
+// ↪ false
+
+2n >= 2
+// ↪ true
+```
+
+两者也可以混在一个数组内并排序。
+
+```js
+const mixed = [4n, 6, -12n, 10, 4, 0, 0n];
+// ↪  [4n, 6, -12n, 10, 4, 0, 0n]
+
+mixed.sort();
+// ↪ [-12n, 0, 0n, 10, 4n, 4, 6]
+```
+
+注意被  `Object` 包装的 `BigInt`s 使用 object 的比较规则进行比较，只用同一个对象在比较时才会相等。
+
+```js
+0n === Object(0n); // false
+Object(0n) === Object(0n); // false
+
+const o = Object(0n);
+o === o // true
+```
+
+### 条件[节](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/BigInt#条件)
+
+`BigInt` 在需要转换成 [`Boolean`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Boolean) 的时表现跟 [`Number`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Number) 类似：如通过 [`Boolean`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Boolean) 函数转换；用于 [`Logical Operators`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Operators/Logical_Operators)  `||`, ``&&``, 和 `!` 的操作数；或者用于在像 [`if statement`](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Statements/if...else) 这样的条件语句中。
+
+```js
+if (0n) {
+  console.log('Hello from the if!');
+} else {
+  console.log('Hello from the else!');
+}
+
+// ↪ "Hello from the else!"
+
+0n || 12n
+// ↪ 12n
+
+0n && 12n
+// ↪ 0n
+
+Boolean(0n)
+// ↪ false
+
+Boolean(12n)
+// ↪ true
+
+!12n
+// ↪ false
+
+!0n
+// ↪ true
+```
 
 ## 另外的引用类型
+
 平时使用的很多引用类型的变量，并不是由Object构造的，但是它们原型链的终点都是Object，这些类型都属于引用类型
 - Array 数组
 - Date 日期
@@ -176,9 +312,12 @@ JavaScript中Number.MAX_SAFE_INTEGER表示最大安全数字,计算结果是9007
 ### 包装类型
 为了便于操作基本类型值，ECMAScript还提供了几个特殊的引用类型
 - String
+
 - Number
+
 - Boolean
-包装类型与原始类型的区别
+
+  包装类型与原始类型的区别
 ```js
 true === new Boolean(true) // false
 123 === new Number(123) // false
