@@ -10,26 +10,22 @@
 
 **@import** [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS)[@规则](https://developer.mozilla.org/en-US/docs/Web/CSS/At-rule)，用于从其他样式表导入样式规则。这些规则必须先于所有其他类型的规则，[`@charset`](https://developer.mozilla.org/zh-CN/docs/Web/CSS/@charset) 规则除外; 因为它不是一个[嵌套语句](https://developer.mozilla.org/zh-CN/docs/Web/CSS/Syntax#nested_statements)，@import不能在[条件组的规则](https://developer.mozilla.org/zh-CN/docs/Web/CSS/At-rule#Conditional_Group_Rules)中使用。
 
-### 1.从属关系区别
+### 1. 从属关系区别
 
 `@import`是 CSS 提供的语法规则，只有导入样式表的作用；`link`是HTML提供的标签，不仅可以加载 CSS 文件，还可以定义 RSS、rel 连接属性等。
 
-### 2.加载顺序区别
+### 2.  加载顺序区别
 
 加载页面时，`link`标签引入的 CSS 被同时加载；`@import`引入的 CSS 将在页面加载完毕后被加载。
 
-### 3.兼容性区别
+### 3. 兼容性区别
 
 `@import`是 CSS2.1 才有的语法，故只可在 IE5+ 才能识别；`link`标签作为 HTML 元素，不存在兼容性问题。
 
-### 4.DOM可控性区别
+### 4. DOM可控性区别
 
 可以通过 JS 操作 DOM ，插入`link`标签来改变样式；由于DOM方法是基于文档的，无法使用`@import`的方式插入样式。
 
-作者：Caoyp_Let_It
+### 5. 权重区别
 
-链接：https://juejin.im/post/5ab36d99f265da23866fccd1
-
-来源：掘金
-
-著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+@import引入的样式，其虽然后被加载，却会在加载完毕后置于样式表顶部，最终渲染时自然会被下面的同名样式层叠。
