@@ -31,20 +31,25 @@ var ws =  new WebSocket(url);
 ```
 webSocket在创建之后就开始和服务端进行握手了。
 
-#### webSocket.readyState
+## 四种状态
 
--  0 connecting，正在连接
-- 1 open，连接成功，可以通信了
-- 2 closing，连接正在关闭
-- 3 closed 连接已经关闭，或是连接打开失败
-#### webSocket.onopen
+#### WebSocket.readyState
+
+-  0 connecting，**正在连接**
+- 1 open，**连接成功**，可以通信了
+- 2 closing，**正在关闭**
+- 3 closed **已经关闭**，或是连接打开失败
+
+## 四个事件
+
+#### WebSocket.onopen
 用于指定连接成功后的回调函数
 ```js
 ws.onopen = function(){
 	ws.send('hello server');
 }
 ```
-#### webSocket.onclose
+#### WebSocket.onclose
 用于指定连接关闭后的回调函数
 ```js
 ws.onclose = function(event) {
@@ -54,7 +59,7 @@ ws.onclose = function(event) {
   // handle close event
 };
 ```
-#### webSocket.onmessage
+#### WebSocket.onmessage
 用于指定接收到服务器数据后的回调函数
 ```js
 ws.onmessage = function(event) {
@@ -62,7 +67,17 @@ ws.onmessage = function(event) {
   // 处理数据
 };
 ```
-#### webSocket.send
+#### WebSocekt.onerror
+用于指定报错时的回调函数
+```js
+socket.onerror = function(event) {
+  // handle error event
+};
+```
+## 三种信息
+
+#### WebSocket.send
+
 实例对象的send()方法用于向服务器发送信息
 - 发文本
 ```js
@@ -86,7 +101,7 @@ for (var i = 0; i < img.data.length; i++) {
 }
 ws.send(binary.buffer);
 ```
-#### webSocket.bufferedAmount
+#### WebSocket.bufferedAmount
 实例的bufferedAmount属性，表示还有多少字节的二进制数据还没有发送出去，它可以用来判断发送是否结束
 ```js
 var data = new ArrayBuffer(10000000);
@@ -97,13 +112,6 @@ if (socket.bufferedAmount === 0) {
 } else {
   // 发送还没结束
 }
-```
-#### webSocekt.onerror
-用于指定报错时的回调函数
-```js
-socket.onerror = function(event) {
-  // handle error event
-};
 ```
 ## 为什么需要心跳重连机制
 遇到网络断开的情况时，服务器没有触发onclose的事件，这样服务器就会继续给客户端发送多余的链接，并且这些数据还会丢失。所以就需要一种机制来检测客户端和服务器是否处于正常的连接状态。因此就有了websocket的心跳，有心跳，说明还活着，没有心跳说明已经死了。
