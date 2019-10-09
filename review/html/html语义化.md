@@ -1,7 +1,7 @@
 # 对HTML语义化的理解（语义化标签有哪些）
 ### 什么是html语义化
 
-> 语义化是指根据内容的结构化（内容语义化），选择合适的标签（代码语义化），便于开发者阅读和写出更优雅的代码的同时，让浏览器的爬虫和机器很好的解析。
+> 语义化是指根据**内容的结构化**（内容语义化），选择**合适的标签**（代码语义化），**便于开发者阅读**和写出更**优雅的代码**的同时，让浏览器的**爬虫**和**机器**很好的**解析**。
 
 ### 语义化的优点
 
@@ -21,7 +21,7 @@
 
 ### h5 新增语义化标签
 
-![HTML5 语义化](https://github.com/luoping1998/Frontend-Nodes/raw/master/HTML%26HTML5/images/html5-layout.jpg)
+![HTML5 语义化](<https://github.com/glbb666/myNote/blob/master/review/html/images/html5-layout.jpg>)
 
 - `header`元素，代表“网页”或“section”的页眉
 - `footer`元素，代表“网页”或“section”的页脚，通常含有该节的一些基本信息，譬如：作者，相关文档链接，版权资料。
