@@ -3,16 +3,18 @@
 [webSocket心跳重连机制](https://www.cnblogs.com/tugenhua0707/p/8648044.html)
 ## 为什么需要WebSocket
 因为 HTTP 协议有一个缺陷：通信只能由客户端发起。这种单向请求的特点，注定了如果服务器有连续的状态变化，客户端要获知就非常麻烦。我们只能使用"轮询"来了解服务器有没有新的信息。最典型的场景就是聊天室。
-轮询的效率低，非常浪费资源（因为短轮询必须不停连接，长轮询HTTP 连接必须始终打开）。因此，工程师们一直在思考，有没有更好的方法。WebSocket 就是这样发明的。
+**轮询的效率低，非常浪费资源**（因为短轮询必须不停连接，长轮询HTTP 连接必须始终打开）。因此，工程师们一直在思考，有没有更好的方法。WebSocket 就是这样发明的。
+
 ## WebSocket的优势
 服务器可以主动向客户端推送信息，客户端也可以主动向服务器发送信息
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190916193825136.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2dhbmx1YmFiYTY2Ng==,size_16,color_FFFFFF,t_70)
+
 ## 其他特点包括
-（1）建立在 **TCP** 协议之上，服务器端的实现比较容易。
+（1）建立在 **TCP** 协议之上，**服务器端容易**实现。
 
 （2）与 HTTP 协议有着良好的**兼容性**。默认端口也是80和443，并且握手阶段采用 HTTP 协议，因此握手时不容易屏蔽，能通过各种 HTTP 代理服务器。
 
-（3）数据格式比较**轻量**，性能开销小，通信高效。
+（3）**数据**格式比较**轻量**，性能开销小，**通信高效**。
 
 （4）可以发送**文本**，也可以发送**二进制数据**。
 
@@ -27,7 +29,10 @@
 var url = '';
 var ws =  new WebSocket(url);
 ```
+webSocket在创建之后就开始和服务端进行握手了。
+
 #### webSocket.readyState
+
 -  0 connecting，正在连接
 - 1 open，连接成功，可以通信了
 - 2 closing，连接正在关闭

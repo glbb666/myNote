@@ -2,7 +2,10 @@
 [Server-Sent Events 教程](https://www.ruanyifeng.com/blog/2017/05/server-sent_events.html)
 [详解Web端通信方式的演进：从Ajax、JSONP 到 SSE、Websocket](https://juejin.im/entry/59b78393f265da066c22e9d3)
 ## 什么是SSE
-SSE使用的是http协议，该协议无法做到服务器主动推送信息。但是有一种变通方法，服务器向客户端声明，接下来发送的是流信息。
+用于服务器主动向客户端发送消息，通常用于 **推送**。
+
+> 使用 HTTP 轮询也可以达到目标，不过需要客户端 **定期的** 给服务器发送请求，而 SSE只要创立了连接，服务器之后就会主动的给客户端发送请求，客户端主需要处理就行。
+
 ## 和webSocket的异同以及优势
 - 相同点
 都是建立浏览器与服务器之间的通信渠道，然后服务器向浏览器推送信息。
@@ -32,14 +35,16 @@ var source = new EventSource(url);
 - 1：相当于常量EventSource.OPEN，表示连接已经建立，可以接受数据。
 - 2：相当于常量EventSource.CLOSED，表示连接已断，且不会重连。
 #### EventSource.onopen
-连接一旦建立，就会触发open事件，可以在onopen属性定义回调函数。
+**连接建立**，就会触发open事件
+
 ```js
 source.onopen = function (event) {
   // ...
 };
 ```
 #### EventSource.onmessage
-客户端收到服务器发来的数据，就会触发message事件，可以在onmessage属性的回调函数。
+**收到服务器数据**，触发message事件
+
 ```js
 source.onmessage = function (event) {
   var data = event.data;

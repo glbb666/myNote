@@ -187,7 +187,7 @@ flex的取值：
 <'flex-basis'>
 ```
 
-定义 flex 元素的 [`flex-basis`](https://developer.mozilla.org/zh-CN/docs/Web/CSS/flex-basis) 属性。若值为`0`，**则必须加上单位**，以免被视作伸缩性。 默认值为 `auto`。
+定义 flex 元素的 [`flex-basis`](https://developer.mozilla.org/zh-CN/docs/Web/CSS/flex-basis) 属性。若值为`0`，**则必须加上单位**，以免被视作伸缩性。 默认值为 `auto`。指定了 `flex-basis` 后，`width` 属性被忽略、不再起作用。但`flex-basis`会受到`min-width`和`max-width`的制约。
 
 > 当使用一个或两个无单位数时, flex-basis会从auto变为0。
 
