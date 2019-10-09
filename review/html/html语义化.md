@@ -23,23 +23,126 @@
 
 ![HTML5 语义化](<https://github.com/glbb666/myNote/blob/master/review/html/images/html5-layout.jpg>)
 
-- `header`元素，代表“网页”或“section”的页眉
-- `footer`元素，代表“网页”或“section”的页脚，通常含有该节的一些基本信息，譬如：作者，相关文档链接，版权资料。
-- `hgroup`元素，对网页或区段（section）的标题进行组合
-- `nav`元素，用于定义网页主要导航部分
-- `aside`元素，用在`article`内部时，作为主要内容的附属信息部分；用在`article`元素外部时，作为页面或站点全局的附属信息部分，例如日志串联，甚至广告。
-- `section`元素，表示文档中的节或者段
-- `article`元素，文章内页中使用，如论坛的帖子，博客上的文章
+### header
+
+> 定义 section 或 page 的页眉
+
+```html
+<header>
+  <h1>Welcome to my homepage</h1>
+  <p>My name is Donald Duck</p>
+</header>
+<main>
+  ...
+</main>
+<footer>
+  <p>end</p>
+</footer>
+```
+
+### nav
+
+定义导航链接的部分。
+
+> 如果文档中有“前后”按钮，则应该把它放到 <nav> 元素中。
+
+```html
+<nav>
+  <a href="index.asp">Home</a>
+  <a href="html5_meter.asp">Previous</a>
+  <a href="html5_noscript.asp">Next</a>
+</nav>
+```
+
+### main
+
+规定文档的主要内容。
+
+<main> 元素中的内容对于文档来说应当是唯一的。它不应包含在文档中重复出现的内容，比如侧栏、导航栏、版权信息、站点标志或搜索表单。 ️
+
+> ⚠️️ 注意：在一个文档中，不能出现一个以上的 <main> 元素。<main> 元素不能是以下元素的后代：<article>、<aside>、<footer>、<header> 或 <nav>。
+
+```html
+<main>
+  <h1>Web Browsers</h1>
+  <p>Google Chrome、Firefox 以及 Internet Explorer 是目前最流行的浏览器。</p>
+
+  <article>
+    <h1>Google Chrome</h1>
+    <p>Google Chrome 是由 Google 开发的一款免费的开源 web 浏览器，于 2008 年发布。</p>
+  </article>
+
+  <article>
+    <h1>Internet Explorer</h1>
+    <p>Internet Explorer 由微软开发的一款免费的 web 浏览器，发布于 1995 年。</p>
+  </article>
+
+  <article>
+    <h1>Mozilla Firefox</h1>
+    <p>Firefox 是一款来自 Mozilla 的免费开源 web 浏览器，发布于 2004 年。</p>
+  </article>
+</main>
+```
+
+### section
+
+定义文档中的节（section、区段)
+
+```html
+<section>
+  <h1>PRC</h1>
+  <p>The People's Republic of China was born in 1949...</p>
+</section>
+```
+
+### article
+
+规定独立的自包含内容（常用于文章）。
+
+```html
+<article>
+  <h1>Internet Explorer 9</h1>
+  <p>Windows Internet Explorer 9（简称 IE9）于 2011 年 3 月 14 日发布.....</p>
+</article>
+```
+
+### aside
+
+标签定义其所处内容之外的内容
+
+```html
+<p>Me and my family visited The Epcot center this summer.</p>
+<aside>
+<h4>Epcot Center</h4>
+The Epcot Center is a theme park in Disney World, Florida.
+</aside>
+```
+
+> <aside> 的内容可用作文章的侧栏。
+
+### footer
+
+定义文档或节的页脚。
+
+> <footer> 元素应当含有其包含元素的信息。页脚通常包含文档的作者、版权信息、使用条款链接、联系信息等等。可以在一个文档中使用多个 <footer> 元素。
+
+```html
+<footer>
+  <p>Posted by: W3School</p>
+  <p>Contact information:
+    <a href="mailto:someone@example.com">someone@example.com</a>
+  </p>
+</footer>
+```
 
 # div布局是否符合html语义化（为什么要用div布局）
 
-[div布局和table布局的比较](https://blog.csdn.net/qq_40128682/article/details/89883319)
-不符合。
+[div+ css布局和table布局的比较](https://blog.csdn.net/qq_40128682/article/details/89883319)
+不符合。div布局和table布局比较是有优势的
 
-- 速度快，增强用户体验。DIV+CSS布局较Table布局减少了页面代码，加载速度得到很大的提高。
--  符合w3c标准，在w3c标准中，table是用来存储数据的。
-- 布局更加灵活多样，能够通过样式选择来实现界面设计方面的更多要求。
-- 布局改版方便，不需要过多地变动页面内容，通常只要更换相应的css样式就可以将网页变成另外一种风格展现出来。
-- 布局可以让一些重要的链接和文字信息等优先让搜索引擎抓取，内容更便于搜索。
-- table的表格嵌套问题，搜索引擎一般不抓取三层以上的表格嵌套。所以为了提升网站排名，使用div布局。
+- **速度快**，增强用户体验。DIV+CSS布局较Table布局（`为什么`）**减少了页面代码**，加载速度得到很大的提高。
+-  **符合w3c标准**，（`符合怎样的标准`）在w3c标准中，**1.table是用来存储数据的。2.结构、样式和行为分离，带来足够好的可维护性。**
+- **布局灵活**，能够通过样式选择来实现界面设计要求。
+- **改版方便**，通常只要更换相应的css样式就可改变网页风格。
+- **SEO**，table有表格嵌套问题，搜索引擎一般不抓取三层以上的表格嵌套。CSS的设计有助于SEO**让搜寻机器人更加轻易辨识网页内容**
 
