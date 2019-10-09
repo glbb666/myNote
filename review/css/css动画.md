@@ -1,4 +1,7 @@
+
+
 ### 分类
+
 | 属性                | 含义                                                         |
 | ------------------- | ------------------------------------------------------------ |
 | transition （过渡） | 用于设置元素的样式过度，和animation有着类似的效果，但细节上有很大的不同 |
@@ -8,7 +11,7 @@
 ### transition
 过渡
 
-顾名思义，一个元素某个属性值从这个变到另一个，这是一个状态的转变，需要一种条件来触发这种转变，比如我们平时用到的:hover、:focus、:checked、媒体查询或者JavaScript。
+顾名思义，一个元素的某个属性的值发生改变，这是一个状态的转变，需要一种条件来触发这种转变，比如我们平时用到的:hover、:focus、:checked、媒体查询或者JavaScript。
 
 #### 语法：transition: property duration timing-function delay;
 | 值                         | 描述                              |
@@ -46,6 +49,7 @@ transition设置过渡属性是transform，当鼠标移入元素时，元素的t
 - 需要事件触发，所以没法在网页加载时自动发生
 - 是一次性的，不能重复发生，除非一再触发
 - 只能定义开始状态和结束状态，不能定义中间状态，也就是说只有两个状态
+- 一条transition规则，只能定义一个属性的变化，不能涉及多个属性。
 ### transition怎样监测多个属性?
 ```html
 <!DOCTYPE html>
@@ -82,9 +86,23 @@ transition设置过渡属性是transform，当鼠标移入元素时，元素的t
 #### transition 相关的事件
 transitionend 事件会在 transition 动画结束的时候触发. [transitionend](https://developer.mozilla.org/en-US/docs/Web/API/TransitionEvent/TransitionEvent)
 ## animation
-transition只能够控制从一个状态到达另外一个状态，没法来控制多个状态的不断变化，而 animation 可以。使用 `animation` 的前提是我们需要先使用 `@keyframes` 来定义一个动画效果，`@keyframes` 定义的规则可以用来控制动画过程中的各个状态的情况，语法是这个样子：
+
+在官方的介绍上介绍这个属性是**transition属性的扩展**，transition只能够控制从一个状态到达另外一个状态，没法来控制多个状态的不断变化，而 animation 可以。使用 `animation` 的前提是我们需要先使用 `@keyframes` 来定义一个动画效果，`@keyframes` 定义的规则可以用来控制动画过程中的各个状态的情况，语法是这个样子：
+
 ```css
-@keyframes W {
+.box {
+    height: 100px;
+    width: 100px;
+    border: 15px solid black;
+    animation: changebox 1s ease-in-out 1s infinite alternate running forwards;
+    //动画changebox在1s后以1s/次的速度沿着ease-in-out的速度循环运行，永不停息，动画结束后动画停留在结束状态
+}
+
+.box:hover {
+    animation-play-state: paused;
+    动画停止
+}
+@keyframes changebox {
   from { left: 0; top: 0; }
   to { left: 100%; top: 100%; }
 }
