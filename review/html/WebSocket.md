@@ -1,6 +1,5 @@
 # HTML5 WebSocket
-[了解webSocket](https://www.ruanyifeng.com/blog/2017/05/websocket.html)
-[webSocket心跳重连机制](https://www.cnblogs.com/tugenhua0707/p/8648044.html)
+
 ## 为什么需要WebSocket
 因为 HTTP 协议有一个缺陷：通信只能由客户端发起。这种单向请求的特点，注定了如果服务器有连续的状态变化，客户端要获知就非常麻烦。我们只能使用"轮询"来了解服务器有没有新的信息。最典型的场景就是聊天室。
 **轮询的效率低，非常浪费资源**（因为短轮询必须不停连接，长轮询HTTP 连接必须始终打开）。因此，工程师们一直在思考，有没有更好的方法。WebSocket 就是这样发明的。
@@ -20,11 +19,11 @@
 
 （5）**没有同源限制**，客户端可以与任意服务器通信。
 
-（6）协议标识符是**ws（如果加密，则为wss）**，服务器网址就是 URL。
+（6）**协议标识符**是ws（如果加密，则为wss），服务器网址就是 URL。
 
-   (7)
-
+（7）**实时性**提高，连接建立可一直保持连接状态，发消息不需要额外的连接建立过程。
 ![在这里插入图片描述](https://github.com/glbb666/myNote/blob/master/review/html/images/WebSocket_2.png)
+
 ## WebSocket不会取代http
 
 然而，WebSocket 在实现高效实时通信的过程却也不再享有在一些本由浏览器提供的**服务和优化，如状态管理、压缩、缓存**等。以后浏览器厂商是不是会针对 WebSocket 作出一些服务和优化不得而知，但至少现在 WebSocket 还完全不足以撼动 HTTP 的地位。总的来说，WebSocket 弥补了 HTTP 在某些通信领域的短板，但绝不可能完全取代 HTTP。
@@ -125,12 +124,31 @@ if (socket.bufferedAmount === 0) {
 
 在执行客户端程序前，需要创建一个支持websocket的服务，也就是说需要服务端语言环境支持。我使用nodejs来作为服务端环境，通过安装`nodejs-websocket`模块来支持websocket。
 #### 创建连接
+
 ```js
 var ws = require('nodejs-websocket')//引入模块
 var server = ws.createServer(function(connect){
 	...（connect用来监听客户端给服务器发送的消息）
 })//创建一个新连接
 ```
+
+#### 接收消息
+
+```js
+connect.on("text", function (str) {
+    	//其中str为服务器端从客户端接收到的消息
+    })
+```
+
+#### 关闭连接
+
+```js
+connect.on("close",fucntion(code,reason){
+	//第一个参数状态码，第二个参数字符串描述
+})
+```
+
+#### 完整代码
 
 ```js
 var ws = require("nodejs-websocket"); //引入websocket模块  
@@ -142,6 +160,9 @@ var server = ws.createServer(function(connect) { //创建一个新连接
             connect.send('服务端已收到消息：' + msg + '服务端发来消息： Hello,' + msg); 
         }  
     });  
+    connect.on("close",fucntion(code,reason){
+	//第一个参数状态码，第二个参数字符串描述
+	})
 }).listen(8088);
 ```
 
@@ -151,16 +172,23 @@ var server = ws.createServer(function(connect) { //创建一个新连接
 
 ![图片描述](https://segmentfault.com/img/bV6RkK?w=370&h=172)
 
-当然，实际生产环境中，我们可以使用PM2来控制nodejs程序在后台运行，使用Nginx做反向代理，不用将服务器ip和端口暴露到外网，可以参考：《Nginx配置反向代理访问内部服务》。
-
-如果你对nodejs还不懂，没关系，我们后面会推出nodejs的相关文章，敬请留意。还有对于websocket的应用，[Helloweba](https://www.helloweba.net/)会继续推出文章讲解websocket在聊天室、直播和消息推送方面的应用，为了以后的讲解做铺垫，希望有兴趣的同学在关注websocket的同时也关注下nodejs以及swoole等技术，当然最关键的是需要关注我们Helloweba。
-
 ## WebSocket适用场景
 
-WebSocket 适用于需要高效实时通信的场景，比如网页聊天，对战游戏等
+WebSocket 适用于需**要高效实时通信**的场景，比如网页聊天，对战游戏等
 
-## 为什么需要心跳重连机制
+### 1. 为什么叫心跳包呢？
 
-遇到网络断开的情况时，服务器没有触发onclose的事件，这样服务器就会继续给客户端发送多余的链接，并且这些数据还会丢失。所以就需要一种机制来检测客户端和服务器是否处于正常的连接状态。因此就有了websocket的心跳，有心跳，说明还活着，没有心跳说明已经死了。
+它就像心跳一样每隔固定的时间发一次，来告诉服务器，我还活着。
+
+### 2. 心跳机制是？
+
+心跳机制是每隔一段时间会向服务器发送一个数据包，告诉服务器自己还活着，同时客户端会确认服务器端是否还活着，如果还活着的话，就会回传一个数据包给客户端来确定服务器端也还活着，否则的话，有可能是网络断开连接了。需要重连
+
 ## 用自己的话归纳一下心跳重连机制的原理
-心跳机制是，每隔一段事件向服务器发送一个数据包，告诉服务器自己还活着，同时服务器会给予回应，客户端也能确认服务器是否还活着。如果一定时间内，服务器没有发来回应，那么就会开启重连。如果服务器发来回应，那么就重置心跳检测（重置倒计时）。
+心跳机制是，每隔一段时间向服务器发送一个数据包，告诉服务器自己还活着，同时服务器会给予回应，客户端也能确认服务器是否还活着。如果一定时间内，服务器没有发来回应，那么就会开启重连。如果服务器发来回应，那么就重置心跳检测（重置倒计时）。
+## 本文参考
+[了解webSocket](https://www.ruanyifeng.com/blog/2017/05/websocket.html)
+
+[使用WebSocket构建实时性应用](<https://juejin.im/post/5a3cb04951882525822793f5>)
+
+[webSocket心跳重连机制](https://www.cnblogs.com/tugenhua0707/p/8648044.html)
