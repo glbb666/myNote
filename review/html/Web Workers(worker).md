@@ -8,8 +8,6 @@ web worker 是运行在后台的 JavaScript，不会影响页面的性能。
 
 web worker 是运行在后台的 JavaScript，独立于其他脚本，不会影响页面的性能。您可以继续做任何愿意做的事情：点击、选取内容等等，而此时 web worker 在后台运行。
 
-## 
-
 ### 使用方法
 
 1. 创建**外部脚本**。
@@ -56,17 +54,15 @@ web worker 是运行在后台的 JavaScript，独立于其他脚本，不会影�
   w.terminate();
 ```
 
-
-
 ### 注意事项
 
 1. **同源限制** 分配给 Worker 线程运行的脚本文件，必须与主线程的脚本文件同源。
 
 2. **DOM 限制** Worker 线程所在的全局对象，与主线程不一样，无法读取主线程所在网页的 DOM 对象，也无法使用 document、window、parent 这些对象。但是，Worker 线程可以访问 navigator 对象和 location 对象。
 
-3. **通信联系** Worker 线程和主线程不在同一个上下文环境，它们不能直接通信，必须通过消息完成。
+3. **通信限制** Worker 线程和主线程不在同一个上下文环境，它们不能直接通信，必须通过消息完成。
 
-4. **脚本限制** Worker 线程不能执行 alert() 方法和 confirm() 方法，但可以使用 XMLHttpRequest 对象发出 AJAX 请求。
+4. **脚本限制** Worker 线程**不能**执行 **alert()** 方法和 **confirm()** 方法，但**可以**使用 XMLHttpRequest 对象发出 **AJAX** 请求。
 
 5. **文件限制** Worker 线程无法读取本地文件，即不能打开本机的文件系统（file://），它所加载的脚本，必须来自网络。
 
