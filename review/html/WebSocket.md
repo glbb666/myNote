@@ -7,7 +7,7 @@
 
 ## WebSocket的优势
 服务器可以主动向客户端推送信息，客户端也可以主动向服务器发送信息
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20190916193825136.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2dhbmx1YmFiYTY2Ng==,size_16,color_FFFFFF,t_70)
+![在这里插入图片描述](<https://github.com/glbb666/myNote/blob/master/review/html/images/WebSocket_1.png>)
 
 ## 其他特点包括
 （1）建立在 **TCP** 协议上，**服务器端容易**实现。
@@ -22,7 +22,9 @@
 
 （6）协议标识符是**ws（如果加密，则为wss）**，服务器网址就是 URL。
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20190916194422868.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2dhbmx1YmFiYTY2Ng==,size_16,color_FFFFFF,t_70)
+   (7)
+
+![在这里插入图片描述](https://github.com/glbb666/myNote/blob/master/review/html/images/WebSocket_2.png)
 ## WebSocket不会取代http
 
 然而，WebSocket 在实现高效实时通信的过程却也不再享有在一些本由浏览器提供的**服务和优化，如状态管理、压缩、缓存**等。以后浏览器厂商是不是会针对 WebSocket 作出一些服务和优化不得而知，但至少现在 WebSocket 还完全不足以撼动 HTTP 的地位。总的来说，WebSocket 弥补了 HTTP 在某些通信领域的短板，但绝不可能完全取代 HTTP。
@@ -152,6 +154,10 @@ var server = ws.createServer(function(connect) { //创建一个新连接
 当然，实际生产环境中，我们可以使用PM2来控制nodejs程序在后台运行，使用Nginx做反向代理，不用将服务器ip和端口暴露到外网，可以参考：《Nginx配置反向代理访问内部服务》。
 
 如果你对nodejs还不懂，没关系，我们后面会推出nodejs的相关文章，敬请留意。还有对于websocket的应用，[Helloweba](https://www.helloweba.net/)会继续推出文章讲解websocket在聊天室、直播和消息推送方面的应用，为了以后的讲解做铺垫，希望有兴趣的同学在关注websocket的同时也关注下nodejs以及swoole等技术，当然最关键的是需要关注我们Helloweba。
+
+## WebSocket适用场景
+
+WebSocket 适用于需要高效实时通信的场景，比如网页聊天，对战游戏等
 
 ## 为什么需要心跳重连机制
 
