@@ -7,7 +7,7 @@
 
 ## WebSocket的优势
 服务器可以主动向客户端推送信息，客户端也可以主动向服务器发送信息
-![在这里插入图片描述](<https://github.com/glbb666/myNote/blob/master/review/html/images/WebSocket_1.png>)
+![在这里插入图片描述](https://github.com/glbb666/myNote/blob/master/review/html/images/WebSocket_1.png)
 
 ## 其他特点包括
 （1）建立在 **TCP** 协议上，**服务器端容易**实现。
