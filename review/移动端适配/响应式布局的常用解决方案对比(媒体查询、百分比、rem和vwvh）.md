@@ -22,11 +22,11 @@
 
 答案是否定的，下面图1.1和图1.2分别表示pc端下和移动端下的显示结果，在网页中我们设置的font-size统一为16px。
 
-![px_text_pc](https://user-gold-cdn.xitu.io/2018/7/2/16458dc25fb76cdf?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
+![px_text_pc](https://github.com/glbb666/myNote/blob/master/review/移动端适配/images/1.jpg)
 
 图1.1 pc端下font-size为16px时的显示结果
 
-![px_text_mobile](https://user-gold-cdn.xitu.io/2018/7/2/16458dc25f82ef71?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
+![px_text_mobile](https://github.com/glbb666/myNote/blob/master/review/移动端适配/images/2.jpg)
 
 图1.2 移动端下font-size为16px时的显示结果
 
@@ -82,9 +82,8 @@
 
 此外，在移动端的布局中，我们可以通过viewport元标签来控制布局，比如一般情况下，我们可以通过下述标签使得移动端在理想视口下布局：
 
-```
+```html
 <meta id="viewport" name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1; user-scalable=no;">
-复制代码
 ```
 
 上述meta标签的每一个属性的详细介绍如下：
@@ -122,7 +121,7 @@ PC端： 1 CSS像素 = 物理像素／分辨率 = 750 ／ 980 =0.76 px
 iphone6：1 CSS像素 = 物理像素 ／分辨率 = 750 ／ 375 = 2 px
 ```
 
-也就是说在PC端，一个CSS像素可以用0.76个物理像素来表示，而iphone6中 一个CSS像素表示了2个物理像素。此外不同的移动设备分辨率不同，也就是1个CSS像素可以表示的物理像素是不同的，因此如果在css中仅仅通过px作为长度和宽度的单位，造成的结果就是无法通过一套样式，实现各端的自适应。
+也就是说在PC端，一个CSS像素可以用0.76个物理像素来表示，而iphone6中 一个CSS像素表示了2个物理像素。此外不同的移动设备分辨率不同，也就是**1个CSS像素可以表示的物理像素是不同的，因此如果在css中仅仅通过px作为长度和宽度的单位，造成的结果就是无法通过一套样式，实现各端的自适应**。
 
 ## 二、媒体查询
 
@@ -158,7 +157,6 @@ iphone6：1 CSS像素 = 物理像素 ／分辨率 = 750 ／ 375 = 2 px
       background-color:#FFFF00;
     }
 }
-
 ```
 
 上述的代码通过媒体查询定义了几套样式，通过max-width设置样式生效时的最大分辨率，上述的代码分别对分辨率在0～320px，320px～550px，550px～768px以及768px～960px的屏幕设置了不同的背景颜色。
@@ -183,34 +181,33 @@ iphone6：1 CSS像素 = 物理像素 ／分辨率 = 750 ／ 375 = 2 px
 
 （1）子元素height和width的百分比
 
-子元素的height或width中使用百分比，是相对于子元素的直接父元素，width相对于父元素的width，height相对于父元素的height。比如：
+**子元素的height或width中使用百分比，是相对于子元素的直接父元素**，width相对于父元素的width，height相对于父元素的height。比如：
 
-```
+```html
 <div class="parent">
   <div class="child"></div>
 </div>
-复制代码
 ```
 
-如果设置： .father{ width:200px; height:100px; } .child{ width:50%; height:50%; } 展示的效果为： ![2018-06-22 7 00 29](https://user-gold-cdn.xitu.io/2018/7/2/16458dc2624637c1?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
+如果设置： .father{ width:200px; height:100px; } .child{ width:50%; height:50%; } 展示的效果为： ![2018-06-22 7 00 29](https://github.com/glbb666/myNote/blob/master/review/移动端适配/images/3.jpg)
 
 (2) top和bottom 、left和right
 
-子元素的top和bottom如果设置百分比，则相对于直接非static定位(默认定位)的父元素的高度，同样
+子元素的top和bottom如果设置百分比，则**相对于直接非static定位(默认定位)的父元素的高度**，同样
 
-子元素的left和right如果设置百分比，则相对于直接非static定位(默认定位的)父元素的宽度。
+子元素的left和right如果设置百分比，则**相对于直接非static定位(默认定位的)父元素的宽度**。
 
 展示的效果为：
 
-
+![2018-06-22 7 00 29](https://github.com/glbb666/myNote/blob/master/review/移动端适配/images/4.jpg)
 
 （3）padding
 
-子元素的padding如果设置百分比，不论是垂直方向或者是水平方向，都相对于直接父亲元素的width，而与父元素的height无关。
+子元素的**padding如果设置百分比**，不论是垂直方向或者是水平方向，都**相对**于直接父亲元素的**width**，而**与**父元素的**height无关**。
 
 举例来说：
 
-```
+```css
 .parent{
   width:200px;
   height:100px;
@@ -224,12 +221,11 @@ iphone6：1 CSS像素 = 物理像素 ／分辨率 = 750 ／ 375 = 2 px
   padding-top:50%;
   padding-left:50%;
 }
-复制代码
 ```
 
 展示的效果为：
 
-
+![2018-06-22 7 55 13](https://github.com/glbb666/myNote/blob/master/review/移动端适配/images/5.jpg)
 
 子元素的初始宽高为0，通过padding可以将父元素撑大，上图的蓝色部分是一个正方形，且边长为100px,说明padding不论宽高，如果设置成百分比都相对于父元素的width。
 
@@ -261,7 +257,7 @@ border-radius不一样，如果设置border-radius为百分比，则是相对于
 
 展示效果为：
 
-
+![jest1](https://github.com/glbb666/myNote/blob/master/review/移动端适配/images/6.jpg)
 
 除了border-radius外，还有比如translate、background-size等都是相对于自身的，这里就不一一举例。
 
@@ -291,7 +287,7 @@ border-radius不一样，如果设置border-radius为百分比，则是相对于
 
 
 
-![jest](https://user-gold-cdn.xitu.io/2018/7/2/16458ddfd32acddf?imageslim)
+![jest](https://github.com/glbb666/myNote/blob/master/review/移动端适配/images/7.jpg)
 
 
 
@@ -420,7 +416,7 @@ module.exports = {
 
 
 
-![jest1](https://user-gold-cdn.xitu.io/2018/7/2/16458dc2b81addbe?imageslim)
+![jest1](https://github.com/glbb666/myNote/blob/master/review/移动端适配/images/8.jpg)
 
 
 
@@ -484,7 +480,7 @@ var defaults = {
 
 可以在https://caniuse.com/ 查看各个版本的浏览器对vw单位的支持性。
 
-
+![2018-06-27 8 19 53](https://github.com/glbb666/myNote/blob/master/review/移动端适配/images/9.jpg)
 
 从上图我们发现，绝大多数的浏览器支持vw单位，但是ie9-11不支持vmin和vmax，考虑到vmin和vmax单位不常用，vw单位在绝大部分高版本浏览器内的支持性很好，但是opera浏览器整体不支持vw单位，如果需要兼容opera浏览器的布局，不推荐使用vw。
 
