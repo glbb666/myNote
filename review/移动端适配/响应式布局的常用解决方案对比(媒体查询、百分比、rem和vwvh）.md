@@ -1,52 +1,22 @@
 # 响应式布局的常用解决方案对比(媒体查询、百分比、rem和vw/vh）
 
-我的博客原文地址：[原文地址](https://link.juejin.im/?target=https%3A%2F%2Fgithub.com%2Fforthealllight%2Fblog%2Fissues%2F13) 如果文章对您有帮助，您的star是对我最好的鼓励～
-
-------
-
-简要介绍：前端开发中，静态网页通常需要适应不同分辨率的设备，常用的自适应解决方案包括媒体查询、百分比、rem和vw/vh等。本文从px单位出发，分析了px在移动端布局中的不足，接着介绍了几种不同的自适应解决方案。
-
-> - px和视口
-> - 媒体查询
-> - 百分比
-> - 自适应场景下的rem解决方案
-> - 通过vw/vh来实现自适应
-
-------
-
 ## 一、px和视口
-
-在静态网页中，我们经常用像素（px）作为单位，来描述一个元素的宽高以及定位信息。在pc端，通常认为css中,1px所表示的真实长度是固定的。
-
-***那么，px真的是一个设备无关，跟长度单位米和分米一样是固定大小的吗？***
-
-答案是否定的，下面图1.1和图1.2分别表示pc端下和移动端下的显示结果，在网页中我们设置的font-size统一为16px。
-
-![px_text_pc](https://github.com/glbb666/myNote/blob/master/review/移动端适配/images/1.jpg)
-
-图1.1 pc端下font-size为16px时的显示结果
-
-![px_text_mobile](https://github.com/glbb666/myNote/blob/master/review/移动端适配/images/2.jpg)
-
-图1.2 移动端下font-size为16px时的显示结果
-
-从上面两幅图的对比可以看出，字体都是16px，显然在pc端中文字正常显示，而在移动端文字很小，几乎看不到，说明在css中1px并不是固定大小，直观从我们发现在移动端1px所表示的长度较小，所以导致文字显示不清楚。
-
-**那么css中的1px的真实长度到底由什么决定呢？**
-
-为了理清楚这个概念我们首先介绍像素和视口的概念
 
 ### 1. 像素
 
-像素是网页布局的基础，一个像素表示了计算机屏幕所能显示的最小区域，像素分为两种类型：css像素和物理像素。
+像素是网页布局的基础，一个像素表示了**计算机屏幕所能显示的最小区域**，像素分为两种类型：`css像素`和`物理像素`。
 
-我们在js或者css代码中使用的px单位就是指的是css像素，物理像素也称设备像素，只与设备或者说硬件有关，同样尺寸的屏幕，设备的密度越高，物理像素也就越多。下表表示css像素和物理像素的具体区别：
+**css像素（逻辑像素）**：js和css设置的像素值。
 
-| css像素  |      为web开发者提供，在css中使用的一个抽象单位      |
-| -------- | :--------------------------------------------------: |
-| 物理像素 | 只与设备的硬件密度有关，任何设备的物理像素都是固定的 |
+**物理像素（设备像素）**：只与设备的硬件密度有关，是显示器(手机屏幕)上最小的物理显示单元。
 
-那么css像素与物理像素的转换关系是怎么样的呢？为了明确css像素和物理像素的转换关系，必须先了解视口是什么。
+**设备独立像素**：计算机设备中的一个点，css 中设置的像素指的就是该像素。老早在没有 retina 屏之前，设备独立像素与物理像素是相等的。
+
+**⚠️dpr(device pixel ratio)**：`dpr=物理像素/设备独立像素`（ 在某一方向上，x方向或者y方向）
+
+![2018-06-22 7 00 29](https://github.com/glbb666/myNote/blob/master/review/移动端适配/images/10.jpg)
+
+为了明确css像素和物理像素的转换关系，必须先了解视口是什么。
 
 ### 2. 视口
 
@@ -54,31 +24,15 @@
 
 ### (1) 布局视口（layout viewport）
 
-布局视口定义了pc网页在移动端的默认布局行为，因为通常pc的分辨率较大，布局视口默认为980px。也就是说在不设置网页的viewport的情况下，pc端的网页默认会以布局视口为基准，在移动端进行展示。因此我们可以明显看出来，默认为布局视口时，根植于pc端的网页在移动端展示很模糊。
+大于实际屏幕， 元素的宽度继承于 layoutviewport，用于保证网站的外观特性与桌面浏览器一样。layoutviewport 到底多宽，每个浏览器不同。iPhone 的 safari 为 980px，通过 document.documentElement.clientWidth 获取。
 
 ### (2) 视觉视口（visual viewport）
 
-视觉视口表示浏览器内看到的网站的显示区域，用户可以通过缩放来查看网页的显示内容，从而改变视觉视口。视觉视口的定义，就像拿着一个放大镜分别从不同距离观察同一个物体，视觉视口仅仅类似于放大镜中显示的内容，因此视觉视口不会影响布局视口的宽度和高度。
+当前显示在屏幕上的页面，即浏览器可视区域的宽度。
 
 ### (3) 理想视口（ideal viewport）
 
 理想视口或者应该全称为“理想的布局视口”，在移动设备中就是指设备的分辨率。换句话说，理想视口或者说分辨率就是给定设备物理像素的情况下，最佳的“布局视口”。
-
-**上述视口中，最重要的是要明确理想视口的概念，在移动端中，理想视口或者说分辨率跟物理像素之间有什么关系呢？**
-
-分辨率：**分辨率**是指单位长度内包含的像素点的数量
-
-为了理清分辨率和物理像素之间的联系，我们介绍一个用DPR（Device pixel ratio）设备像素比来表示，则可以写成：
-
-```
-1 DPR = 物理像素／分辨率
-```
-
-在不缩放的情况下，一个css像素就对应一个dpr，也就是说，在不缩放
-
-```
-1 CSS像素 = 物理像素／分辨率
-```
 
 此外，在移动端的布局中，我们可以通过viewport元标签来控制布局，比如一般情况下，我们可以通过下述标签使得移动端在理想视口下布局：
 
@@ -93,8 +47,8 @@
 | width         | 正整数  |           定义布局视口的宽度，单位为像素 |
 | height        | 正整数  | 定义布局视口的高度，单位为像素，很少使用 |
 | initial-scale | [0,10]  |                初始缩放比例，1表示不缩放 |
-| minimum-scale | [0,10]  |                             最小缩放比例 |
-| maximum-scale | [0,10]  |                             最大缩放比例 |
+| minimum-scale | [0,10]  |                 最小缩放比例，可为浮点数 |
+| maximum-scale | [0,10]  |                 最大缩放比例，可为浮点数 |
 | user-scalable | yes／no |        是否允许手动缩放页面，默认值为yes |
 
 其中我们来看width属性，在移动端布局时，在meta标签中我们会将width设置称为device-width，device-width一般是表示分辨率的宽，通过width=device-width的设置我们就将布局视口设置成了理想的视口。
@@ -231,20 +185,19 @@ iphone6：1 CSS像素 = 物理像素 ／分辨率 = 750 ／ 375 = 2 px
 
 （4）margin
 
-跟padding一样，margin也是如此，子元素的margin如果设置成百分比，不论是垂直方向还是水平方向，都相对于直接父元素的width。这里就不具体举例。
+**跟padding一样**
 
 （5）border-radius
 
-border-radius不一样，如果设置border-radius为百分比，则是相对于自身的宽度，举例来说：
+border-radius不一样，如果设置border-radius为百分比，则是相对于**自身的宽度**，举例来说：
 
-```
+```html
   <div class="trangle"></div>
-复制代码
 ```
 
 设置border-radius为百分比：
 
-```
+```css
 .trangle{
   width:100px;
   height:100px;
@@ -252,7 +205,6 @@ border-radius不一样，如果设置border-radius为百分比，则是相对于
   background:blue;
   margin-top:10px;
 }
-复制代码
 ```
 
 展示效果为：
@@ -267,20 +219,18 @@ border-radius不一样，如果设置border-radius为百分比，则是相对于
 
 比如我们要实现一个固定长宽比的长方形，比如要实现一个长宽比为4:3的长方形,我们可以根据padding属性来实现，因为padding不管是垂直方向还是水平方向，百分比单位都相对于父元素的宽度，因此我们可以设置padding-top为百分比来实现，长宽自适应的长方形：
 
-```
+```html
 <div class="trangle"></div>
-复制代码
 ```
 
 设置样式让其自适应：
 
-```
+```css
 .trangle{
   height:0;
   width:100%;
   padding-top:75%;
 }
-复制代码
 ```
 
 通过设置padding-top：75%,相对比宽度的75%，因此这样就设置了一个长宽高恒定比例的长方形，具体效果展示如下：
@@ -295,50 +245,46 @@ border-radius不一样，如果设置border-radius为百分比，则是相对于
 
 从上述对于百分比单位的介绍我们很容易看出如果全部使用百分比单位来实现响应式的布局，有明显的以下两个缺点：
 
-（1）计算困难，如果我们要定义一个元素的宽度和高度，按照设计稿，必须换算成百分比单位。 （2）从小节1可以看出，各个属性中如果使用百分比，相对父元素的属性并不是唯一的。比如width和height相对于父元素的width和height，而margin、padding不管垂直还是水平方向都相对比父元素的宽度、border-radius则是相对于元素自身等等，造成我们使用百分比单位容易使布局问题变得复杂。
+（1）**计算困难**，元素的**宽高都要按设计稿换算成百分比**。 （2）各个属性**百分比，相对父元素的属性不唯一**。width和height相对于父元素的width和height，而margin、padding不管垂直还是水平方向都相对比父元素的宽度、border-radius则是相对于元素自身等等，造成我们使用百分比单位容易使布局问题变得复杂。
 
 ## 四、自适应场景下的rem解决方案
 
 ### 1. rem单位
 
-首先来看，什么是rem单位。rem是一个灵活的、可扩展的单位，由浏览器转化像素并显示。与em单位不同，rem单位无论嵌套层级如何，都只相对于浏览器的根元素（HTML元素）的font-size。默认情况下，html元素的font-size为16px，所以：
+rem是相对于浏览器的根元素（HTML元素）的font-size。默认情况下，html元素的font-size为16px，所以：
 
 ```
-    1 rem = 12px
-复制代码
+    1 rem = 16px
 ```
 
 为了计算方便，通常可以将html的font-size设置成：
 
-```
+```css
     html{ font-size: 62.5% }
-复制代码
 ```
 
 这种情况下：
 
 ```
     1 rem = 10px
-复制代码
 ```
 
 ### 2.通过rem来实现响应式布局
 
-rem单位都是相对于根元素html的font-size来决定大小的,根元素的font-size相当于提供了一个基准，当页面的size发生变化时，只需要改变font-size的值，那么以rem为固定单位的元素的大小也会发生响应的变化。 因此，如果通过rem来实现响应式的布局，只需要根据视图容器的大小，动态的改变font-size即可。
+rem单位都是相对于根元素html的font-size来决定大小的，当页面的size发生变化时，只需要改变font-size的值，那么以rem为固定单位的元素的大小也会发生响应的变化。 因此，如果通过rem来实现响应式的布局，只需要**根据视图容器的大小，动态的改变font-size即可**。
 
-```
-function refreshRem() {
-    var docEl = doc.documentElement;
-    var width = docEl.getBoundingClientRect().width;
-    var rem = width / 10;
-    docEl.style.fontSize = rem + 'px';
-    flexible.rem = win.rem = rem;
+```js
+function refreshRem(){
+                var docEl = document.documentElement;
+                var width = docEl.getBoundingClientRect().width;
+                console.log(width);
+                var rem = width/10;
+                docEl.style.fontSize = rem + 'px';
 }
-win.addEventListener('resize', refreshRem);
-复制代码
+window.addEventListener('resize',refreshRem);
 ```
 
-上述代码中将视图容器分为10份，font-size用十分之一的宽度来表示，最后在header标签中执行这段代码，就可以动态定义font-size的大小，从而1rem在不同的视觉容器中表示不同的大小，用rem固定单位可以实现不同容器内布局的自适应。
+上述代码中将视图容器分为10份，font-size用十分之一的宽度来表示，最后在head标签中执行这段代码，就可以动态定义font-size的大小，从而1rem在不同的视觉容器中表示不同的大小，用rem固定单位可以实现不同容器内布局的自适应。
 
 ### 3. rem2px和px2rem
 
@@ -352,12 +298,11 @@ px2rem的原理也很简单，重点在于预处理以px为单位的css文件，
 
 ```
 npm install px2rem-loader
-复制代码
 ```
 
 在webpack的配置文件中：
 
-```
+```js
 module.exports = {
   // ...
   module: {
@@ -377,7 +322,6 @@ module.exports = {
       }]
     }]
   }
-复制代码
 ```
 
 }
@@ -386,7 +330,6 @@ module.exports = {
 
 ```
 npm install postcss-loader
-复制代码
 ```
 
 在webpack的plugin中:
@@ -407,7 +350,6 @@ module.exports = {
     return [px2rem({remUnit: 75})];
   }
 }
-复制代码
 ```
 
 ### 4. rem 布局应用举例
@@ -448,7 +390,7 @@ css3中引入了一个新的单位vw/vh，与视图窗口有关，vw表示相对
 | %     | 大部分相对于祖先元素，也有相对于自身的情况比如（border-radius、translate等) |
 | vw/vh |                       相对于视窗的尺寸                       |
 
-从对比中我们可以发现，vw单位与百分比类似，单确有区别，前面我们介绍了百分比单位的换算困难，这里的vw更像"理想的百分比单位"。任意层级元素，在使用vw单位的情况下，1vw都等于视图宽度的百分之一。
+从对比中我们可以发现，vw单位与百分比类似，单确有区别，前面我们介绍了**百分比单位的换算困难**，这里的**vw更像理想的百分比单位**。任意层级元素，在使用vw单位的情况下，1vw都等于视图宽度的百分之一。
 
 ### 2. vw单位换算
 
@@ -456,12 +398,11 @@ css3中引入了一个新的单位vw/vh，与视图窗口有关，vw表示相对
 
 ```
 1px = （1/375）*100 vw
-复制代码
 ```
 
 此外，也可以通过postcss的相应插件，预处理css做一个自动的转换，[postcss-px-to-viewport](https://link.juejin.im/?target=https%3A%2F%2Fgithub.com%2Fevrone%2Fpostcss-px-to-viewport)可以自动将px转化成vw。 postcss-px-to-viewport的默认参数为：
 
-```
+```js
 var defaults = {
   viewportWidth: 320,
   viewportHeight: 568, 
@@ -471,7 +412,6 @@ var defaults = {
   minPixelValue: 1,
   mediaQuery: false
 };
-复制代码
 ```
 
 通过指定视窗的宽度和高度，以及换算精度，就能将px转化成vw。
