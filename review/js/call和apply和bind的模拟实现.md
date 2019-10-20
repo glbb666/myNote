@@ -79,10 +79,13 @@ Function.prototype.apply2 = function(context){
 
 ```js
 Function.prototype.bind2 = function(context){
+    	if(typeof this!=='function'){
+           throw new Error("Function.prototype.bind - what is trying to be bound is not callable");
+        }
         var self = this;
         var [,args] = [...arguments];
         var fNOP = function(){}
-        var bfound = function(){
+        var fBound = function(){
             var bindArgs = [...args,...arguments];
             var _this = this instanceof self?this:context;
             _this.fn = self;
@@ -91,8 +94,8 @@ Function.prototype.bind2 = function(context){
             return result;
         }
         fNOP.prototype = this.prototype;
-        bfound.prototype = new fNOP();
-        return bfound;
+        fBound.prototype = new fNOP();
+        return fBound;
 }
 ```
 
