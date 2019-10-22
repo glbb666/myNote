@@ -19,11 +19,10 @@
 我的es6实现
 
 ```js
-Function.prototype.call2 = function(context){
+Function.prototype.call2 = function(context,...args){
 	context =context||window;
 	context.fn = this;
-	var args = [...args].slice(1);
-	var result =context.fn(...args）
+	var result =context.fn(...args）;
 	delete context.fn;
 	return result;
 }
@@ -53,10 +52,9 @@ Function.prototype.call2 = function(context){
 `apply和call唯一的区别就是apply接受的第二个参数为数组`
 
 ```js
-Function.prototype.apply2 = function(context){
-	context = context||window
+Function.prototype.apply2 = function(context,...args){
+	context = context||window;
 	context.fn = this;
-	var [,...args] = arguments;
 	var result = context.fn(...args);
 	delete context.fn;
 	return result;
@@ -78,12 +76,11 @@ Function.prototype.apply2 = function(context){
 5.在返回的函数中的实现就类似于call了
 
 ```js
-Function.prototype.bind2 = function(context){
+Function.prototype.bind2 = function(context,...args){
     	if(typeof this!=='function'){
            throw new Error("Function.prototype.bind - what is trying to be bound is not callable");
         }
         var self = this;
-        var [,args] = [...arguments];
         var fNOP = function(){}
         var fBound = function(){
             var bindArgs = [...args,...arguments];

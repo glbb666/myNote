@@ -11,7 +11,7 @@
 
 > JavaScript的数据类型分为两大种：
 
-1. 基本类型：Undefined、Null、Boolean、Number 和 String，这5中基本数据类型可以直接访问，他们是按照值进行分配的，存放在栈(stack)内存中的简单数据段，数据大小确定，内存空间大小可以分配。
+1. 基本类型：Undefined、Null、Boolean、Number 、String、BigInt、Symbol这7种类基本数据类型可以直接访问，他们是按照值进行分配的，存放在栈(stack)内存中的简单数据段，数据大小确定，内存空间大小可以分配。
 2. 引用类型：即存放在堆(heap)内存中的对象，变量实际保存的是一个指针，这个指针指向另一个位置。
   以上我们知道了什么是堆栈，和JavaScript的数据类型，下面我们根据js的数据类型来说明一下他们的拷贝情况：
 ```js
@@ -33,15 +33,14 @@ console.log(obj1.age);       //18
 
 
 ## 三：什么是浅拷贝？
-  创建一个新对象，这个对象有着原始对象属性值的一份精确拷贝。如果属性是基本类型，拷贝的就是基本类型的值，如果属性是引用类型，拷贝的就是内存地址 ，所以如果其中一个对象改变了这个地址，就会影响到另一个对象。
+  创建一个新对象，这个对象有着原始对象属性值的一份精确拷贝。**如果属性是基本类型，拷贝的就是基本类型的值**，如果属性**是引用类型**，**拷贝的就是内存地址** ，所以如果其中一个对象改变了这个地址，就会影响到另一个对象。
 
 ```js
 function cloneShallow(source) {
     var target = {};
     for (var key in source) {
-     //for in 在数组和对象中都能用作遍历
+     	//for in 在数组和对象中都能用作遍历
         if (Object.prototype.hasOwnProperty.call(source, key)) {
-   	//对象自身的属性,使用Object.prototype.hasOwnProperty主要是考虑到数组没有hasOwnProperty方法
             target[key] = source[key];
         }
     }
@@ -52,7 +51,7 @@ function cloneShallow(source) {
 创建一个新的对象，遍历需要克隆的对象，将需要克隆对象的属性依次添加到新对象上，返回
 
 ## 四：什么是深度拷贝？
-将一个对象从内存中完整的拷贝一份出来,从堆内存中开辟一个新的区域存放新对象,且修改新对象不会影响原对象
+将一个对象从内存中完整的拷贝一份出来,**从堆内存中开辟一个新的区域存放新对象**,且修改新对象不会影响原对象
 
 - 方法一：
 
@@ -73,6 +72,7 @@ function cloneShallow(source) {
 function cloneDeep1(source) {
     var target = {};
     for(var key in source) {
+        //用来检测一个对象是否含有特定的自身属性
         if (Object.prototype.hasOwnProperty.call(source, key)) {
             if (typeof source[key] === 'object') {
                 target[key] = cloneDeep1(source[key]); // 注意这里
@@ -83,7 +83,6 @@ function cloneDeep1(source) {
     }
     return target;
 }
-
 ```
 
 一个简单的深拷贝就完成了，但是这个实现还存在很多问题。
@@ -94,29 +93,18 @@ function cloneDeep1(source) {
 
 ## 第二步：拷贝数组
 
-我们来看下对于对象的判断，之前在【进阶3-3期】有过介绍，判断方案如下。
+我们来看下对于对象的判断
 
 ```js
-// 木易杨
-function isObject(obj) {
-    return Object.prototype.toString.call(obj) === '[object Object]';
-}
-```
-
-但是用在这里并不合适，因为我们要保留数组这种情况，所以这里使用 `typeof` 来处理。
-
-```js
-// 木易杨
 typeof null //"object"
 typeof {} //"object"
 typeof [] //"object"
 typeof function foo(){} //"function" (特殊情况)
 ```
 
-改动过后的 isObject 判断逻辑如下。
+因为[]和{}需要放在下面单独判断，所以我们只需要用isObject<font color='red'>筛除基本类型</font>即可
 
 ```js
-// 木易杨
 function isObject(obj) {
 	return typeof obj === 'object' && obj != null;
 }
@@ -127,46 +115,38 @@ function isObject(obj) {
 ```js
 // 木易杨
 function cloneDeep2(source) {
-
-    if (!isObject(source)) return source; // 非对象返回自身
-      
+    if (!isObject(source)) return source;//筛除基本类型
     var target = Array.isArray(source) ? [] : {};
     for(var key in source) {
         if (Object.prototype.hasOwnProperty.call(source, key)) {
-            if (isObject(source[key])) {
-                target[key] = cloneDeep2(source[key]); // 注意这里
-            } else {
-                target[key] = source[key];
-            }
+            target[key]=isObject(source[key]？cloneDeep2(source[key]):source[key]；
+			// 注意这里   
         }
     }
     return target;
 }
 ```
 
-#### 考虑循环引用
+#### 考虑循环引用（如果不解决循环引用问题，会出现栈溢出）
 
 > 循环引用：对象的属性间接或直接的引用了自身的情况
-**解决循环引用**：额外开辟一个存储空间，来存储当前对象和拷贝对象的对应关系，当需要拷贝当前对象时，先去存储空间中找，有没有拷贝过这个对象，如果有的话直接返回，如果没有的话继续拷贝，这样就巧妙化解的循环引用的问题
+> **解决循环引用**：额外开辟一个存储空间，来存储当前对象和拷贝对象的对应关系，当需要拷贝当前对象时，先去存储空间中找，有没有拷贝过这个对象，如果有的话直接返回，如果没有的话继续拷贝，这样就巧妙化解的循环引用的问题
+>
+> 假如对象A和B循环应用，那么B会是A的一个属性，B会是A的一个属性，每次拷贝时，看看要拷贝的值在map中存不存在，存在的话，就直接返回，不存在的话，就把要拷贝的值存入map中
 ```js
-// 木易杨
 function cloneDeep3(source, hash = new WeakMap()) {
-    if (!isObject(source)) return source; 
-    if (hash.has(source)) return hash.get(source); // 新增代码，查哈希表
+    if (!isObject(source)) return source; //筛除基本值
+    if (hash.has(source)) return hash.get(source); //看看该对象在不在哈希表中
     var target = Array.isArray(source) ? [] : {};
-    hash.set(source, target); // 新增代码，哈希表设值   
+    hash.set(source, target); //把对象存入哈希表
     for(var key in source) {
         if (Object.prototype.hasOwnProperty.call(source, key)) {
-            if (isObject(source[key])) {
-                target[key] = cloneDeep3(source[key], hash); // 新增代码，传入哈希表
-            } else {
-                target[key] = source[key];
-            }
+          target=isObject(source[key])?cloneDeep3(source[key], hash):source[key];
         }
     }
     return target;
 }
 ```
 ### 为什么用WeakMap?
-因为WeakMap的键是弱引用的，而我们这里的键恰好是对象，需要弱引用。
+因为`WeakMap`的键是弱引用的，而我们这里的键恰好是对象，需要弱引用。
 
