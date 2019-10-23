@@ -1,6 +1,6 @@
 # call的模拟实现
 
-`call()方法在指定一个this和若干个参数的情况下调用某个函数或方法`
+`call()方法在指定一个this和若干个参数的情况下调用某个函数或方法，传递给call的参数必须依次列举出来`
 
 1.首先，让要执行的函数变成属于对象的方法（改变this指向）
 
@@ -49,7 +49,7 @@ Function.prototype.call2 = function(context){
 
 # apply的模拟实现
 
-`apply和call唯一的区别就是apply接受的第二个参数为数组`
+`apply和call唯一的区别就是apply接受的第二个参数为数组或者是类数组对象`
 
 ```js
 Function.prototype.apply2 = function(context,...args){
