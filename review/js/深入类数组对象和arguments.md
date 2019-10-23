@@ -40,17 +40,14 @@ Array.prototype.concat.apply([], arrayLike)
 
 ## Arguments对象
 
-接下来重点讲讲 Arguments 对象。
-
-Arguments 对象只定义在函数体中，包括了函数的参数和其他属性。在函数体中，arguments 指代该函数的 Arguments 对象。
+Arguments 对象只**定义在函数体中**，包括着传入函数的所有形参和其他属性。在函数体中，arguments 指代该函数的 Arguments 对象。
 
 举个例子：
 
-```
+```javascript
 function foo(name, age, sex) {
     console.log(arguments);
 }
-
 foo('name', 'age', 'sex')
 ```
 
@@ -62,9 +59,9 @@ foo('name', 'age', 'sex')
 
 ## length属性
 
-Arguments对象的length属性，表示实参的长度，举个例子：
+Arguments对象的length属性，表示**<font color='red'>实参</font>的长度**，举个例子：
 
-```
+```javascript
 function foo(b, c, d){
     console.log("实参的长度为：" + arguments.length)
 }
@@ -79,11 +76,13 @@ foo(1)
 
 ## callee属性
 
-Arguments 对象的 callee 属性，通过它可以调用函数自身。
+Arguments 对象的 callee 属性是一个指针，**指向拥有该arguments对象的函数**。
 
-讲个闭包经典面试题使用 callee 的解决方法：
+- 可以用来**消除**递归调用中函数和函数名的**紧密耦合**现象(高程书P114）
 
-```
+- 讲个闭包经典面试题使用 callee 的解决方法：
+
+```javascript
 var data = [];
 
 for (var i = 0; i < 3; i++) {
@@ -105,7 +104,7 @@ data[2]();
 
 ## arguments 和对应参数的绑定
 
-```
+```javascript
 function foo(name, age, sex, hobbit) {
 
     console.log(name, arguments[0]); // name name
@@ -144,7 +143,7 @@ foo('name', 'age')
 
 将参数从一个函数传递到另一个函数
 
-```
+```javascript
 // 使用 apply 将 foo 的参数传递给 bar
 function foo() {
     bar.apply(this, arguments);
@@ -160,7 +159,7 @@ foo(1, 2, 3)
 
 使用ES6的 ... 运算符，我们可以轻松转成数组。
 
-```
+```javascript
 function func(...arguments) {
     console.log(arguments); // [1, 2, 3]
 }
