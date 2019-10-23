@@ -136,9 +136,10 @@ function cloneDeep2(source) {
 ```js
 function cloneDeep3(source, hash = new WeakMap()) {
     if (!isObject(source)) return source; //筛除基本值
-    if (hash.has(source)) return hash.get(source); //看看该对象在不在哈希表中
+    if (hash.has(source)) return hash.get(source); //看看该对象在不在哈希表中，在表中直接取值返回即可
+    //对象不存在，再进行拷贝
     var target = Array.isArray(source) ? [] : {};
-    hash.set(source, target); //把对象存入哈希表
+    hash.set(source, target); //把source作为键存入map，map的键名不重复
     for(var key in source) {
         if (Object.prototype.hasOwnProperty.call(source, key)) {
           target=isObject(source[key])?cloneDeep3(source[key], hash):source[key];
@@ -148,5 +149,5 @@ function cloneDeep3(source, hash = new WeakMap()) {
 }
 ```
 ### 为什么用WeakMap?
-因为`WeakMap`的键是弱引用的，而我们这里的键恰好是对象，需要弱引用。
-
+- <font color='red'>解决同名属性碰撞问题：</font>WeakMap的键是和内存地址绑定的，只要内存地址不一样，就视为两个键，这样就能
+- <font color='red'>解决内存泄漏问题</font>`WeakMap`的键名所指向的对象是弱引用的，不计入垃圾回收机制，不造成对对象的引用。这样，当这个对象被删除，其所对应的`WeakMap`记录就自动被移除，不需要手动删除引用，

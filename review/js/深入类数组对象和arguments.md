@@ -135,9 +135,9 @@ function foo(name, age, sex, hobbit) {
 foo('name', 'age')
 ```
 
-传入的参数，实参和 arguments 的值会共享，当没有传入时，实参与 arguments 值不会共享
+传入的参数，实参和 arguments 的值会共享（但是它们的内存空间是独立的）当没有传入时，实参与 arguments 值不会共享
 
-除此之外，以上是在非严格模式下，如果是在严格模式下，实参和 arguments 是不会共享的。
+除此之外，以上是在非严格模式下，如果是**在严格模式下，实参和 arguments 是不会共享的**。
 
 ## 传递参数
 
@@ -177,4 +177,4 @@ arguments的应用其实很多，在下个系列，也就是 JavaScript 专题�
 2. 函数柯里化
 3. 递归调用
 4. 函数重载
-   ...
+
