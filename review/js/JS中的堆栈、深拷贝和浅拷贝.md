@@ -50,6 +50,15 @@ function cloneShallow(source) {
 
 创建一个新的对象，遍历需要克隆的对象，将需要克隆对象的属性依次添加到新对象上，返回
 
+es6的**Object.assign**属性也可以进行浅拷贝
+
+```javascript
+var target = {};
+Object.assign(target,source);
+```
+
+
+
 ## 四：什么是深度拷贝？
 将一个对象从内存中完整的拷贝一份出来,**从堆内存中开辟一个新的区域存放新对象**,且修改新对象不会影响原对象
 
