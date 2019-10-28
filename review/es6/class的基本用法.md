@@ -252,7 +252,7 @@ new Foo(); // ReferenceError
 class Foo {}
 ```
 
-上面代码中，`Foo`类使用在前，定义在后，这样会报错，因为 ES6 不会把类的声明提升到代码头部。这种规定的原因与下文要提到的继承有关，必须保证子类在父类之后定义。
+上面代码中，`Foo`类使用在前，定义在后，这样会报错，因为 ES6 不会把类的声明提升到代码头部。这种规定的原因与下文要提到的继承有关，**必须保证子类在父类之后定义**。
 
 ```javascript
 {
@@ -273,7 +273,7 @@ class Point {}
 Point.name // "Point"
 ```
 
-`name`属性总是返回紧跟在`class`关键字后面的类名。
+`name`属性总是**返回紧跟在`class`关键字后面的类名**。
 
 **（4）Generator 方法**
 
@@ -302,7 +302,7 @@ for (let x of new Foo('hello', 'world')) {
 
 **（5）this 的指向**
 
-类的方法内部如果含有`this`，它默认指向类的实例。但是，必须非常小心，一旦单独使用该方法，很可能报错。
+**类的方法内部如果含有`this`，它默认指向类的实例**。但是，必须非常小心，一旦单独使用该方法，很可能报错。
 
 ```javascript
 class Logger {
@@ -347,7 +347,7 @@ const myObj = new Obj();
 myObj.getThis() === myObj // true
 ```
 
-箭头函数内部的`this`总是指向定义时所在的对象。上面代码中，箭头函数位于构造函数内部，它的定义生效的时候，是在构造函数执行的时候。这时，箭头函数所在的运行环境，肯定是实例对象，所以`this`会总是指向实例对象。
+**箭头函数内部的`this`总是指向定义时所在的对象**。上面代码中，箭头函数位于构造函数内部，它的定义生效的时候，是在构造函数执行的时候。这时，箭头函数所在的运行环境，肯定是实例对象，所以`this`会总是指向实例对象。
 
 还有一种解决方法是使用`Proxy`，获取方法的时候，自动绑定`this`。
 
@@ -375,7 +375,7 @@ const logger = selfish(new Logger());
 
 ## 静态方法
 
-类相当于实例的原型，所有在类中定义的方法，都会被实例继承。如果在一个方法前，加上`static`关键字，就表示该方法不会被实例继承，而是直接通过类来调用，这就称为“静态方法”。
+类相当于实例的原型，所有在类中定义的方法，都会被实例继承。如果在一个方法前，**加上`static`关键字，就表示该方法不会被实例继承**，而是直接通过类来调用，这就称为“静态方法”。
 
 ```javascript
 class Foo {
@@ -391,9 +391,9 @@ foo.classMethod()
 // TypeError: foo.classMethod is not a function
 ```
 
-上面代码中，`Foo`类的`classMethod`方法前有`static`关键字，表明该方法是一个静态方法，可以直接在`Foo`类上调用（`Foo.classMethod()`），而不是在`Foo`类的实例上调用。如果在实例上调用静态方法，会抛出一个错误，表示不存在该方法。
+上面代码中，`Foo`类的`classMethod`方法前有`static`关键字，表明该方法是一个静态方法，可以**直接在`Foo`类上调用**（`Foo.classMethod()`），而不是在`Foo`类的实例上调用。如果在实例上调用静态方法，会抛出一个错误，表示不存在该方法。
 
-注意，如果静态方法包含`this`关键字，这个`this`指的是类，而不是实例。
+注意，如果**静态方法包含`this`关键字，这个`this`指的是类**，而不是实例。
 
 ```javascript
 class Foo {
@@ -411,9 +411,9 @@ class Foo {
 Foo.bar() // hello
 ```
 
-上面代码中，静态方法`bar`调用了`this.baz`，这里的`this`指的是`Foo`类，而不是`Foo`的实例，等同于调用`Foo.baz`。另外，从这个例子还可以看出，静态方法可以与非静态方法重名。
+上面代码中，静态方法`bar`调用了`this.baz`，这里的`this`指的是`Foo`类，而不是`Foo`的实例，等同于调用`Foo.baz`。另外，从这个例子还可以看出，**静态方法可以与非静态方法重名**。
 
-父类的静态方法，可以被子类继承。
+**父类的静态方法，可以被子类继承**。
 
 ```javascript
 class Foo {
@@ -430,7 +430,7 @@ Bar.classMethod() // 'hello'
 
 上面代码中，父类`Foo`有一个静态方法，子类`Bar`可以调用这个方法。
 
-静态方法也是可以从`super`对象上调用的。
+**静态方法也是可以从`super`对象上调用**的。
 
 ```javascript
 class Foo {
@@ -450,7 +450,7 @@ Bar.classMethod() // "hello, too"
 
 ## 实例属性的新写法
 
-实例属性除了定义在`constructor()`方法里面的`this`上面，也可以定义在类的最顶层。
+**实例属性**除了定义在**（1）`constructor()`方法里面的`this`上面**，也可以定义在**（2）类的最顶层**。
 
 ```javascript
 class IncreasingCounter {
@@ -501,7 +501,7 @@ class foo {
 
 ## 静态属性
 
-静态属性指的是 Class 本身的属性，即`Class.propName`，而不是定义在实例对象（`this`）上的属性。
+**静态属性指的是 Class 本身的属性**，即`Class.propName`，而不是定义在实例对象（`this`）上的属性。
 
 ```javascript
 class Foo {
@@ -513,7 +513,7 @@ Foo.prop // 1
 
 上面的写法为`Foo`类定义了一个静态属性`prop`。
 
-目前，只有这种写法可行，因为 ES6 明确规定，Class 内部只有静态方法，没有静态属性。现在有一个[提案](https://github.com/tc39/proposal-class-fields)提供了类的静态属性，写法是在实例属性的前面，加上`static`关键字。
+**目前，只有这种写法可行**，因为 ES6 明确规定，Class 内部只有静态方法，没有静态属性。现在有一个[提案](https://github.com/tc39/proposal-class-fields)提供了类的静态属性，写法是在实例属性的前面，加上`static`关键字。
 
 ```javascript
 class MyClass {
@@ -637,7 +637,7 @@ class IncreasingCounter {
 }
 ```
 
-上面代码中，`#count`就是私有属性，只能在类的内部使用（`this.#count`）。如果在类的外部使用，就会报错。
+上面代码中，`#count`就是私有属性，**只能在类的内部使用**（`this.#count`）。如果在类的外部使用，就会报错。
 
 ```javascript
 const counter = new IncreasingCounter();
