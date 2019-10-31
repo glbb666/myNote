@@ -2,7 +2,7 @@
 
 `class`写法只是**(1)让对象原型的写法更加清晰、(2)更像面向对象编程的语法**而已。
 
-ES5 的构造函数`Point`，对应 ES6 的`Point`类的构造方法`constructor`。
+ES5 的**构造函数**`Point`，**对应** ES6 的`Point`**类的构造方法**`constructor`。
 
 **类的数据类型就是函数**，类本身就指向构造函数。
 
@@ -19,29 +19,21 @@ var b = new Bar();
 b.doStuff() // "stuff"
 ```
 
-构造函数的`prototype`属性，在 ES6 的“类”上面继续存在。事实上，**类的所有方法都定义在类的`prototype`属性上面**。
+构造函数的`prototype`属性，在 ES6 的“类”上面继续存在。事实上，**类的所有普通方法都定义在类的`prototype`属性上面**。
 
 ```javascript
 class Point {
   constructor() {
     // ...
   }
-
   toString() {
     // ...
   }
-
-  toValue() {
-    // ...
-  }
 }
-
 // 等同于
-
 Point.prototype = {
   constructor() {},
   toString() {},
-  toValue() {},
 };
 ```
 
@@ -71,16 +63,13 @@ Object.assign(Point.prototype, {
 ```javascript
 class Point {
 }
-
 // 等同于
 class Point {
   constructor() {}
 }
 ```
 
-上面代码中，定义了一个空的类`Point`，JavaScript 引擎会自动为它添加一个空的`constructor`方法。
-
-`constructor`方法**默认返回实例对象（即`this`）**，完全可以指定返回另外一个对象。
+`constructor`方法**默认返回实例对象（即`this`）**，完全**可以指定返回另外一个对象**。
 
 ```javascript
 class Foo {
@@ -88,7 +77,6 @@ class Foo {
     return Object.create(null);
   }
 }
-
 new Foo() instanceof Foo
 // false
 ```
@@ -177,12 +165,10 @@ var descriptor = Object.getOwnPropertyDescriptor(
 
 ```javascript
 let methodName = 'getArea';
-
 class Square {
   constructor(length) {
     // ...
   }
-
   [methodName]() {
     // ...
   }
