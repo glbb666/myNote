@@ -47,11 +47,29 @@ output:{
 
 webpack给我们提供了三种哈希值计算方式，分别是hash、chunkhash和contenthash。那么这三者有什么区别呢？
 
-- hash：跟整个项目的构建相关，构建生成的文件hash值都是一样的，只要项目里有文件更改，整个项目构建的hash值都会更改。（项目的所有文件，文件名共用一个hash）
-- chunkhash：根据不同的入口文件(Entry)进行依赖文件解析、构建对应的chunk，生成对应的hash值。（项目相同入口的文件，文件名共用一个hash）
+- hash：跟整个项目的构建相关，构建生成的文件hash值都是一样的，只要项目里有文件更改，整个项目构建的hash值都会更改。（项目的所有文件，文件名都带上一个hash）
+- chunkhash：根据不同的入口文件(Entry)进行依赖文件解析、构建对应的chunk，生成对应的hash值。（项目相同入口的文件，文件名都带上一个hash）
 - contenthash：由文件内容产生的hash值，内容不同产生的contenthash值也不一样。(项目的每一个文件都根据自己的内容拥有自己的的hash)
 
 显然，我们是不会使用第一种的。改了一个文件，打包之后，其他文件的hash都变了，缓存自然都失效了。这不是我们想要的。
 
 那chunkhash和contenthash的主要应用场景是什么呢？在实际在项目中，我们一般会把项目中的css都抽离出对应的css文件来加以引用。如果我们使用chunkhash，当我们改了css代码之后，会发现css文件hash值改变的同时，js文件的hash值也会改变。这时候，contenthash就派上用场了。
 
+## 后端需要怎么设置
+
+上文主要说的是前端如何进行打包，那后端怎么做呢？ 我们知道，**浏览器是根据响应头的相关字段来决定缓存的方案的**。所以，后端的关键就在于，根据不同的请求返回对应的缓存字段。 以nodejs为例，如果需要浏览器强缓存，我们可以这样设置：
+
+```javascript
+res.setHeader('Cache-Control', 'public, max-age=xxx');
+```
+
+如果需要协商缓存，则可以这样设置：
+
+```javascript
+res.setHeader('Cache-Control', 'public, max-age=0');
+res.setHeader('Last-Modified', xxx);
+res.setHeader('ETag', xxx);
+```
+
+## 总结
+在做前端缓存时，我们尽可能设置长时间的强缓存，通过文件名加hash的方式来做版本更新。在代码分包的时候，应该将一些不常变的公共库独立打包出来，使其能够更持久的缓存。
