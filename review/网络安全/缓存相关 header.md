@@ -216,9 +216,9 @@ ETag: "<etag_value>"
 
 ##### Notes
 
-服务器端在生成状态码为 304 的响应的时候，必须同时生成以下会存在于对应的 200 响应中的首部：`Cache-Control`、`Content-Location`、`Date`、`ETag`、`Expires` 和 `Vary`。
+服务器端在生成状态码为 304 的响应的时候，<font color='red'>必须同时生成以下会存在于对应的 200 响应中的首部</font>：`Cache-Control`、`Content-Location`、`Date`、`ETag`、`Expires` 和 `Vary`。
 
-`ETag`属性之间的比较采用的是**弱比较算法**，即两个文件除了每个比特都相同外，内容一致也可以认为是相同的。例如，如果两个页面仅仅在页脚的生成时间有所不同，就可以认为二者是相同的。
+`ETag`属性之间的比较采用的是<font color='red'>**弱比较算法**</font>，即两个文件除了每个比特都相同外，内容一致也可以认为是相同的。例如，如果两个页面仅仅在页脚的生成时间有所不同，就可以认为二者是相同的。
 
 当与`If-Modified-Since`一同使用的时候，`If-None-Match`优先级更高（假如服务器支持的话）。
 

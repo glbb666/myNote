@@ -25,7 +25,7 @@
 
 先检查本地有没有缓存，如果没有缓存则向服务器请求数据，如果有缓存，检查缓存有没有过期，如果缓存过期了，就携带标识(这一块涉及到强制缓存和对比缓存)向服务器发起请求，服务器会
 
-https://github.com/glbb666/myNote/blob/master/review/%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8/image/url.png](https://github.com/glbb666/myNote/blob/master/review/网络安全/image/url.png)
+[https://github.com/glbb666/myNote/blob/master/review/%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8/image/cache2.png](https://github.com/glbb666/myNote/blob/master/review/网络安全/image/cache2.png)
 
 ## 二、DNS 查询
 
