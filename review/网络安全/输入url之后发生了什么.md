@@ -27,7 +27,7 @@
 
 ![img]([https://github.com/glbb666/myNote/blob/master/review/%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8/image/cache2.png](https://github.com/glbb666/myNote/blob/master/review/网络安全/image/cache2.png))
 
-## 二、DNS 查询
+## 二、DNS 解析
 
 - 浏览器根据地址去本身缓存中查找dns解析记录，如果有，则直接返回IP地址，否则浏览器会查找操作系统中（hosts文件）是否有该域名的dns解析记录，如果有则返回。
 - 如果浏览器缓存和操作系统hosts中均无该域名的dns解析记录，或者已经过期。就到你的路由器来查找，因为路由器一般也会有自己的 DNS 缓存。
