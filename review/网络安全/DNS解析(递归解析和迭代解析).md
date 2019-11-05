@@ -47,6 +47,7 @@ TCP/IP 网络是通过 IP 地址来确定通信对象的，不知道 IP 地址�
 
   ![img](https://pic1.zhimg.com/80/v2-b6cf454b2fc9144470f097c827a13ab0_hd.jpg)
 
+![img](https://github.com/glbb666/myNote/blob/master/review/网络安全/image/dns.jpg)
 
 #### 递归解析
 
