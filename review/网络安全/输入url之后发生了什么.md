@@ -45,6 +45,10 @@
 3. 客户端接收到确认后，检查ack是否为J+1，ACK是否为1，如果正确，客户端进入establish状态。接着，客户端将**`标志位ACK置为1`**，随机产生ack=K+1，并将该数据包发送给服务端。
 4. 服务端接收到确认后，检查ack是否为K+1，ACK是否为1，如果正确，服务端变为establish状态。连接建立成功。
 
+![img](http://www.2cto.com/uploadfile/2013/1022/20131022025346218.png)
+
+![img](<https://github.com/glbb666/myNote/blob/master/review/网络安全/image/tcp1.png>)
+
 >SYN:synchronous   建立联机
 >ACK:acknowledgement  确认
 >SYN_SENT:请求连接
