@@ -27,7 +27,9 @@
 
 先检查本地有没有缓存，如果没有缓存则向服务器请求数据，如果有缓存，检查缓存有没有过期，如果缓存没有过期，就命中强缓存，如果缓存过期了，就携带标识向服务器发起请求，服务器会根据标识判断资源有没有被修改过，如果被修改了，就返回200和缓存标识和资源主题，否则返回304，让你使用本地缓存。
 
-![img]([https://github.com/glbb666/myNote/blob/master/review/%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8/image/cache2.png](https://github.com/glbb666/myNote/blob/master/review/网络安全/image/cache2.png))
+![img2]([https://github.com/glbb666/myNote/blob/master/review/%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8/image/cache2.png](https://github.com/glbb666/myNote/blob/master/review/网络安全/image/cache2.png))
+
+![cache2](G:\WebstormProjects\myNote\review\网络安全\image\cache2.png)
 
 ## 二、DNS 解析获取对应IP
 
@@ -40,20 +42,30 @@
 
 ## 三、根据IP建立TCP 连接（三次握手）
 
-1. 客户端把**`标志位SYN`**置为1，随机产生一个值为seq=J（J的取值范围为=1234567）的数据包到服务器，请求建立联机，同时客户端进入**`syn_sent`**半打开状态，等待服务器确认
-2. 服务端收到数据包后由**`标志位SYN`=1**知道客户端请求建立连接，服务端进入**`syn_rcvd`**半打开状态。服务端将**`标志位SYN和ACK`都置为1**，ack=J+1，并将该数据包发送给客户端A以确认连接请求
-3. 客户端接收到确认后，检查ack是否为J+1，ACK是否为1，如果正确，客户端进入establish状态。接着，客户端将**`标志位ACK置为1`**，随机产生ack=K+1，并将该数据包发送给服务端。
+1. 客户端把一个**`标志位SYN`置为1，序号seq为随机值J**的数据包发送到服务器，请求建立连接，同时客户端进入**`syn_sent`**半打开状态，等待服务器确认
+2. 服务端收到数据包后由**`标志位SYN`=1**知道客户端请求建立连接，服务端进入**`syn_rcvd`**半打开状态。服务端将一个**`标志位SYN和ACK`都置为1，ack=J+1，序列号seq为随机值K**的SYN+ACK包发送给客户端，以确认连接请求
+3. 客户端接收到服务器的SYN+ACK包，检查ack是否为J+1，ACK是否为1，如果正确，客户端进入**`establish`**状态。接着，客户端将一个**`标志位ACK置为1`，ack=K+1**的数据包发送给服务端。
 4. 服务端接收到确认后，检查ack是否为K+1，ACK是否为1，如果正确，服务端变为establish状态。连接建立成功。
 
 ![img](http://www.2cto.com/uploadfile/2013/1022/20131022025346218.png)
 
 ![img](<https://github.com/glbb666/myNote/blob/master/review/网络安全/image/tcp1.png>)
 
->SYN:synchronous   建立联机
+>SYN:synchronous   建立连接
 >ACK:acknowledgement  确认
 >SYN_SENT:请求连接
->SYN_RECV:服务端被动打开后,接收到了客户端的SYN并且发送了ACK时的状态。再进一步接收到客户端的ACK就进入ESTABLISHED状态。
+>SYN_RECV:服务端被动打开后，接收到了客户端的SYN并且发送了ACK时的状态。再进一步接收到客户端的ACK就进入ESTABLISHED状态。
 
 **syn_sent**是主动打开方的「半打开」状态，**syn_rcvd**是被动打开方的「半打开」状态。**客户端是主动打开方，服务器是被动打开方**。
 
 💥注意：**tcp在握手过程中并不携带数据，(就像你打电话给酒店订房时，在确认对方是酒店客服人员之前，你也不会马上把身份证号码报给他吧？)，而是在三次握手完成之后，才会进行数据传送**。
+## 八、关闭TCP连接（四次挥手）
+
+1. 客户端把一个**`标志位FIN`置为1，序号seq为随机值M**的数据包发送到服务器，用来关闭客户端到服务器的数据传送，客户端进入fin_wait_1状态 
+3. 服务器收到客户端的fin包，把一个**`标志位ACK置为1`，ack=M+1**的数据包发送给客户端，服务端进入close_wait状态
+3. 客户端接收到服务器的ack包，检查ack是否为M+1，ACK是否为1，如果正确，客户端进入fin_wait_2状态
+4. 服务器把一个**`标志位FIN`置为1，序号seq为随机值N**的数据包发送到客户端，用来关闭服务器到客户端的数据传送，服务器进入到last_ack状态
+5. 客户端收到服务器的fin，把一个**`标志位ACK置为1`，ack=K+1**的数据包发送给客户端，客户端进入time_wait状态，在2MSL之后进入closed状态
+6. 服务器收到客户端的包，进入closed状态
+
+![img](http://www.2cto.com/uploadfile/2013/1022/20131022025350523.png)
