@@ -1,0 +1,13 @@
+自我介绍
+项目，项目中的难点
+websocket和http的差别
+localStorage session cookie
+输入url之后
+vue
+数据双向绑定
+组件的生命周期
+js
+原型，原型链
+算法
+字符串中，字符出现的次数
+冒泡，快排

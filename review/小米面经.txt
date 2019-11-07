@@ -1,0 +1,19 @@
+小米前端面经
+自我介绍
+项目，项目中的难点
+websocket和http的差别
+localStorage session cookie的区别
+输入url之后发生了什么
+
+vue
+
+据双向绑定
+组件的生命周期
+mvvm
+
+js
+原型，原型链
+
+算法
+字符串中，字符出现的个数
+冒泡，快排

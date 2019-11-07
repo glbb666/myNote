@@ -95,16 +95,16 @@ var path = require('path')
     module.exports = baseConfig
 ```
 
-
+![webpack.png](https://github.com/glbb666/myNote/blob/master/review/webpack/images/webpack.png?raw=true)
 
 如今这么少的配置，就能够让你运行一个服务器并在本地使用命令`npm start`或者`npm run build`来打包我们的代码进行发布
 
 # Loader
 
-**loader的作用**：
-1、实现对不同格式的文件的处理，比如说将scss转换为css，或者typescript转化为js
-2、转换这些文件，从而使其能够被添加到依赖图中
-loader是webpack最重要的部分之一，通过使用不同的Loader，我们能够调用外部的脚本或者工具，实现对不同格式文件的处理，loader需要在webpack.config.js里边单独用module进行配置，配置如下：
+### loader的作用
+实现对不同格式的文件的处理，比如说将`scss`转换为`css`，或者`typescript`转化为`js`，从而使其能够被添加到依赖图中
+
+`loader`是`webpack`最重要的部分之一，通过使用不同的`Loader`，我们能够调用外部的脚本或者工具，实现对不同格式文件的处理，`loader`需要在`webpack.config.js`边单独用`module`进行配置，配置如下：
 
 ```javascript
 test: 匹配所处理文件的扩展名的正则表达式（必须）
@@ -162,15 +162,20 @@ var baseConfig = {
 ```
 
 ### 常用的loader
-`babel-loader`： 让下一代的`js`文件转换成现代浏览器能够支持的`js`文件。
+
+- `style-loader`：在 `DOM` 里插入一个 `<style>` 标签，并且将 `CSS` 写入这个标签内。
+
+- `css-loader`解析`CSS`文件后，使用 `import `加载，并且返回 CSS 代码
+
+- `babel-loader`： 让下一代的`js`文件转换成现代浏览器能够支持的`js`文件。
+
 `babel`有些复杂，所以大多数都会新建一个`.babelrc`进行配置
-`css-loader`,`style-loader`:两个建议配合使用，用来解析`css`文件，能够解释`@import`，`url()`
 
 ```javascript
 {test:/\.css$/,use:['style-loader','css-loader']}
 ```
 
-解析`less`和`sass`
+`less-loader`和`sass-loader`可以加载和转译`less`和`sass`文件
 
 ```javascript
 {test:/\.less$/,use:['style-loader','css-loader','less-loader']},
