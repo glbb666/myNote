@@ -1,10 +1,10 @@
-# HTML5 WebSocket
+# `HTML5 WebSocket`
 
-## 为什么需要WebSocket
-因为 HTTP 协议有一个缺陷：通信只能由客户端发起。这种单向请求的特点，注定了如果服务器有连续的状态变化，客户端要获知就非常麻烦。我们只能使用"轮询"来了解服务器有没有新的信息。最典型的场景就是聊天室。
-**轮询的效率低，非常浪费资源**（因为短轮询必须不停连接，长轮询HTTP 连接必须始终打开）。因此，工程师们一直在思考，有没有更好的方法。WebSocket 就是这样发明的。
+## 什么是`WebSocket`
 
-## WebSocket的优势
+`WebSocket`是`HTML5`中的协议，支持**持久连接**，`http`协议**不支持持久性连接**。`Http1.0`和`Http1.1`都不支持持久性的连接，`http1.1`中的`keep-alive`是将多个`http`请求合并成一个。无法获知服务器有连续的状态变化。**轮询的效率低，非常浪费资源**（因为短轮询必须不停连接，长轮询HTTP 连接必须始终打开）。`WebSocket` 就是这样发明的。
+
+## `WebSocket`的优势
 服务器可以主动向客户端推送信息，客户端也可以主动向服务器发送信息
 ![在这里插入图片描述](https://github.com/glbb666/myNote/blob/master/review/html/images/WebSocket_1.png)
 
@@ -24,11 +24,11 @@
 （7）**实时性**提高，连接建立可一直保持连接状态，发消息不需要额外的连接建立过程。
 ![在这里插入图片描述](https://github.com/glbb666/myNote/blob/master/review/html/images/WebSocket_2.png)
 
-## WebSocket不会取代http
+## `WebSocket`不会取代`http`
 
-然而，WebSocket 在实现高效实时通信的过程却也不再享有在一些本由浏览器提供的**服务和优化，如状态管理、压缩、缓存**等。以后浏览器厂商是不是会针对 WebSocket 作出一些服务和优化不得而知，但至少现在 WebSocket 还完全不足以撼动 HTTP 的地位。总的来说，WebSocket 弥补了 HTTP 在某些通信领域的短板，但绝不可能完全取代 HTTP。
+然而，`WebSocket` 在实现高效实时通信的过程却也不再享有在一些本由浏览器提供的**服务和优化，如状态管理、压缩、缓存**等。以后浏览器厂商是不是会针对 `WebSocket `作出一些服务和优化不得而知，但至少现在 `WebSocket` 还完全不足以撼动 `HTTP` 的地位。总的来说，`WebSocket` 弥补了 `HTTP` 在某些通信领域的短板，但绝不可能完全取代 `HTTP`。
 
-## WebSocket有哪些api
+## `WebSocket`有哪些`api`
 
 #### 创建webSocket实例
 
@@ -44,7 +44,7 @@
 - protocols
     可以是一个单个的协议名字**字符串**或者包含多个协议名字字符串的**数组**。这些字符串用来表示**子协议**，这样做可以让一个服务器实现多种 WebSocket 子协议（例如你可能希望通过制定不同的协议来处理不同类型的交互）。如果没有制定这个参数，它会默认设为一个空字符串。
 
-webSocket在创建之后就开始和服务端进行握手了。
+`WebSocket`在创建之后就开始和服务端进行握手了。
 
 ## 四种状态
 
@@ -172,7 +172,7 @@ var server = ws.createServer(function(connect) { //创建一个新连接
 
 ![图片描述](https://segmentfault.com/img/bV6RkK?w=370&h=172)
 
-## WebSocket适用场景
+## `WebSocket`适用场景
 
 WebSocket 适用于需**要高效实时通信**的场景，比如网页聊天，对战游戏等
 
