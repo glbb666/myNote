@@ -2,9 +2,11 @@
 
 [Vue.js 和 MVVM](<https://blog.csdn.net/u014346301/article/details/53812770>)
 
+[不好意思！耽误你的十分钟，让MVVM原理还给你(这篇比较由浅入深)](<https://juejin.im/post/5abdd6f6f265da23793c4458>)
+
 ### 什么是`MVVM`
 
-关注`Model`（数据）的变化，让`MVVM`框架去自动更新DOM的状态
+关注`Model`（数据）的变化，让`MVVM`框架去自动更新`DOM`的状态，比较主流的实现有：`angular`的（脏值检测）`vue`的（数据劫持->发布订阅模式）
 
 ### `vue`数据双向绑定原理
 
@@ -33,7 +35,7 @@ var vm = new Vue({
 
 ![img](https://images2015.cnblogs.com/blog/938664/201705/938664-20170522225032257-1498304708.png)
 
-我们可以看到属性a有两个相对应的get和set方法，为什么会多出这两个方法呢？因为`vue`是通过`Object.defineProperty()`来实现数据劫持的。
+我们可以看到属性a有两个相对应的`get`和`set`方法，为什么会多出这两个方法呢？因为`vue`是通过`Object.defineProperty()`来实现数据劫持的。
 
 `Object.defineProperty( )`是用来做什么的？它可以来控制一个对象属性的一些特有操作，比如读写权、是否可以枚举，这里我们主要先来研究下它对应的两个描述属性`get`和`set`
 
