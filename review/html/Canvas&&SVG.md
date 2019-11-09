@@ -112,6 +112,41 @@ myCanvas.height = 200;
 </html>
 ```
 
+### canvas进行图片压缩
+
+##### drawImage(image, x, y, width, height)
+
+其中 `image` 是 `image` 或者 `canvas` 对象，`x` 和 `y` 是其在目标 canvas 里的起始坐标，`width` 和 `height`，这用来控制缩放的图片大小
+
+```javascript
+var canvas = document.createElement('canvas');
+var context = canvas.getContext('2d');
+
+//获取图片的原始宽高
+var originW = oImg.width;
+var originH = oImg.height;
+
+//设置图片压缩后的最大宽高
+var maxW = 120, maxH = 120;
+var targW = originW, targH = originH;
+if(originW > maxW || originH > maxH) {
+    if(originH/originW > maxH/maxW) {
+        targH = maxH;
+        targW = Math.round(maxH * (originW / originH));
+    }else {
+        targW = maxW;
+        targH = Math.round(maxW * (originH / originW));
+    }
+}
+//对图片进行缩放canvas.toblob
+canvas.width = targW;
+canvas.height = targH;
+//清除画布，在画之前清是因为会存在多次绘制的情况
+context.clearRect(0,0,targW,targH);
+//图片压缩
+context.drawImage(oImg,0,0,targW,targH);
+```
+
 ### 更多方法
 
 [🐷 canvas 教程 MDN](https://developer.mozilla.org/zh-CN/docs/Web/API/Canvas_API/Tutorial)

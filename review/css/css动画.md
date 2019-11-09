@@ -1,6 +1,6 @@
 
 
-### 分类
+# 分类
 
 | 属性                | 含义                                                         |
 | ------------------- | ------------------------------------------------------------ |
@@ -8,12 +8,11 @@
 | transform（变形）   | 用于元素进行**旋转、缩放、移动或倾斜**                       |
 | animation （动画）  | 用于设置动画属性，他是一个简写的属性，包含6个属性            |
 | translate（移动）   | transform的属性                                              |
-### transition
-过渡
+## transition
+过渡，顾名思义，一个元素的某个属性的值发生改变，这是一个状态的转变，需要一种条件来触发这种转变，比如我们平时用到的:hover、:focus、:checked、媒体查询或者JavaScript。
 
-顾名思义，一个元素的某个属性的值发生改变，这是一个状态的转变，需要一种条件来触发这种转变，比如我们平时用到的:hover、:focus、:checked、媒体查询或者JavaScript。
+语法：`transition: property duration timing-function delay`
 
-#### 语法：transition: property duration timing-function delay;
 | 值                         | 描述                              |
 | -------------------------- | --------------------------------- |
 | transition-property        | 规定设置过渡效果的 CSS 属性的名称 |
@@ -38,11 +37,9 @@ demo
         }
     </style>
 </head>
-
 <body>
     <div id="box"></div>
 </body>
-
 </html>
 ```
 transition设置过渡属性是transform，当鼠标移入元素时，元素的transform发生变化，就触发了transition，产生了动画，当鼠标移出时，transform又发生变化，这时还会触发transition，产生动画，所以transition产生动画的条件是**transition设置的property发生变化**，这种动画的特点是需要“一个驱动力去触发”，有着以下几个不足：
@@ -83,7 +80,7 @@ transition设置过渡属性是transform，当鼠标移入元素时，元素的t
 ```
 > display 这个属性并不能添加 transition 效果,可以考虑使用 visibility 或者后边会提及的 animation
 
-#### transition 相关的事件
+### transition 相关的事件
 transitionend 事件会在 transition 动画结束的时候触发. [transitionend](https://developer.mozilla.org/en-US/docs/Web/API/TransitionEvent/TransitionEvent)
 ## animation
 
@@ -122,7 +119,7 @@ transitionend 事件会在 transition 动画结束的时候触发. [transitionen
 | direction       | 设置动画播放方向：normal(按时间轴顺序),reverse(时间轴反方向运行),alternate(轮流，即来回往复进行),alternate-reverse(动画先反运行再正方向运行，并持续交替运行) |
 | play-state      | 控制元素动画的播放状态，通过此来控制动画的暂停和继续，两个值：running(继续)，paused(暂停) |
 | fill-mode       | 控制动画结束后，元素的样式，有四个值：none(回到动画没开始时的状态)，forwards(动画结束后动画停留在结束状态)，backwords(动画回到第一帧的状态)，both(根据animation-direction轮流应用forwards和backwards规则)，注意与iteration-count不要冲突(动画执行无限次) |
-#### 补充
+### 补充
 **优先级**
 
 优先级高的属性会覆盖优先级低的属性，当 animation 应用到元素中时，动画运行过程中，@keyframes 声明的 CSS 属性优先级最高，比行内声明 !important 的样式还要高。
@@ -143,11 +140,11 @@ transitionend 事件会在 transition 动画结束的时候触发. [transitionen
 **display 的影响**
 如果一个元素的 display 设置为 none，那么在它或者它的子元素上的动画效果便会停止，而重新设置 display 为可见后，动画效果会重新重头开始执行。
 
-#### animation 相关事件
+### animation 相关事件
 我们可以通过绑定事件来监听 animation 的几个状态，这些事件分别是：
 
 - animationstart 动画开始事件，如果有 delay 属性的话，那么等到动画真正开始再触发，如果是没有 delay，那么当动画效果应用到元素时，这个事件会被触发。
 - animationend 动画结束的事件，和 transitionend 类似。如果有多个动画，那么这个事件会触发多次，像上边的例子，这个事件会触发三次。如果 animation-iteration-count 设置为 infinite，那么这个事件则不会被触发。
 - animationiteration 动画循环一个生命周期结束的事件，和上一个事件不一样的是，这个在每次循环结束一段动画时会触发，而不是整个动画结束时触发。无限循环时，除非 duration 为 0，否则这个事件会无限触发。
 
-### requestAnimationFrame
+## requestAnimationFrame

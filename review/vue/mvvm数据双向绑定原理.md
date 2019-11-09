@@ -1,30 +1,24 @@
-## [vue的双向绑定原理及实现](https://www.cnblogs.com/canfoo/p/6891868.html)
+[vue的双向绑定原理及实现](https://www.cnblogs.com/canfoo/p/6891868.html)
 
-# **前言**
+[Vue.js 和 MVVM](<https://blog.csdn.net/u014346301/article/details/53812770>)
 
-使用vue也好有一段时间了，虽然对其双向绑定原理也有了解个大概，但也没好好探究下其原理实现，所以这次特意花了几晚时间查阅资料和阅读相关源码，自己也实现一个简单版vue的双向绑定版本，先上个成果图来吸引各位：
+### 什么是`MVVM`
 
-代码：                                                                    效果图：
+关注`Model`（数据）的变化，让`MVVM`框架去自动更新DOM的状态
 
-![img](https://images2015.cnblogs.com/blog/938664/201705/938664-20170522223732179-2029881767.png) ![img](https://images2015.cnblogs.com/blog/938664/201705/938664-20170522224049413-1823976084.gif)
+### `vue`数据双向绑定原理
 
-是不是看起来跟vue的使用方式差不多？接下来就来从原理到实现，从简到难一步一步来实现这个SelfVue。由于本文只是为了学习和分享，所以只是简单实现下原理，并没有考虑太多情况和设计，如果大家有什么建议，欢迎提出来。
+`vue`数据双向绑定是通过`数据劫持`结合`发布者-订阅者模式`来实现的
 
-本文主要介绍两大内容：
+#### 发布者订阅者模式
 
-\1. vue数据双向绑定的原理。
+发布订阅是一种消息范式，消息的发送者（称为发布者）不会将消息直接发送给特定的接收者（称为订阅者）。而是将发布的消息分为不同的类别，无需了解哪些订阅者（如果有的话）可能存在。同样的，订阅者可以表达对一个或多个类别的兴趣，只接收感兴趣的消息，无需了解哪些发布者（如果有的话）存在。
 
-\2. 实现简单版vue的过程，主要实现{{}}、v-model和事件指令的功能。
+#### 数据劫持
 
-相关代码地址：<https://github.com/canfoo/self-vue>
+我们可以先来看一下通过控制台输出一个定义在`vue`初始化数据上的对象是个什么东西。
 
-# **vue数据双向绑定原理**
-
-`vue`数据双向绑定是通过`数据劫持`结合`发布者-订阅者模式`的方式来实现的，我们可以先来看一下通过控制台输出一个定义在`vue`初始化数据上的对象是个什么东西。
-
-代码：
-
-```
+```javascript
 var vm = new Vue({
     data: {
         obj: {
@@ -37,28 +31,25 @@ var vm = new Vue({
 });
 ```
 
-结果：
-
 ![img](https://images2015.cnblogs.com/blog/938664/201705/938664-20170522225032257-1498304708.png)
 
-我们可以看到属性a有两个相对应的get和set方法，为什么会多出这两个方法呢？因为vue是通过Object.defineProperty()来实现数据劫持的。
+我们可以看到属性a有两个相对应的get和set方法，为什么会多出这两个方法呢？因为`vue`是通过`Object.defineProperty()`来实现数据劫持的。
 
-Object.defineProperty( )是用来做什么的？它可以来控制一个对象属性的一些特有操作，比如读写权、是否可以枚举，这里我们主要先来研究下它对应的两个描述属性get和set，如果还不熟悉其用法，[请点击这里阅读更多用法](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Object/defineProperty)。
+`Object.defineProperty( )`是用来做什么的？它可以来控制一个对象属性的一些特有操作，比如读写权、是否可以枚举，这里我们主要先来研究下它对应的两个描述属性`get`和`set`
 
 在平常，我们很容易就可以打印出一个对象的属性数据：
 
-```
+```javascript
 var Book = {
   name: 'vue权威指南'
 };
 console.log(Book.name);  // vue权威指南
 ```
 
-如果想要在执行console.log(book.name)的同时，直接给书名加个书名号，那要怎么处理呢？或者说要通过什么监听对象 Book 的属性值。这时候Object.defineProperty( )就派上用场了，代码如下：
+如果想要在执行`console.log(book.name)`的同时，直接给书名加个书名号，那要怎么处理呢？或者说要通过什么监听对象 `Book` 的属性值。这时候`Object.defineProperty( )`就派上用场了，代码如下：
 
-[![复制代码](https://common.cnblogs.com/images/copycode.gif)](javascript:void(0);)
 
-```
+```javascript
 var Book = {}
 var name = '';
 Object.defineProperty(Book, 'name', {
@@ -75,11 +66,10 @@ Book.name = 'vue权威指南';  // 你取了一个书名叫做vue权威指南
 console.log(Book.name);  // 《vue权威指南》
 ```
 
-[![复制代码](https://common.cnblogs.com/images/copycode.gif)](javascript:void(0);)
 
-我们通过Object.defineProperty( )设置了对象Book的name属性，对其get和set进行重写操作，顾名思义，get就是在读取name属性这个值触发的函数，set就是在设置name属性这个值触发的函数，所以当执行 Book.name = 'vue权威指南' 这个语句时，控制台会打印出 "你取了一个书名叫做vue权威指南"，紧接着，当读取这个属性时，就会输出 "《vue权威指南》"，因为我们在get函数里面对该值做了加工了。如果这个时候我们执行下下面的语句，控制台会输出什么？
+我们通过`Object.defineProperty( )`设置了对象`Book`的`name`属性，对其`get`和`set`进行重写操作，顾名思义，get就是在读取name属性这个值触发的函数，set就是在设置name属性这个值触发的函数，所以当执行 `Book.name = 'vue权威指南'` 这个语句时，控制台会打印出 "你取了一个书名叫做`vue`权威指南"，紧接着，当读取这个属性时，就会输出 "《`vue`权威指南》"，因为我们在get函数里面对该值做了加工了。如果这个时候我们执行下下面的语句，控制台会输出什么？
 
-```
+```javascript
 console.log(Book);
 ```
 
@@ -87,9 +77,9 @@ console.log(Book);
 
 ![img](https://images2015.cnblogs.com/blog/938664/201705/938664-20170522225238960-1133794938.png)
 
-乍一看，是不是跟我们在上面打印vue数据长得有点类似，说明vue确实是通过这种方法来进行数据劫持的。接下来我们通过其原理来实现一个简单版的mvvm双向绑定代码。
+乍一看，是不是跟我们在上面打印`vue`数据长得有点类似，说明`vue`确实是通过这种方法来进行数据劫持的。接下来我们通过其原理来实现一个简单版的`mvvm`双向绑定代码。
 
-# **思路分析**
+### **思路分析**
 
 实现mvvm主要包含两个方面，数据变化更新视图，视图变化更新数据：
 
@@ -103,7 +93,7 @@ console.log(Book);
 
 思路有了，接下去就是实现过程了。
 
-# **实现过程**
+### **实现过程**
 
 我们已经知道实现数据的双向绑定，首先要对数据进行劫持监听，所以我们需要设置一个`监听器Observer`，用来监听所有属性。如果属性发上变化了，就需要告诉`订阅者Watcher`看是否需要更新。因为订阅者是有很多个，所以我们需要有一个`消息订阅器Dep`来专门收集这些订阅者，然后在`监听器Observer`和`订阅者Watcher`之间进行统一管理的。接着，我们还需要有一个`指令解析器Compile`，对每个节点元素进行扫描和解析，将相关指令对应初始化成一个`订阅者Watcher`，并替换模板数据或者绑定相应的函数，此时当`订阅者Watcher`接收到相应属性的变化，就会执行对应的更新函数，从而更新视图。因此接下去我们执行以下3个步骤，实现数据的双向绑定：
 
@@ -117,7 +107,7 @@ console.log(Book);
 
 ![img](https://images2015.cnblogs.com/blog/938664/201705/938664-20170522225458132-1434604303.png)
 
-## **1.实现一个Observer**
+#### **1.实现一个Observer**
 
 Observer是一个数据监听器，其实现核心方法就是前文所说的Object.defineProperty( )。如果要对所有属性都进行监听的话，那么可以通过递归方法遍历所有属性值，并对其进行Object.defineProperty( )处理。如下代码，实现了一个Observer。
 
@@ -208,7 +198,7 @@ Dep.prototype = {
 
 从代码上看，我们将订阅器Dep添加一个订阅者设计在getter里面，这是为了让Watcher初始化进行触发，因此需要判断是否要添加订阅者，至于具体设计方案，下文会详细说明的。在setter函数里面，如果数据变化，就会去通知所有订阅者，订阅者们就会去执行对应的更新的函数。到此为止，一个比较完整Observer已经实现了，接下来我们开始设计Watcher。
 
-## **2.实现Watcher**
+#### **2.实现Watcher**
 
 订阅者Watcher在初始化的时候需要将自己添加进订阅器Dep中，那该如何添加呢？我们已经知道监听器Observer是在get函数执行了添加订阅者Wather的操作的，所以我们只要在订阅者Watcher初始化的时候触发对应的get函数去执行添加订阅者操作即可，那要如何触发get的函数，再简单不过了，只要获取对应的属性值就可以触发了，核心原因就是因为我们使用了Object.defineProperty( )进行数据监听。这里还有一个细节点需要处理，我们只要在订阅者Watcher初始化的时候才需要添加订阅者，所以需要做一个判断操作，因此可以在订阅器上做一下手脚：在Dep.target上缓存下订阅者，添加成功后再将其去掉就可以了。订阅者Watcher的实现如下：
 
@@ -372,7 +362,7 @@ SelfVue.prototype = {
 
 这下我们就可以直接通过'  selfVue.name = 'canfoo'  '的形式来进行改变模板数据了。如果想要迫切看到现象的童鞋赶快来[获取代码！](https://github.com/canfoo/self-vue/tree/master/v1)
 
-## **3.实现Compile**
+#### **3.实现Compile**
 
 虽然上面已经实现了一个双向数据绑定的例子，但是整个过程都没有去解析dom节点，而是直接固定某个节点进行替换数据的，所以接下来需要实现一个解析器Compile来做解析和绑定工作。解析器Compile实现步骤：
 
