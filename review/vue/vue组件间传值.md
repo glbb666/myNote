@@ -178,6 +178,8 @@ var vm = new Vue({
 
 ## 方法三、`vuex`
 
+![image](https://user-gold-cdn.xitu.io/2019/5/17/16ac35bf70ef8eb1?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
+
 ### 1.简要介绍`Vuex`原理
 
 `Vuex`实现了一个单向数据流，在全局拥有一个`State`存放数据，当组件必须通过`Mutation`更改`State`中的数据，`Mutation`同时提供了订阅者模式供外部插件调用获取`State`数据的更新。而当所有异步操作(常见于调用后端接口异步获取更新数据)或批量的同步操作需要走`Action`，但`Action`也是无法直接修改`State`的，还是需要通过`Mutation`来修改`State`的数据。最后，根据`State`的变化，渲染到视图上。
