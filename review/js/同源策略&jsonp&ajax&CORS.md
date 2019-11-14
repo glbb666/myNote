@@ -107,7 +107,7 @@ Ajax 的限制比 iframe 限制更严.
 
 #### 2. 通过CORS跨域
 
-> CORS（Cross-Origin Resource Sharing）跨域资源共享，定义了必须在访问跨域资源时，浏览器与服务器应该如何沟通。CORS背后的**基本思想就是使用自定义的HTTP头部让浏览器与服务器进行沟通**，从而决定请求或响应是应该成功还是失败。目前，所有浏览器都支持该功能，IE浏览器不能低于IE10。整个CORS通信过程，都是浏览器自动完成，不需要用户参与。对于开发者来说，CORS通信与同源的AJAX通信没有差别，代码完全一样。浏览器一旦发现AJAX请求跨源，就会自动添加一些附加的头信息，有时还会多出一次附加的请求，但用户不会有感觉。
+> `CORS`（Cross-Origin Resource Sharing）跨域资源共享，定义了必须在访问跨域资源时，浏览器与服务器应该如何沟通。`CORS`背后的**基本思想就是使用自定义的HTTP头部让浏览器与服务器进行沟通**，从而决定请求或响应是应该成功还是失败。目前，所有浏览器都支持该功能，IE浏览器不能低于`IE10`。整个`CORS`通信过程，都是浏览器自动完成，不需要用户参与。对于开发者来说，`CORS`通信与同源的`AJAX`通信没有差别，代码完全一样。浏览器一旦发现AJAX请求跨源，就会自动添加一些附加的头信息，有时还会多出一次附加的请求，但用户不会有感觉。
 
 **因此，实现CORS通信的关键是服务器。只要服务器实现了CORS接口，就可以跨源通信。**
 
@@ -121,7 +121,7 @@ Ajax 的限制比 iframe 限制更严.
 </script>
 ```
 
-以上damonare部分是相对路径，如果我们要使用CORS，相关Ajax代码可能如下所示：
+以上`damonare`部分是相对路径，如果我们要使用`CORS`，相关`Ajax`代码可能如下所示：
 
 ```javascript
 <script type="text/javascript">
@@ -133,14 +133,14 @@ Ajax 的限制比 iframe 限制更严.
 
 代码与之前的区别就在于**相对路径换成了其他域的绝对路径**，也就是你要跨域访问的接口地址。
 
-服务器端对于CORS的支持，主要就是通过设置Access-Control-Allow-Origin来进行的。如果浏览器检测到相应的设置，就可以允许Ajax进行跨域的访问。关于CORS更多了解可以看下阮一峰老师的这一篇文章：[跨域资源共享 CORS 详解](http://www.ruanyifeng.com/blog/2016/04/cors.html)
+服务器端对于CORS的支持，主要就是通过设置`Access-Control-Allow-Origin`来进行的。如果浏览器检测到相应的设置，就可以允许Ajax进行跨域的访问。关于`CORS`更多了解可以看下阮一峰老师的这一篇文章：[跨域资源共享 CORS 详解](http://www.ruanyifeng.com/blog/2016/04/cors.html)
 
-- CORS和JSONP对比
-  - JSONP只能实现GET请求，而CORS支持所有类型的HTTP请求。
-  - 使用CORS，开发者可以使用普通的XMLHttpRequest发起请求和获得数据，比起JSONP有更好的错误处理。
-  - JSONP主要被老的浏览器支持，它们往往不支持CORS，而绝大多数现代浏览器都已经支持了CORS）。
+- `CORS`和`JSONP`对比
+  - `JSONP`只能实现`GET`请求，而`CORS`支持所有类型的`HTTP`请求。
+    - 使用`CORS`，开发者可以使用普通的`XMLHttpRequest`发起请求和获得数据，比起`JSONP`有更好的错误处理。
+  - `JSONP`主要被老的浏览器支持，它们往往不支持`CORS`，而绝大多数现代浏览器都已经支持了`CORS`）。
 
-CORS与JSONP相比，无疑更为先进、方便和可靠。
+`CORS`与`JSONP`相比，无疑更为先进、方便和可靠。
 
 #### 3. 通过window.name跨域
 
