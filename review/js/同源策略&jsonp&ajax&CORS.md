@@ -34,12 +34,12 @@ http://www.a.com/b.js 不同域名 不允许
 
 ##### `iframe`限制
 
-- 访问同域资源, 可读写
+- 同域资源可读写
 - 访问跨域页面时, 只读，不同的框架之间是可以获取window对象的，但却无法获取相应的属性和方法。
 
 ##### `Ajax`限制
 
-Ajax 的限制比 iframe 限制更严.
+Ajax 的限制比 `iframe` 限制更严.
 
 - 同域资源可读写;
 - 跨域请求会直接**被浏览器拦截**(chrome下跨域请求不会发起, 其他浏览器一般是可发送跨域请求, 但响应被浏览器拦截)
@@ -61,7 +61,13 @@ Ajax 的限制比 iframe 限制更严.
 
 1. 如果是**协议**和**端口**造成的跨域问题“前台”是无能为力的；
 2. 域不会判断相同的`ip`地址对应着两个域或两个域是否在同一个`ip`上。
+
+### JS原生AJAX
+
+`AJAX`是一种无需刷新页面就可以从服务器获取到数据的技术
+
 ### 单向跨域
+
 #### 1.通过`jsonp`跨域
 ##### 原理
 `ajax`受同源策略的影响，不允许进行跨域请求，而`script`标签的`src`中的链接却可以访问跨域的静态资源，利用这个特性，服务端不再返回`JSON`格式的数据，而是返回一段调用某个函数的`js`代码，这样实现了跨域。
@@ -76,9 +82,10 @@ Ajax 的限制比 iframe 限制更严.
 ##### 实现一个`JSONP`
 
 - 把传入对象转换为`url`
-- 处理`url`中的回调函数
+- 给回调函数名设置随机标识，并且拼接到`url`中
 - 动态创建`script`标签并插入到页面
 - 挂载回调函数
+- 超时处理
 
 ```javascript
 <script type="text/javascript">
@@ -100,6 +107,7 @@ function jsonp(obj,time,url){
         window[callBackName] = null;//把回调函数解除引用
         document.head.removeChild(scriptEle);
     }
+    //超时处理
     var timer = window.setTimeout(function(){
         document.head.removeChild(scriptEle);//移除script标签
 		window[callBackName] = null;//把回调函数解除引用
@@ -111,39 +119,46 @@ jsonp({name:'dd'},5000,url)
 
 
 
-#### 2. 通过CORS跨域
+#### 2. 通过`CORS`跨域
 
-> `CORS`（Cross-Origin Resource Sharing）跨域资源共享，定义了必须在访问跨域资源时，浏览器与服务器应该如何沟通。`CORS`背后的**基本思想就是使用自定义的HTTP头部让浏览器与服务器进行沟通**，从而决定请求或响应是应该成功还是失败。目前，所有浏览器都支持该功能，IE浏览器不能低于`IE10`。整个`CORS`通信过程，都是浏览器自动完成，不需要用户参与。对于开发者来说，`CORS`通信与同源的`AJAX`通信没有差别，代码完全一样。浏览器一旦发现AJAX请求跨源，就会自动添加一些附加的头信息，有时还会多出一次附加的请求，但用户不会有感觉。
+> `CORS`（Cross-Origin Resource Sharing）跨域资源共享。`CORS`背后的**基本思想就是使用自定义的HTTP头部让浏览器与服务器进行沟通**，从而决定请求或响应是应该成功还是失败。浏览器一旦发现AJAX请求跨源，就会自动添加一些附加的头信息，有时还会多出一次附加的请求，但用户不会有感觉。
 
-**因此，实现CORS通信的关键是服务器。只要服务器实现了CORS接口，就可以跨源通信。**
+**服务端设置`Access-Control-allow-orginal`即可，前端无需设置，若要携带cookie请求，前后端都要设置**
 
-平时的ajax请求可能是这样的:
-
-```javascript
-<script type="text/javascript">
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", "/damonare",true);
-    xhr.send();
-</script>
+```js
+server.all('*',function(req,res,next){
+    
+    //其中`*` 表示通配, 所有的域都能访问此资源
+    res.header("Access-Control-Allow-Origin",'*');
+    //只允许B站访问
+    res.header("Access-Control-Allow-Origin",<B-DOMAIN>)
+               
+    //CORS需要指定METHOD访问, 对于GET和POST请求, 至少要指定以下三种methods, 如下:
+    res.header("Access-Control-Allow-Methods","PUT,POST,GET,DELETE,OPTIONS");
+    
+    //如果是POST请求, 且提交的数据类型是json, 那么, CORS需要指定headers.
+	res.header("Content-Type", "application/json;charset=utf-8");
+    
+    //CORS默认是不带cookie的, 设置以下字段将允许浏览器发送cookie.
+    res.header('Access-Control-Allow-Credentials', true);
+    
+    next()
+})
 ```
 
-以上`damonare`部分是相对路径，如果我们要使用`CORS`，相关`Ajax`代码可能如下所示：
+🌟注意：除此之外, 为了跨站发送cookie等验证信息， `Access-Control-Allow-Origin` 字段将不允许设置为`*`, 它需要明确指定与请求网页一致的域名
+
+同时,前端需要做如下显式设置才能真正发送`cookie`
 
 ```javascript
-<script type="text/javascript">
-    var xhr = new XMLHttpRequest();
-    xhr.open("￼GET", "http://segmentfault.com/u/trigkit4/",true);
-    xhr.send();
-</script>
+xhr.withCredentials = true;
 ```
 
-代码与之前的区别就在于**相对路径换成了其他域的绝对路径**，也就是你要跨域访问的接口地址。
-
-服务器端对于CORS的支持，主要就是通过设置`Access-Control-Allow-Origin`来进行的。如果浏览器检测到相应的设置，就可以允许Ajax进行跨域的访问。关于`CORS`更多了解可以看下阮一峰老师的这一篇文章：[跨域资源共享 CORS 详解](http://www.ruanyifeng.com/blog/2016/04/cors.html)
-
-- `CORS`和`JSONP`对比
-  - `JSONP`只能实现`GET`请求，而`CORS`支持所有类型的`HTTP`请求。
-    - 使用`CORS`，开发者可以使用普通的`XMLHttpRequest`发起请求和获得数据，比起`JSONP`有更好的错误处理。
+##### `CORS`和`JSONP`对比
+  - 请求类型：`JSONP`只能实现`GET`请求，而`CORS`支持所有类型的`HTTP`请求。
+    
+  - 使用`CORS`，开发者可以使用普通的`XMLHttpRequest`发起请求和获得数据，比起`JSONP`有更好的错误处理。
+    
   - `JSONP`主要被老的浏览器支持，它们往往不支持`CORS`，而绝大多数现代浏览器都已经支持了`CORS`）。
 
 `CORS`与`JSONP`相比，无疑更为先进、方便和可靠。
@@ -295,7 +310,7 @@ window.onload = function() {
 
 B页面通过`message`事件监听并接受消息:
 
-```
+```javascript
 var onmessage = function (event) {  
   var data = event.data;//消息  
   var origin = event.origin;//消息来源地址  
