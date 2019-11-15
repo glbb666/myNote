@@ -63,43 +63,49 @@ Ajax 的限制比 iframe 限制更严.
 2. 域不会判断相同的`ip`地址对应着两个域或两个域是否在同一个`ip`上。
 ### 单向跨域
 #### 1.通过`jsonp`跨域
+##### 原理
+`ajax`受同源策略的影响，不允许进行跨域请求，而`script`标签的`src`中的链接却可以访问跨域的静态资源，利用这个特性，服务端不再返回`JSON`格式的数据，而是返回一段调用某个函数的`js`代码，这样实现了跨域。
 
-> 刚才说的这几种都是双向通信的，即两个iframe，页面与iframe或是页面与页面之间的，下面说几种单项跨域的（一般用来获取数据），因为通过script标签引入的js是不受同源策略的限制的。所以我们可以通过script标签引入一个js或者是一个其他后缀形式（如php，jsp等）的文件，此文件返回一个js函数的调用。
+##### 过程
 
-比如，有个a.html页面，它里面的代码需要利用ajax获取一个不同域上的json数据，假设这个json数据地址是[damonare.cn/data.php](http://damonare.cn/data.php), 那么a.html中的代码就可以这样：
+- 客户端利用`script`标签可以跨域请求资源的性质，向网页中动态插入`script`标签，来向服务器请求数据
+- 服务器会解析请求的`url`，从里面取出`callback`，然后把数据放入callback中返回给客户端
+##### `JSONP`的优缺点
+  - 优点：它不像Ajax请求那样受到同源策略的限制；它的兼容性更好，在更加古老的浏览器中都可以运行，不需要`XMLHttpRequest`或`ActiveX`的支持；并且在请求完毕后可以通过调用`callback`的方式回传结果。
+  - 缺点：它只支持GET请求，因为`script`标签只能使用`get`；没有超时处理；需要和后端协商
+##### 实现一个`JSONP`
+
+- 把传入对象转换为`url`
+- 处理`url`中的回调函数
+- 动态创建`script`标签并插入到页面
+- 挂载回调函数
 
 ```javascript
 <script type="text/javascript">
-    function dosomething(jsondata){
-        //处理获得的json数据
+var url = 'http://localhost:8080/';
+function jsonp(obj,time,url){
+    //基本类型
+    url+=url.indexOf('?')===-1?'?':'&';
+    for(let item in obj){
+        url+=item+'='+obj[item]+'&';
     }
-</script>
-<script src="http://example.com/data.php?callback=dosomething"></script>
-```
-
-我们看到获取数据的地址后面还有一个callback参数，按惯例是用这个参数名，但是你用其他的也一样。当然如果获取数据的jsonp地址页面不是你自己能控制的，就得按照提供数据的那一方的规定格式来操作了。
-
-因为是当做一个js文件来引入的，所以[damonare.cn/data.php](http://damonare.cn/data.php) 返回的必须是一个能执行的js文件
-
-- JSONP的优缺点
-  - JSONP的优点是：它不像Ajax请求那样受到同源策略的限制；它的兼容性更好，在更加古老的浏览器中都可以运行，不需要XMLHttpRequest或ActiveX的支持；并且在请求完毕后可以通过调用callback的方式回传结果。
-  - JSONP的缺点则是：它只支持GET请求；没有超时处理；需要和后端协商
-
-##### JSONP的超时处理
-
-```
-<script type="text/javascript">
-    function dosomething(jsondata){
-        //处理获得的json数据
+    var callBackName =('_jsonp'+Math.random()).replace('.','')
+    url+='callback='+callBackName;
+    var scriptEle = document.createElement('script');
+    scriptEle.src = url;
+    document.head.appendChild(scriptEle);
+    window[callBackName] = function(data){
+       	//这里是对数据进行处理
+        window.clearTimeout(timer);//清除定时器
+        window[callBackName] = null;//把回调函数解除引用
+        document.head.removeChild(scriptEle);
     }
-    (function(){
-    	var url = "http://example.com/data.php?callback=dosomething"
-    	var scp = document.createElement('script');
-    	document.head.appendChild(scp);
-    	setTimeOut(function(){
-    		document.head.removeChild(scp);	 
-    	},5000)
-    })()  
+    var timer = window.setTimeout(function(){
+        document.head.removeChild(scriptEle);//移除script标签
+		window[callBackName] = null;//把回调函数解除引用
+    },time)
+}
+jsonp({name:'dd'},5000,url)
 </script>
 ```
 
