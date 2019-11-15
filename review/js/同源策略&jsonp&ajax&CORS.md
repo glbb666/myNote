@@ -62,9 +62,35 @@ Ajax 的限制比 `iframe` 限制更严.
 1. 如果是**协议**和**端口**造成的跨域问题“前台”是无能为力的；
 2. 域不会判断相同的`ip`地址对应着两个域或两个域是否在同一个`ip`上。
 
-### JS原生AJAX
+### AJAX
 
-`AJAX`是一种无需刷新页面就可以从服务器获取到数据的技术
+`AJAX`是一种无需刷新页面就可以从服务器获取到数据的技术,它的核心是`XMLHttpRequest`对象
+
+##### 创建步骤
+
+```javascript
+let url = '';
+function ajax(url){
+	var xhr = new XMLHttpRequest();
+	xhr.onreadyStateChange = function(){
+		if(xhr.readyState===4){
+			if(xhr.state>=200&&xhr.state<300||xhr.state===304){
+				console.log(xhr.responseText)
+			}
+		}
+	}
+	xhr.open('post',url,true);
+	xhr.setRequestHeader('Content-type','application/json')
+    //因为是post请求,在提交前要设置表单提交的内容类型
+    xhr.send()
+}
+```
+
+🌟注意:`ajax`请求是不能跨域的
+
+##### ajax和Fecth比有什么区别
+
+`fecth`基于`promise`,方便异步,支持node,比较轻量
 
 ### 单向跨域
 
