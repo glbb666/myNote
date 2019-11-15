@@ -2,6 +2,8 @@
 
 [由同源策略到前端跨域](<https://juejin.im/post/58f816198d6d81005874fd97>)
 
+[Jquery ajax, Axios, Fetch区别](<https://juejin.im/post/5acde23c5188255cb32e7e76>)
+
 ###  同源策略和跨域？
 
 > 同源就是要求协议、域名、端口相同。不满足同源策列就会导致跨域。
@@ -66,7 +68,7 @@ Ajax 的限制比 `iframe` 限制更严.
 
 `AJAX`是一种无需刷新页面就可以从服务器获取到数据的技术,它的核心是`XMLHttpRequest`对象
 
-##### 创建步骤
+#### 创建步骤
 
 ```javascript
 let url = '';
@@ -86,11 +88,52 @@ function ajax(url){
 }
 ```
 
+#### AJAX返回的状态
+
+| 状态码 | 含义                                         |
+| ------ | -------------------------------------------- |
+| 0      | 未初始化。未调用open()                       |
+| 1      | 启动。已调用open()，未调用send()             |
+| 2      | 发送。调用send(),但未收到响应                |
+| 3      | 接收。受到部分响应数据                       |
+| 4      | 完成。接收全部响应数据，且可以在客户端使用。 |
+
+#### 如何发出一个有序的`AJAX`
+
+回调函数,`Promise.then`,`async`
+
+#### `ajax`和`jquery`, `Fecth`,`Axios`比有什么区别
+
+##### `jquery`
+
+是对原生`XMLHttpRequest`对象的封装,还增添了对`jsonp`的支持,但是`jquery`整个项目太大了,单纯使用`ajax`就要引入整个`jquery`非常的不合理
+
+##### `fecth`
+
+优点:`API`基于`promise`方便异步,支持`node`,比较轻量
+
+缺点:因为基于`promise`,除了**网络故障或者请求被阻止**时会将`promise`状态标记为`reject`,其他情况下`fecth`返回的`promise`状态都为`resolve`(但是会将 resolve 的返回值的 `ok` 属性设置为 `false` ),默认情况下,`fecth`不会从服务器接受或发送`cookie`,必须设置`credenitials`选项,所以需要我们再次封装
+
+##### `axios`
+
+也是对原生`XMLHttpRequest`对象的封装,但是是`promise`的实现版本,它有以下功能
+
+- 从` node.js `创建 `http` 请求
+- 支持` Promise API`
+- 客户端支持防止`CSRF`
+- **提供了一些并发请求的接口**（重要，方便了很多的操作）
+
+```javascript
+axios.all([getUserAccount(), getUserPermissions()])
+  .then(axios.spread(function (acct, perms) {
+    // Both requests are now complete
+  }));
+//并发案例
+```
+
+这个支持防止`CSRF`其实挺好玩的，是怎么做到的呢，就是让你的每个请求都带一个从`cookie`中拿到的`key`, 根据浏览器同源策略，假冒的网站是拿不到你`cookie`中得`key`的，这样，后台就可以轻松辨别出这个请求是否是用户在假冒网站上的误导输入，从而采取正确的策略。
+
 🌟注意:`ajax`请求是不能跨域的
-
-##### ajax和Fecth比有什么区别
-
-`fecth`基于`promise`,方便异步,支持node,比较轻量
 
 ### 单向跨域
 
