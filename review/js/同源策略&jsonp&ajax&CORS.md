@@ -148,17 +148,17 @@ Ajax 的限制比 iframe 限制更严.
 
 比如：我们在任意一个页面输入
 
-```
+```javascript
 window.name = "My window's name";
 setTimeout(function(){
     window.location.href = "http://damonare.cn/";
-},1000)复制代码
+},1000)
 ```
 
 进入damonare.cn页面后我们再检测再检测 window.name :
 
-```
-window.name; // My window's name复制代码
+```javascript
+window.name; // My window's name
 ```
 
 可以看到，如果在一个标签里面跳转网页的话，我们的 window.name 是不会改变的。
@@ -176,18 +176,18 @@ window.name; // My window's name复制代码
 在 iframe.html 中设置好了 window.name 为我们要传递的字符串。
 我们在 index.html 中写了下面的代码：
 
-```
+```javascript
 var iframe = document.getElementById('iframe');
 var data = '';
 
 iframe.onload = function() {
     data = iframe.contentWindow.name;
-};复制代码
+};
 ```
 
 Boom!报错！肯定的，因为两个页面不同源嘛，想要解决这个问题可以这样干：
 
-```
+```javascript
 var iframe = document.getElementById('iframe');
 var data = '';
 
@@ -196,7 +196,7 @@ iframe.onload = function() {
         data = iframe.contentWindow.name;
     }
     iframe.src = 'about:blank';
-};复制代码
+};
 ```
 
 **或者将里面的 about:blank 替换成某个同源页面（about:blank，javascript: 和 data: 中的内容，继承了载入他们的页面的源。）**
