@@ -2,49 +2,39 @@
 
 [由同源策略到前端跨域](<https://juejin.im/post/58f816198d6d81005874fd97>)
 
+[九种跨域方式实现原理（完整版）](<https://juejin.im/post/5c23993de51d457b8c1f4ee1#heading-2>)
+
 [Jquery ajax, Axios, Fetch区别](<https://juejin.im/post/5acde23c5188255cb32e7e76>)
 
 ###  同源策略和跨域？
 
 > 同源就是要求协议、域名、端口相同。不满足同源策列就会导致跨域。
+>
 
-```
-URL                      说明       是否允许通信
-http://www.a.com/a.js
-http://www.a.com/b.js     同一域名下   允许
-
-http://www.a.com/lab/a.js
-http://www.a.com/script/b.js 同一域名下不同文件夹 允许
-
-http://www.a.com:8000/a.js
-http://www.a.com/b.js     同一域名，不同端口  不允许
-
-http://www.a.com/a.js
-https://www.a.com/b.js 同一域名，不同协议 不允许
-
-http://www.a.com/a.js
-http://70.32.92.74/b.js 域名和域名对应ip 不允许
-
-http://www.a.com/a.js
-http://script.a.com/b.js 子域不同 不允许（cookie这种情况下也不允许访问）
-
-http://www.cnblogs.com/a.js
-http://www.a.com/b.js 不同域名 不允许
-```
+![img](images/1638b3579dde630e)
 
 #### 同源策略的限制
 
-##### `iframe`限制
+##### 对`iframe`限制
 
 - 同域资源可读写
 - 访问跨域页面时, 只读，不同的框架之间是可以获取window对象的，但却无法获取相应的属性和方法。
 
-##### `Ajax`限制
-
-Ajax 的限制比 `iframe` 限制更严.
+##### 对`Ajax`限制
 
 - 同域资源可读写;
 - 跨域请求会直接**被浏览器拦截**(chrome下跨域请求不会发起, 其他浏览器一般是可发送跨域请求, 但响应被浏览器拦截)
+
+##### 还限制了
+
+- `DOM`结点
+- `cookie`，`localStorage`，`IndexDB`等存储型内容
+
+🌟但是有三种标签允许跨域加载资源
+
+- `<img src=XXX>`
+- `<link href=XXX>`
+- `<script src=XXX>`
 
 #### 理解域名
 
@@ -56,7 +46,7 @@ Ajax 的限制比 `iframe` 限制更严.
 
 **子域**是属于更高一层域的域。比如，`mail.example.com`和`calendar.example.com`是`example.com`的两个子域，而`example.com`则是顶级域`.com`的子域。
 
-**域名带不带www的区别**
+**域名带不带`www`的区别**
 `www`代表的是主机名，`www.baidu.com`为三级域名，`baidu.com`属于二级域名。
 
 🌟注意：
@@ -66,27 +56,55 @@ Ajax 的限制比 `iframe` 限制更严.
 
 ### AJAX
 
+#### `AJAX`是什么
+
 `AJAX`是一种无需刷新页面就可以从服务器获取到数据的技术,它的核心是`XMLHttpRequest`对象
+
+#### `AJAX`的原理
+
+Ajax相当于在用户和服务器之间加了一个中间层(ajax引擎)，让用户的操作与服务器响应异步化。并不是所有的用户请求都提交给服务器，像—些数据验证(比如判断用户是否输入了数据)和数据处理(比如判断用户输入数据是否是数字)等都交给Ajax引擎自己来做, 只有确定需要从服务器读取新数据时再由Ajax引擎代为向服务器提交请求。把这些交给了Ajax引擎，用户操作起来也就感觉更加流畅了。
 
 #### 创建步骤
 
 ```javascript
-let url = '';
-function ajax(url){
-	var xhr = new XMLHttpRequest();
-	xhr.onreadyStateChange = function(){
-		if(xhr.readyState===4){
-			if(xhr.state>=200&&xhr.state<300||xhr.state===304){
-				console.log(xhr.responseText)
-			}
-		}
-	}
-	xhr.open('post',url,true);
-	xhr.setRequestHeader('Content-type','application/json')
-    //因为是post请求,在提交前要设置表单提交的内容类型
-    xhr.send()
-}
+ 	var url = 'http://localhost:8080/';
+    function ajax(url){
+        var xhr = new XMLHttpRequest();
+        //注意onreadystatechange全小写
+        xhr.onreadystatechange = function(){
+            if(xhr.readyState===4){
+                if(xhr.status>=200&&xhr.status<300||xhr.status===304){
+                    console.log(xhr.responseText)
+                }
+            }
+        }
+        xhr.open('post',url,true);
+        //在get请求中不需要设置请求头，content-type实际上就是指定了发送给服务器的数据的形式
+        xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded
+')
+        //超时处理
+        xhr.timeout = 5000;
+        xhr.ontimeout = function(){
+            alert('超时了')；
+            console.log(xhr.readyState);
+        }
+        xhr.send();
+    }
+    ajax(url)
 ```
+
+#### AJAX请求头Content-Type
+
+如果不设置请求头，`Content-Type`的默认值为`text/plain;charset=UTF-8`
+
+- `application/json`：用来告诉服务器消息主题是序列化后的JSON字符串
+
+- `application/x-www-form-urlencoded`：原生的`form`表单，如果不设置`enctype`属性，那么就最终就会以`application/x-www-form-urlencoded`方式提交数据，如下
+
+  ```
+  title=test&sub%5B%5D=1&sub%5B%5D=2&sub%5B%5D=3
+  ```
+
 
 #### AJAX返回的状态
 
@@ -97,6 +115,8 @@ function ajax(url){
 | 2      | 发送。调用send(),但未收到响应                |
 | 3      | 接收。受到部分响应数据                       |
 | 4      | 完成。接收全部响应数据，且可以在客户端使用。 |
+
+🌟注意：一个`ajax`请求不是完全异步的，在readyState变为2之前，都是同步的(即readyState为0,1时是同步的)
 
 #### 如何发出一个有序的`AJAX`
 
@@ -112,7 +132,7 @@ function ajax(url){
 
 优点:`API`基于`promise`方便异步,支持`node`,比较轻量
 
-缺点:因为基于`promise`,除了**网络故障或者请求被阻止**时会将`promise`状态标记为`reject`,其他情况下`fecth`返回的`promise`状态都为`resolve`(但是会将 resolve 的返回值的 `ok` 属性设置为 `false` ),默认情况下,`fecth`不会从服务器接受或发送`cookie`,必须设置`credenitials`选项,所以需要我们再次封装
+缺点：除了**网络故障或者请求被阻止**时会将`promise`状态标记为`reject`，其他情况下`fecth`返回的`promise`状态都为`resolve`(但是会将 resolve 的返回值的 `ok` 属性设置为 `false` )，默认情况下，`fecth`不会从服务器接受或发送`cookie`，必须设置`credenitials`选项，所以需要我们再次封装
 
 ##### `axios`
 
@@ -163,7 +183,7 @@ function jsonp(obj,time,url){
     //基本类型
     url+=url.indexOf('?')===-1?'?':'&';
     for(let item in obj){
-        url+=item+'='+obj[item]+'&';
+        url+=encodeURIComponent(item)+'='+encodeURIComponent(obj[item])+'&';
     }
     var callBackName =('_jsonp'+Math.random()).replace('.','')
     url+='callback='+callBackName;
@@ -259,8 +279,8 @@ window.name; // My window's name
 同样这个方法也可以应用到和iframe的交互来：
 比如：我的页面([damonare.cn/index.html)…](http://damonare.cn/index.html)中内嵌了一个iframe：)
 
-```
-<iframe id="iframe" src="http://www.google.com/iframe.html"></iframe>复制代码
+```javascript
+<iframe id="iframe" src="http://www.google.com/iframe.html"></iframe>
 ```
 
 在 iframe.html 中设置好了 window.name 为我们要传递的字符串。
@@ -397,10 +417,6 @@ if (typeof window.addEventListener != 'undefined') {
 ```
 
 同理，也可以B页面发送消息，然后A页面监听并接受消息。
-
-
-
-
 
 ### 后记
 
