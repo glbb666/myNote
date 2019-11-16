@@ -53,7 +53,7 @@ foo('name', 'age', 'sex')
 
 打印结果如下：
 
-[![arguments](<https://github.com/glbb666/myNote/blob/master/review/js/image/arguments.png>)](<https://github.com/glbb666/myNote/blob/master/review/js/image/arguments.png>)
+![arguments](images/arguments.png)
 
 我们可以看到除了类数组的索引属性和length属性之外，还有一个callee属性，接下来我们一个一个介绍。
 
