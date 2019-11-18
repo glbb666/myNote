@@ -157,7 +157,7 @@ axios.all([getUserAccount(), getUserPermissions()])
 
 ### 单向跨域
 
-#### 1.通过`jsonp`跨域
+#### 1.`JSONP`
 ##### 原理
 `ajax`受同源策略的影响，不允许进行跨域请求，而`script`标签的`src`中的链接却可以访问跨域的静态资源，利用这个特性，服务端不再返回`JSON`格式的数据，而是返回一段调用某个函数的`js`代码，这样实现了跨域。
 
@@ -206,11 +206,9 @@ jsonp({name:'dd'},5000,url)
 </script>
 ```
 
+#### 2. `CORS(Cross-Origin Resource Sharing)跨域资源共享`
 
-
-#### 2. 通过`CORS`跨域
-
-> `CORS`（Cross-Origin Resource Sharing）跨域资源共享。`CORS`背后的**基本思想就是使用自定义的HTTP头部让浏览器与服务器进行沟通**，从而决定请求或响应是应该成功还是失败。浏览器一旦发现AJAX请求跨源，就会自动添加一些附加的头信息，有时还会多出一次附加的请求，但用户不会有感觉。
+> `CORS`的**基本思想就是使用自定义的HTTP头部让浏览器与服务器进行沟通**，从而决定请求或响应是应该成功还是失败。浏览器一旦发现AJAX请求跨源，就会自动添加一些附加的头信息，有时还会多出一次附加的请求，但用户不会有感觉。
 
 **服务端设置`Access-Control-allow-orginal`即可，前端无需设置，若要携带cookie请求，前后端都要设置**
 
@@ -243,7 +241,20 @@ server.all('*',function(req,res,next){
 xhr.withCredentials = true;
 ```
 
+##### `简单请求`和`非简单请求（preflighted requests预测请求）`
+
+`CORS`把请求分成两类：简单请求和预测请求
+
+简单请求就是普通form表单在不依赖脚本的情况下可以发出的请求，比如表单的`method`如果指定为`POST`，可以用`enctype`属性决定用什么方式对表单内容进行编码。
+
+非简单请求就是普通form表单无法实现的请求，比如`put`方法，需要其他的内容编码方式，自定义头之类的，
+
+简单请求：自定义头部(`HEAD`)、`GET`、`POST`
+
+
+
 ##### `CORS`和`JSONP`对比
+
   - 请求类型：`JSONP`只能实现`GET`请求，而`CORS`支持所有类型的`HTTP`请求。
     
   - 使用`CORS`，开发者可以使用普通的`XMLHttpRequest`发起请求和获得数据，比起`JSONP`有更好的错误处理。
