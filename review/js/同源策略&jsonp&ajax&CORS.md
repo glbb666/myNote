@@ -6,24 +6,22 @@
 
 [Jquery ajax, Axios, Fetch区别](<https://juejin.im/post/5acde23c5188255cb32e7e76>)
 
+[CORS 简单请求+预检请求（彻底理解跨域）](<https://github.com/amandakelake/blog/issues/62>)
+
 ###  同源策略和跨域？
 
-> 同源就是要求协议、域名、端口相同。不满足同源策列就会导致跨域。
+> 如果两个页面的协议，端口和主机都相同，则两个页面具有相同的**源**不满足同源策列就会导致跨域。
 >
-
-![img](images/1638b3579dde630e)
 
 #### 同源策略的限制
 
-##### 对`iframe`限制
+同源资源都是可读写的
 
-- 同域资源可读写
-- 访问跨域页面时, 只读，不同的框架之间是可以获取window对象的，但却无法获取相应的属性和方法。
+不同源：
 
-##### 对`Ajax`限制
+- `iframe`：访问跨域页面时, 只读，不同的框架之间是可以获取window对象的，但却无法获取相应的属性和方法。
 
-- 同域资源可读写;
-- 跨域请求会直接**被浏览器拦截**(chrome下跨域请求不会发起, 其他浏览器一般是可发送跨域请求, 但响应被浏览器拦截)
+- `Ajax`：跨域请求会直接**被浏览器拦截**(chrome下跨域请求不会发起, 其他浏览器一般是可发送跨域请求, 但响应被浏览器拦截)
 
 ##### 还限制了
 
@@ -208,14 +206,14 @@ jsonp({name:'dd'},5000,url)
 
 #### 2. `CORS(Cross-Origin Resource Sharing)跨域资源共享`
 
-> `CORS`的**基本思想就是使用自定义的HTTP头部让浏览器与服务器进行沟通**，从而决定请求或响应是应该成功还是失败。浏览器一旦发现AJAX请求跨源，就会自动添加一些附加的头信息，有时还会多出一次附加的请求，但用户不会有感觉。
+`CORS`允许服务器声明哪些源站通过浏览器有权限访问哪些资源。
 
-**服务端设置`Access-Control-allow-orginal`即可，前端无需设置，若要携带cookie请求，前后端都要设置**
+##### 基本使用
 
 ```js
 server.all('*',function(req,res,next){
     
-    //其中`*` 表示通配, 所有的域都能访问此资源
+    //其中`*` 表示通配, 所有的域都能访问此资源,为了跨站发送cookie等验证信息， `Access-Control-Allow-Origin` 字段将不允许设置为`*`, 它需要明确指定与请求网页一致的域名
     res.header("Access-Control-Allow-Origin",'*');
     //只允许B站访问
     res.header("Access-Control-Allow-Origin",<B-DOMAIN>)
@@ -226,32 +224,62 @@ server.all('*',function(req,res,next){
     //如果是POST请求, 且提交的数据类型是json, 那么, CORS需要指定headers.
 	res.header("Content-Type", "application/json;charset=utf-8");
     
-    //CORS默认是不带cookie的, 设置以下字段将允许浏览器发送cookie.
+    //CORS默认是不带cookie的, 设置以下字段将允许浏览器发送cookie
     res.header('Access-Control-Allow-Credentials', true);
-    
+   
     next()
 })
 ```
 
-🌟注意：除此之外, 为了跨站发送cookie等验证信息， `Access-Control-Allow-Origin` 字段将不允许设置为`*`, 它需要明确指定与请求网页一致的域名
-
-同时,前端需要做如下显式设置才能真正发送`cookie`
+同时，前端需要做如下显式设置才能真正发送`cookie`
 
 ```javascript
 xhr.withCredentials = true;
 ```
 
-##### `简单请求`和`非简单请求（preflighted requests预测请求）`
+##### `简单请求`和`预检请求（preflighted requests）`
 
-`CORS`把请求分成两类：简单请求和预测请求
+另外，规范要求，对那些可能对服务器数据产生副作用的 HTTP 请求方法（特别是 GET 以外的 HTTP 请求，或者搭配某些 MIME 类型的 POST 请求），**浏览器必须首先使用 OPTIONS 方法发起一个预检请求（preflight request），从而获知服务端是否允许该跨域请求。**
 
-简单请求就是普通form表单在不依赖脚本的情况下可以发出的请求，比如表单的`method`如果指定为`POST`，可以用`enctype`属性决定用什么方式对表单内容进行编码。
+**服务器确认允许之后，才发起实际的 HTTP 请求**。在预检请求的返回中，服务器端也可以通知客户端，是否需要携带身份凭证（包括 Cookies 和 HTTP 认证相关数据）。
 
-非简单请求就是普通form表单无法实现的请求，比如`put`方法，需要其他的内容编码方式，自定义头之类的，
+![2ec957a3-b220-49c5-8fa1-59a82a030e89](images/50205846-accac300-03a4-11e9-8654-2d646d237820.png)
 
-简单请求：自定义头部(`HEAD`)、`GET`、`POST`
+**简单请求就是不会触发CORS预检的请求**，满足以下**所有条件**的才会被视为简单请求，基本上我们日常开发只会关注前面两点
 
+1. 使用`GET、POST、HEAD`其中一种方法
 
+2. 只使用了如下的安全首部字段，不得人为设置其他首部字段
+
+   - `Accept`
+
+   - `Accept-Language`
+
+   - `Content-Language`
+
+   - `Content-Type`仅限以下三种
+     - `text/plain`
+- `multipart/form-data`
+     - `application/x-www-form-urlencoded`
+
+   - HTML头部header field字段：`DPR、Download、Save-Data、Viewport-Width、WIdth`
+
+3. 请求中的任意`XMLHttpRequestUpload` 对象均没有注册任何事件监听器；XMLHttpRequestUpload 对象可以使用 XMLHttpRequest.upload 属性访问
+
+4. 请求中没有使用 ReadableStream 对象
+
+预检请求要求必须**首先使用 `OPTIONS` 方法发起一个预检请求到服务器，以获知服务器是否允许该实际请求**。"预检请求“的使用，可以避免跨域请求对服务器的用户数据产生未预期的影响
+
+下面的请求会触发预检请求，其实非简单请求之外的就会触发预检，就不用记那么多了
+
+1. 使用了`PUT、DELETE、CONNECT、OPTIONS、TRACE、PATCH`方法
+2. 人为设置了非规定内的其他首部字段，参考上面简单请求的安全字段集合，还要特别注意`Content-Type`的类型
+3. `XMLHttpRequestUpload` 对象注册了任何事件监听器
+4. 请求中使用了`ReadableStream`对象
+
+##### 完整请求流程
+
+![img](images/50205881-c409b080-03a4-11e9-8a57-a2a6d0e1d879.png)
 
 ##### `CORS`和`JSONP`对比
 
