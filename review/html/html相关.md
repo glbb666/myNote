@@ -1,4 +1,3 @@
-@[toc]
 # 对HTML语义化的理解（语义化标签有哪些）
 [对html语义化的了解](https://blog.csdn.net/eeeecw/article/details/80591511)
 
