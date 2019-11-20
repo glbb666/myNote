@@ -16,6 +16,8 @@
   width=border+padding+内容的宽度（border内部宽度）
 
   height=border+padding+内容的高度(border内部高度)
+  
+- inherit -从父元素继承`box-sizing`属性
 
 > 在ie8+浏览器中使用哪个盒模型可以由**box-sizing**(CSS新增的属性)控制，默认值为content-box，即标准盒模型；如果将box-sizing设为border-box则用的是IE盒模型。如果在ie6,7,8中DOCTYPE缺失会触发IE模式。在当前W3C标准中盒模型是可以通过box-sizing自由的进行切换的。
 

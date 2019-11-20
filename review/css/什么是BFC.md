@@ -13,15 +13,15 @@
 - 生成额外的盒来放置项目符号，不过多数元素只生成一个主要块级盒。
 - 块状元素排斥其他元素与其位于同一行，可以设定元素的宽（`width`）和高（`height`），块级元素一般是其他元素的容器，可容纳块级元素和行内元素
 
-### 块格式化上下文(`BFC`)
+### 块级格式化上下文(`Block Formatting Context`)
 
-`BFC`全称是`Block Formatting Context`，即块格式化上下文。块级格式化上下文是Web页面的可视化`css`渲染的一部分，是块盒子的布局过程发生的区域，也是浮动元素与其他元素交互的区域，块级格式化上下文包含创建它的元素内部的所有内容
+`BFC`是`块级格式化上下文`，是块盒子的布局过程发生的区域，也是浮动元素与其他元素交互的区域，包含创建它的元素内部的所有内容
 
 ### `BFC`创建方法
 
 - **根元素**或**包含根元素的元素**
-- **浮动** (元素的 `float` 不为 `none`)
-- **绝对定位**元素 (元素的 `position` 为 `absolute` 或 `fixed`)
+- **浮动**元素 (元素的 `float` 不为 `none`)
+- **绝对定位**元素 (元素的 `position` 不为 `relative` 或 `static`)
 - `overflow` 的值不为 `visible` 的元素
 - **弹性元素**（`display`为 `flex` 或 `inline-flex`元素的直接子元素）
 - `display:inline-block / table-cells / table-caption.`
@@ -39,7 +39,7 @@
 -  `block-progression`值为`lr`或 `rl`，其父框的`block-progression`的值为`tb`
 -  `block-progression`的 `tb`的值为' '，其父框的`block-progression`的值为`lr`或`rl`。
 
-### BFC范围
+### `BFC`范围
 
 `BFC`包含创建该上下文元素的所有子元素，但不包括创建了新`BFC`的子元素的内部元素。
 
@@ -65,7 +65,7 @@
 ### 布局规则
 
 - 内部的盒子在垂直方向依次放置。
-- 内部垂直方向的距离由margin决定。`BFC`内相邻盒子的`margin`会发生重叠
+- 内部垂直方向的距离由`margin`决定。`BFC`内相邻盒子的`margin`会发生重叠
 - 每个元素的`margin`的左边，与`包含块border`的左边相接触(对于从左往右的格式化，否则相反)。即使存在浮动也是如此。
 - `BFC`的区域不会与`float box`重叠。
 - `BFC`就是页面上的一个**隔离的独立容器**，容器里面的子元素不会影响到外面的元素。（解决margin塌陷）
@@ -77,6 +77,6 @@
 - 清除浮动
 
 - 自适应两栏布局
-- 分属于不同的`BFC`时可以阻止`margin`重叠
+- 分属于不同的`BFC`时可以解决`margin`塌陷
 
   
