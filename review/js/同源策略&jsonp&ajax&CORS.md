@@ -93,15 +93,26 @@ Ajax相当于在用户和服务器之间加了一个中间层(ajax引擎)，让�
 
 #### AJAX请求头Content-Type
 
-如果不设置请求头，`Content-Type`的默认值为`text/plain;charset=UTF-8`
+[Content-Type的理解](<https://www.cnblogs.com/tugenhua0707/p/8975121.html>)
 
-- `application/json`：用来告诉服务器消息主题是序列化后的JSON字符串
+**Content-Type**是指http/https发送信息至服务器时的内容编码类型，默认值为`text/plain;charset=UTF-8`
 
-- `application/x-www-form-urlencoded`：原生的`form`表单，如果不设置`enctype`属性，那么就最终就会以`application/x-www-form-urlencoded`方式提交数据，如下
+- `application/x-www-form-urlencoded`：在发送前编码所有字符。原生的`form`表单，如果不设置`enctype`属性，那么就以这种方式提交数据，如下
 
   ```
   title=test&sub%5B%5D=1&sub%5B%5D=2&sub%5B%5D=3
+  //所有数据变成键值对的形式，并且特殊字符需要转义成utf-8编号
   ```
+  
+  对于`GET`请求，格式化的字符串将直接拼接在`url`后发送到服务端；对于`POST`请求，在`chrome`的`network`面板下，格式化的字符串将放在`http body`的`Form Data`中发送，如下![1574322417300](images/1574322417300.png)
+  
+- `multipart/form-data`：不对字符编码。在使用表单上传文件时，必须使用该值。请求体被` --boundary`分割成多部分
+
+- `application/json`：用来告诉服务器消息主题是序列化后的JSON字符串，一般用来传递复杂的数据对象
+
+🌟注意：`ContentType`为 `application/json`时会发两次请求，第一次先发`Method`为`OPTIONS`的请求询问服务器支持哪些请求方法(比如`GET`,`POST`)等。如果这个请求支持跨域的话，才会发送第二个请求，否则的话在控制台会报错，第二个请求不会发送。
+
+![img](images/561794-20180430230355691-288861275.png)
 
 
 #### AJAX返回的状态
