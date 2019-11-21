@@ -1,4 +1,4 @@
-## 属性值都有哪些
+## 属性值都有哪些(5种)
 - static（静态定位）
 
 对象遵循标准文档流中，top, right, bottom, left 等属性失效。
@@ -17,8 +17,9 @@
 
 填充规则：
 
-- height和width 被设定为auto的绝对定位元素，按其内容大小调整尺寸。但，被绝对定位的元素可以通过指定top和bottom ，保留height未指定（即auto），来填充可用的垂直空间。它们同样可以通过指定left 和 right并将width 指定为auto来填充可用的水平空间。
-- top,bottom同时设定时top优先。left right同时设置，当 direction设置为 ltr（水平书写的中文、英语）时 left 优先， 当direction设置为 rtl（阿拉伯语、希伯来语、波斯语由右向左书写）时 right 优先。
+- `height`和`width`被设定为`auto`的绝对定位元素，按其内容大小调整尺寸。但，被绝对定位的元素可以通过指定`top`和`bottom` ，保留`height`未指定（即`auto`），来填充可用的垂直空间。它们同样可以通过指定`left `和 `right`并将`width `指定为`auto`来填充可用的水平空间。
+- `top`,`bottom`同时设定时`top`优先。`left`,` right`同时设置，当 `direction`设置为 `ltr`时 `left` 优先， 当`direction`设置为` rtl`时` right `优先。
+- 
 
 ### relative
 ```html
