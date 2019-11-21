@@ -19,7 +19,6 @@
 
 - `height`和`width`被设定为`auto`的绝对定位元素，按其内容大小调整尺寸。但，被绝对定位的元素可以通过指定`top`和`bottom` ，保留`height`未指定（即`auto`），来填充可用的垂直空间。它们同样可以通过指定`left `和 `right`并将`width `指定为`auto`来填充可用的水平空间。
 - `top`,`bottom`同时设定时`top`优先。`left`,` right`同时设置，当 `direction`设置为 `ltr`时 `left` 优先， 当`direction`设置为` rtl`时` right `优先。
-- 
 
 ### relative
 ```html

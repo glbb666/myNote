@@ -1,0 +1,5 @@
+vue-router传参
+vuex action可不可以发送同步
+vuex的原理
+浏览器优化
+vue和react的区别

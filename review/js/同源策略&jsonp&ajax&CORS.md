@@ -270,7 +270,7 @@ xhr.withCredentials = true;
 
    - `Content-Type`仅限以下三种
      - `text/plain`
-- `multipart/form-data`
+	 - `multipart/form-data`
      - `application/x-www-form-urlencoded`
 
    - HTML头部header field字段：`DPR、Download、Save-Data、Viewport-Width、WIdth`

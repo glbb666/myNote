@@ -147,4 +147,8 @@ transitionend 事件会在 transition 动画结束的时候触发. [transitionen
 - animationend 动画结束的事件，和 transitionend 类似。如果有多个动画，那么这个事件会触发多次，像上边的例子，这个事件会触发三次。如果 animation-iteration-count 设置为 infinite，那么这个事件则不会被触发。
 - animationiteration 动画循环一个生命周期结束的事件，和上一个事件不一样的是，这个在每次循环结束一段动画时会触发，而不是整个动画结束时触发。无限循环时，除非 duration 为 0，否则这个事件会无限触发。
 
+### transition和animition的区别
+
+它们大部分属性相同，都是随时间而改变的属性值。但是`transition`需要事件触发才能改变属性，`animition`不需要触发任何事件，并且`transition`只有两帧，`animition`可以一帧一帧的。
+
 ## requestAnimationFrame
