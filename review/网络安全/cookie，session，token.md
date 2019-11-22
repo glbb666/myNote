@@ -113,11 +113,9 @@ document.cookie = "name=xiaoming; age=12 "
 
 #### Token有效期
 
-- 把token存在cookie里，设置有效期
+- 把token存在cookie里，就可以和cookie一样设置有效期
 
-- 服务器端保存 Token 状态，用户每次操作都会自动刷新（推迟） Token 的过期时间。然而，每次都去刷新过期时间代价大。所以通常为了提升效率，减少消耗，会把 Token 的过期时保存在缓存或者内存中。
-
--  Refresh Token。服务端不需要刷新 Token 的过期时间，一旦 Token 过期，就反馈给前端，前端使用 Refresh Token 申请一个全新 Token 继续使用。当然 Refresh Token 也是有有效期的，但是这个有效期就可以长一点了，比如，以天为单位的时间。
+- 登陆成功后服务端给客户端发送一个 `Refresh Token`和`token`。服务端收到客户端请求时发现` token `过期，就反馈给前端，前端使用 `Refresh Token` 申请一个全新` token `继续使用。当然 `Refresh Token `也是有有效期的，但是这个有效期就可以长一点了，比如，以天为单位的时间。
 
   
 

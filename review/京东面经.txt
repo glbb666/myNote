@@ -1,5 +1,4 @@
 算法
-token
 vue-router传参
 vuex的原理，action可不可以发送同步
 浏览器优化

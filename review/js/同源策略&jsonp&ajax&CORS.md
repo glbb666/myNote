@@ -274,9 +274,9 @@ xhr.withCredentials = true;
 
    - `Content-Type`仅限以下三种
      - `text/plain`
-	 - `multipart/form-data`
-     - `application/x-www-form-urlencoded`
-
+	   - `multipart/form-data`
+       - `application/x-www-form-urlencoded`
+  
    - HTML头部header field字段：`DPR、Download、Save-Data、Viewport-Width、WIdth`
 
 3. 请求中的任意`XMLHttpRequestUpload` 对象均没有注册任何事件监听器；XMLHttpRequestUpload 对象可以使用 XMLHttpRequest.upload 属性访问
