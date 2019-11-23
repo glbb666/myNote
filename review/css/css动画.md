@@ -151,4 +151,3 @@ transitionend 事件会在 transition 动画结束的时候触发. [transitionen
 
 它们大部分属性相同，都是随时间而改变的属性值。但是`transition`需要事件触发才能改变属性，`animition`不需要触发任何事件，并且`transition`只有两帧，`animition`可以一帧一帧的。
 
-## requestAnimationFrame
