@@ -18,4 +18,8 @@
    - **`beforeDestroy`**：实例销毁之前调用。在这一步，实例仍然完全可用
    - **`destroy`**：`Vue`实例销毁后调用。调用后，`Vue`实例指示的所有东西都会解绑定，所有的事件监听器会被移除，所有的子实例也会被销毁
 
-![在这里插入图片描述](https://img-blog.csdnimg.cn/20190204154840188.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2dhbmx1YmFiYTY2Ng==,size_16,color_FFFFFF,t_70)
+![img](images/16c498ca0e16ac26)
+
+### 异步请求适合在哪个生命周期调用
+
+官方实例的异步请求是在`mounted`生命周期中调用的，而实际上也可以在`created`生命周期中调用。
