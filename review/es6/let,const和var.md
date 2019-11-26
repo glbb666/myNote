@@ -2,7 +2,7 @@
 
 `let`，`const`所声明的变量，只在`let`，`const`命令所在的代码块内有效。
 
-var没有块级作用域
+`var`没有块级作用域
 
 ```javascript
 {

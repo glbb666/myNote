@@ -63,6 +63,12 @@ proxy.foo // TypeError: Revoked
 
 `Proxy.revocable`的一个使用场景是，目标对象必须通过代理访问，访问结束就收回代理权，不允许再次访问。
 
-### this 问题 
+### `this` 问题 
 
-目标对象内部的`this`关键字会指向 Proxy 代理，`this`绑定原始对象，就可以解决这个问题。
+目标对象内部的`this`关键字会指向 `Proxy` 代理，`this`绑定原始对象，就可以解决这个问题。
+
+### `proxy`和`Object.definedProerty`区别
+
+- `Object.defineProperty()`只能对某个`key`进行监测，如果想对每个属性都监测的话就需要遍历，而`Proxy`是直接监测整个对象，不需要遍历
+- 前者对数组的监测只能是：`arr[0]` = 1,不能对可以改变原数组的方法进行监测，而`proxy`可以
+- `proxy`的兼容性目前还没有提上来，并且对应的`polyfill`也不完善

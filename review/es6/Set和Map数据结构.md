@@ -2,126 +2,33 @@
 
 ### 基本用法
 
-ES6 提供了新的数据结构 Set。它类似于数组，但是**成员的值都是唯一的，没有重复的值**。
+`ES6` 提供了新的数据结构 `Set`。它类似于数组，但是**成员的值都是唯一的,可以用来数组去重**。
 
-`Set`本身是一个构造函数，用来生成 Set 数据结构。
-
-`Set`函数可以接受一个数组（或者具有 iterable 接口的其他数据结构）作为参数，用来初始化。
+`Set`函数可以接受一个数组（或者具有 `iterable` 接口的其他数据结构）作为参数，用来初始化。
 
 ```javascript
 // 例一
 const set = new Set([1, 2, 3, 4, 4]);
-set.size
-//4
-[...set]
-// [1, 2, 3, 4]
-
-// 例二
-const set = new Set(document.querySelectorAll('div'));
-set.size // 56
-
-// 类似于
-const set = new Set();
-document
- .querySelectorAll('div')
- .forEach(div => set.add(div));
-set.size // 56
+[...set]// [1, 2, 3, 4]
+set.add(/*要增加的值*/) //返回set
+set.has(/*要检测的值*/) //返回布尔值
+set.delete(/*要删除的值*/)//返回布尔值
+set.size //元素数量
+set.clear() //删除set中的所有值 无返回
 ```
 
-上面代码中，例一是`Set`函数接受**数组**作为参数，例二是接受**<font color='red'>类似数组的对象</font>**作为参数。
+`Set`函数接受**数组**或**<font color='red'>类似数组的对象</font>**作为参数。
 
-上面代码也展示了一种**数组去重**的方法。
-
-```javascript
-// 去除数组的重复成员
-[...new Set(array)]
-```
-
-上面的方法也可以用于，**字符串去重**。
+**字符串去重**。
 
 ```javascript
 [...new Set('ababbc')].join('')
 // "abc"
 ```
 
-向 Set 加入值的时候，**不会发生类型转换**，所以`5`和`"5"`是两个不同的值。Set 内部判断两个值是否不同，使用的算法叫做“Same-value-zero equality”，它类似于精确相等运算符（`===`），主要的区别是向 Set 加入值时认为`NaN`等于自身，而精确相等运算符认为`NaN`不等于自身。
-
-```javascript
-let set = new Set();
-let a = NaN;
-let b = NaN;
-set.add(a);
-set.add(b);
-set // Set {NaN}
-```
-
-上面代码向 Set 实例添加了两次`NaN`，但是只会加入一个。这表明，在 Set 内部，两个`NaN`是相等的。
+向 Set 加入值的时候，**不会发生类型转换**。Set 内部判断两个值是否不同，使用的算法叫做“Same-value-zero equality”，它和（`===`），区别是向 Set 加入值时认为`NaN`等于自身
 
 另外，两个对象总是不相等的。
-
-```javascript
-let set = new Set();
-
-set.add({});
-set.size // 1
-
-set.add({});
-set.size // 2
-```
-
-### Set 实例的属性和方法
-
-Set 结构的实例有以下属性。
-
-- `Set.prototype.constructor`：构造函数，默认就是`Set`函数。
-- `Set.prototype.size`：返回`Set`实例的成员总数。
-
-Set 实例的方法分为两大类：操作方法（用于操作数据）和遍历方法（用于遍历成员）。下面先介绍四个操作方法。
-
-- `Set.prototype.add(value)`：添加某个值，返回 Set 结构本身。
-- `Set.prototype.delete(value)`：删除某个值，返回一个布尔值，表示删除是否成功。
-- `Set.prototype.has(value)`：返回一个布尔值，表示该值是否为`Set`的成员。
-- `Set.prototype.clear()`：清除所有成员，没有返回值。
-
-上面这些属性和方法的实例如下。
-
-```javascript
-s.add(1).add(2).add(2);
-// 注意2被加入了两次
-
-s.size // 2
-
-s.has(1) // true
-s.has(2) // true
-s.has(3) // false
-
-s.delete(2);
-s.has(2) // false
-```
-
-下面是一个对比，看看在判断是否包括一个键上面，`Object`结构和`Set`结构的写法不同。
-
-```javascript
-// 对象的写法
-const properties = {
-  'width': 1,
-  'height': 1
-};
-
-if (properties[someName]) {
-  // do something
-}
-
-// Set的写法
-const properties = new Set();
-
-properties.add('width');
-properties.add('height');
-
-if (properties.has(someName)) {
-  // do something
-}
-```
 
 `Array.from`方法可以将 Set 结构转为数组。
 
@@ -155,60 +62,17 @@ Set 结构的实例有四个遍历方法，可以用于遍历成员。
 
 `keys`方法、`values`方法、`entries`方法返回的都是遍历器对象（详见《Iterator 对象》一章）。由于 Set 结构没有键名，只有键值（或者说键名和键值是同一个值），所以`keys`方法和`values`方法的行为完全一致。
 
-```javascript
-let set = new Set(['red', 'green', 'blue']);
-
-for (let item of set.keys()) {
-  console.log(item);
-}
-// red
-// green
-// blue
-
-for (let item of set.values()) {
-  console.log(item);
-}
-// red
-// green
-// blue
-
-set.keys===set.keys
-//true
-
-for (let item of set.entries()) {
-  console.log(item);
-}
-// ["red", "red"]
-// ["green", "green"]
-// ["blue", "blue"]
-
-```
-
-上面代码中，`entries`方法返回的遍历器，同时包括键名和键值，所以每次输出一个数组，它的两个成员完全相等。
-
 Set 结构的实例默认可遍历，它的默认遍历器生成函数就是它的`values`方法。
 
 ```javascript
 Set.prototype[Symbol.iterator] === Set.prototype.values
-// true
 ```
 
 这意味着，可以省略`values`方法，直接用`for...of`循环遍历 Set。
 
-```javascript
-let set = new Set(['red', 'green', 'blue']);
-
-for (let x of set) {
-  console.log(x);
-}
-// red
-// green
-// blue
-```
-
 **（2）forEach()**
 
-Set 结构的实例与数组一样，也拥有`forEach`方法，用于对每个成员执行某种操作，没有返回值。
+Set 结构的实例与数组一样，也拥有`forEach`方法，差别是第一个参数与第二个参数的值永远都是一样的
 
 ```javascript
 let set = new Set([1, 4, 9]);
@@ -218,19 +82,11 @@ set.forEach((value, key) => console.log(key + ' : ' + value))
 // 9 : 9
 ```
 
-上面代码说明，`forEach`方法的参数就是一个处理函数。该函数的参数与数组的`forEach`一致，依次为键值、键名、集合本身（上例省略了该参数）。这里需要注意，Set 结构的键名就是键值（两者是同一个值），因此第一个参数与第二个参数的值永远都是一样的。
-
 另外，`forEach`方法还可以有第二个参数，表示绑定处理函数内部的`this`对象。
 
 **（3）遍历的应用**
 
 扩展运算符（`...`）内部使用`for...of`循环，所以也可以用于 Set 结构。
-
-```javascript
-let set = new Set(['red', 'green', 'blue']);
-let arr = [...set];
-// ['red', 'green', 'blue']
-```
 
 扩展运算符和 Set 结构相结合，就可以去除数组的重复成员。
 
@@ -250,25 +106,6 @@ set = new Set([...set].map(x => x * 2));
 let set = new Set([1, 2, 3, 4, 5]);
 set = new Set([...set].filter(x => (x % 2) == 0));
 // 返回Set结构：{2, 4}
-```
-
-因此使用 Set 可以很容易地实现并集（Union）、交集（Intersect）和差集（Difference）。
-
-```javascript
-let a = new Set([1, 2, 3]);
-let b = new Set([4, 3, 2]);
-
-// 并集
-let union = new Set([...a, ...b]);
-// Set {1, 2, 3, 4}
-
-// 交集
-let intersect = new Set([...a].filter(x => b.has(x)));
-// set {2, 3}
-
-// 差集
-let difference = new Set([...a].filter(x => !b.has(x)));
-// Set {1}
 ```
 
 如果想在遍历操作中，同步改变原来的 Set 结构，目前没有直接的方法，但有两种变通方法。一种是利用原 Set 结构映射出一个新的结构，然后赋值给原来的 Set 结构；另一种是利用`Array.from`方法。
