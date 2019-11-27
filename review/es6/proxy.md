@@ -2,13 +2,11 @@
 
 `Proxy`用于修改某些操作的默认行为，也可以理解为在目标对象之前架设一层“拦截”，外界对该对象的访问，都必须先通过这层拦截，因此提供了一种**代理**机制，可以对外界的访问进行过滤和改写。
 
-`ES6` 原生提供 `Proxy` 构造函数，用来生成 `Proxy` 实例。
-
 ```javascript
 var proxy = new Proxy(target, handler);
 ```
 
-`target`参数表示所要拦截的目标对象，`handler`参数也是一个对象，用来定制拦截行为，如果`handler`没有设置任何拦截，那就等同于直接通向原对象。
+`target`参数表示所要拦截的目标对象，`handler`参数也是一个对象，用来定制拦截行为，如果`handler`没有设置任何拦截，那就直通原对象。
 
 ```javascript
 var proxy = new Proxy({}, {
@@ -32,7 +30,7 @@ proxy.title // 35
 - **set(target, propKey, value, receiver)**：拦截对象属性的设置，比如`proxy.foo = v`或`proxy['foo'] = v`，返回一个布尔值。
 - **has(target, propKey)**：拦截`propKey in proxy`的操作，返回一个布尔值。`has`拦截只对`in`运算符生效，对`for...in`循环不生效。可以用来隐藏属性。
 - **deleteProperty(target, propKey)**：拦截`delete proxy[propKey]`的操作，返回一个布尔值。
-- **ownKeys(target)**：拦截`Object.getOwnPropertyNames(proxy)`、`Object.getOwnPropertySymbols(proxy)`、`Object.keys(proxy)`、`for...in`循环，返回一个数组。该方法返回目标对象所有自身的属性的属性名，而`Object.keys()`的返回结果仅包括目标对象**<font color='red'>自身</font>**的**<font color='red'>可遍历</font>**的**<font color='red'>非Symbol</font>**属性，`for...in`的返回结果为目标对象**<font color='red'>自身或继承的</font>**的**<font color='red'>可遍历</font>**的**<font color='red'>非Symbol</font>**属性。
+- **ownKeys(target)**：对象自身的读取操作（对象遍历方法，除了`Reflect.ownKeys`)，返回一个数组。该方法返回目标对象所有自身的属性的属性名，而`Object.keys()`的返回结果仅包括目标对象**<font color='red'>自身</font>**的**<font color='red'>可遍历</font>**的**<font color='red'>非Symbol</font>**属性，`for...in`的返回结果为目标对象**<font color='red'>自身或继承的</font>**的**<font color='red'>可遍历</font>**的**<font color='red'>非Symbol</font>**属性。
 - **getOwnPropertyDescriptor(target, propKey)**：拦截`Object.getOwnPropertyDescriptor(proxy, propKey)`，返回属性的描述对象。
 - **defineProperty(target, propKey, propDesc)**：拦截`Object.defineProperty(proxy, propKey, propDesc）`、`Object.defineProperties(proxy, propDescs)`，返回一个布尔值。
 - **preventExtensions(target)**：拦截`Object.preventExtensions(proxy)`，返回一个布尔值。
@@ -67,8 +65,10 @@ proxy.foo // TypeError: Revoked
 
 目标对象内部的`this`关键字会指向 `Proxy` 代理，`this`绑定原始对象，就可以解决这个问题。
 
-### `proxy`和`Object.definedProerty`区别
+### `proxy`和`Object.definedProperty`区别
+
+- 使用 `defineProperty` 只能拦截属性的读取（get）和设置（set）行为， `Proxy`，可以拦截13种行为，比如 in、delete、函数调用等更多行为
 
 - `Object.defineProperty()`只能对某个`key`进行监测，如果想对每个属性都监测的话就需要遍历，而`Proxy`是直接监测整个对象，不需要遍历
-- 前者对数组的监测只能是：`arr[0]` = 1,不能对可以改变原数组的方法进行监测，而`proxy`可以
+- 当使用 `defineProperty`，我们修改原来的 obj 对象就可以触发拦截，而使用 proxy，就必须修改代理对象，即 `Proxy` 的实例才可以触发拦截。
 - `proxy`的兼容性目前还没有提上来，并且对应的`polyfill`也不完善
