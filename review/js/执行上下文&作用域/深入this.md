@@ -1,10 +1,6 @@
 # this指向
 - 全局函数中的this指向window对象
 
-```javascript
-console.log(this);//Window
-```
-
 - 当函数作为实例方法调用时，函数中的this指向实例
 
 ```javascript
@@ -16,41 +12,22 @@ console.log(this);//Window
       }
   }
   obj.a()//'obj'
-```
-
-  💥注意：有一种情况
-
-  ```javascript
-  var name = 'global'
-  var obj = {
-      name:'obj',
-      a(){
-          console.log(this.name)
-      }
-  }
+  //💥注意
   var fn = obj.a;
   fn();//'global'
-  ```
+```
 
 这是因为，在非严格模式下，在全局作用域声明的变量会成为window的属性。函数是在全局作用域调用的，所以函数内部的this指向window
 
 - 构造函数内部的this指向创建出的实例
 
-  ```javascript
-  function CreateObj(){
-      this.name = 'a'
-      console.log(this);//CreateObj {name: "a"}
-  }
-  var a = new CreateObj();
-  ```
-  
 - 使用了call，apply，bind等方法的函数的this指向通过这些方法绑定的this
 
    💥注意：bind方法返回的函数如果使用new，通过bind绑定的this失效，因为new会将this指向初始化为构造函数创建出的实例
 
 - 箭头函数内部的this
 
-  箭头函数体内的this对象，就是**定义时<font color='red'>所在的对象</font>**，而不是使用时所在的对象。箭头函数不可以当作构造函数，也就是说，不可以使用new命令，否则会抛出一个错误。 不可以使用arguments对象，该对象在函数体内不存在。如果要用，可以用 rest 参数代替。 不可以使用yield命令，因此箭头函数不能用作 Generator 函数。
+  箭头函数体内的this对象，就是**定义时<font color='red'>所在的对象</font>**，而不是使用时所在的对象。箭头函数不可以当作构造函数，即不可以使用new命令， 不可以使用arguments对象，该对象在函数体内不存在。如果要用，可以用 rest 参数代替。 不可以使用yield命令，因此箭头函数不能用作 Generator 函数。
 
   ```javascript
   var name = 'global'
@@ -65,7 +42,6 @@ console.log(this);//Window
   fn();
   ```
 
-  
 
 # 改变this指向的方法
 
@@ -95,3 +71,19 @@ console.log(this);//Window
 
 - 参数可以通过bind和创建出的函数分两次传入
 - 如果对创建出的函数调用new，通过bind传入的this会失效，被重新初始化为构造函数创建出的实例对象
+
+### 多次bind,上下文是什么？
+
+```javascript
+let a = {}
+let fn = function () { console.log(this) }
+fn.bind().bind(a)()//window
+```
+
+不管我们给函数 bind 几次，函数中的 this 永远由第一次 bind 决定，所以结果永远是 window。
+
+### 多个this规则出现，this指向哪里？
+
+优先级如下
+
+**new > bind/call/apply > 隐式绑定（即对象调方法）> 默认绑定（即严格undefined，非严格window）**
