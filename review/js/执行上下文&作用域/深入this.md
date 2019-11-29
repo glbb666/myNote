@@ -27,7 +27,7 @@
 
 - 箭头函数内部的this
 
-  箭头函数体内的this对象，就是**定义时<font color='red'>所在的对象</font>**，而不是使用时所在的对象。箭头函数不可以当作构造函数，即不可以使用new命令， 不可以使用arguments对象，该对象在函数体内不存在。如果要用，可以用 rest 参数代替。 不可以使用yield命令，因此箭头函数不能用作 Generator 函数。
+  箭头函数没有`this`，因为它没有原型。它的`this`就是**定义时<font color='red'>所在的对象</font>**，而不是使用时所在的对象。箭头函数不可以当作构造函数，即不可以使用new命令， 不存在arguments对象。如果要用，可以用 rest 参数代替。 不可以使用yield命令，因此箭头函数不能用作 Generator 函数。
 
   ```javascript
   var name = 'global'
