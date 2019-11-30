@@ -1,6 +1,6 @@
-# 响应式布局的常用解决方案对比(媒体查询、百分比、rem和vw/vh）
+# 响应式布局的常用解决方案对比(媒体查询、百分比、`rem`和`vw`/`vh`）
 
-## 一、px和视口
+## 一、`px`和视口
 
 ### 1. 像素
 
@@ -14,7 +14,7 @@
 
 **⚠️dpr(device pixel ratio)**：`dpr=物理像素/设备独立像素`（ 在某一方向上，x方向或者y方向）
 
-![2018-06-22 7 00 29](https://github.com/glbb666/myNote/blob/master/review/移动端适配/images/10.jpg)
+![10.jpg](images/10-1575110867744.jpg)
 
 为了明确css像素和物理像素的转换关系，必须先了解视口是什么。
 
@@ -143,7 +143,9 @@ iphone6：1 CSS像素 = 物理像素 ／分辨率 = 750 ／ 375 = 2 px
 </div>
 ```
 
-如果设置： .father{ width:200px; height:100px; } .child{ width:50%; height:50%; } 展示的效果为： ![2018-06-22 7 00 29](https://github.com/glbb666/myNote/blob/master/review/移动端适配/images/3.jpg)
+如果设置：` .father{ width:200px; height:100px; } .child{ width:50%; height:50%; }` 展示的效果为： 
+
+![3.jpg](images/3-1575110928788.jpg)
 
 (2) top和bottom 、left和right
 
@@ -153,7 +155,7 @@ iphone6：1 CSS像素 = 物理像素 ／分辨率 = 750 ／ 375 = 2 px
 
 展示的效果为：
 
-![2018-06-22 7 00 29](https://github.com/glbb666/myNote/blob/master/review/移动端适配/images/4.jpg)
+![4.jpg](images/4-1575110974848.jpg)
 
 （3）padding
 
@@ -179,7 +181,7 @@ iphone6：1 CSS像素 = 物理像素 ／分辨率 = 750 ／ 375 = 2 px
 
 展示的效果为：
 
-![2018-06-22 7 55 13](https://github.com/glbb666/myNote/blob/master/review/移动端适配/images/5.jpg)
+![5.jpg](images/5-1575110960079.jpg)
 
 子元素的初始宽高为0，通过padding可以将父元素撑大，上图的蓝色部分是一个正方形，且边长为100px,说明padding不论宽高，如果设置成百分比都相对于父元素的width。
 
@@ -235,9 +237,7 @@ border-radius不一样，如果设置border-radius为百分比，则是相对于
 
 通过设置padding-top：75%,相对比宽度的75%，因此这样就设置了一个长宽高恒定比例的长方形，具体效果展示如下：
 
-
-
-![jest](https://github.com/glbb666/myNote/blob/master/review/移动端适配/images/7.jpg)
+![7.jpg](https://github.com/glbb666/myNote/blob/master/review/%E7%A7%BB%E5%8A%A8%E7%AB%AF%E9%80%82%E9%85%8D/images/7.jpg?raw=true)
 
 
 
@@ -358,7 +358,7 @@ module.exports = {
 
 
 
-![jest1](https://github.com/glbb666/myNote/blob/master/review/移动端适配/images/8.jpg)
+![8.jpg](https://github.com/glbb666/myNote/blob/master/review/%E7%A7%BB%E5%8A%A8%E7%AB%AF%E9%80%82%E9%85%8D/images/8.jpg?raw=true)
 
 
 
@@ -366,9 +366,11 @@ module.exports = {
 
 通过rem单位，可以实现响应式的布局，特别是引入相应的postcss相关插件，免去了设计稿中的px到rem的计算。rem单位在国外的一些网站也有使用，这里所说的rem来实现布局的缺点，或者说是小缺陷是：
 
-***在响应式布局中，必须通过js来动态控制根元素font-size的大小。***
+***在响应式布局中，必须通过`js`来动态控制根元素font-size的大小。***
 
-也就是说css样式和js代码有一定的耦合性。且必须将改变font-size的代码放在css样式之前。
+也就是说`css`样式和`js`代码有一定的耦合性。且必须将改变`font-size`的代码放在`css`样式之前。
+
+> 
 
 ## 五. 通过vw/vh来实现自适应
 
@@ -420,7 +422,7 @@ var defaults = {
 
 可以在https://caniuse.com/ 查看各个版本的浏览器对vw单位的支持性。
 
-![2018-06-27 8 19 53](https://github.com/glbb666/myNote/blob/master/review/移动端适配/images/9.jpg)
+![9.jpg](images/9-1575111104089.jpg)
 
 从上图我们发现，绝大多数的浏览器支持vw单位，但是ie9-11不支持vmin和vmax，考虑到vmin和vmax单位不常用，vw单位在绝大部分高版本浏览器内的支持性很好，但是opera浏览器整体不支持vw单位，如果需要兼容opera浏览器的布局，不推荐使用vw。
 
