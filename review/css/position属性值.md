@@ -1,7 +1,7 @@
 ## 属性值都有哪些(5种)
 - static（静态定位）
 
-对象遵循标准文档流中，top, right, bottom, left 等属性失效。
+对象遵循标准文档流中，top, right, bottom, left,z-index等属性失效。
 - relative(相对定位)
 
 对象遵循标准文档流中，依赖top, right, bottom, left 等属性相对于该对象在标准文档流中的位置进行偏移，同时可通过z-index定义层叠关系。position:relative 对 table-*-group, table-row, table-column, table-cell, table-caption 元素无效。
@@ -12,7 +12,7 @@
 
 对象脱离标准文档流，通过指定元素相对于屏幕视口（viewport）的位置来指定元素位置。元素位置不随屏幕滚动改变。fixed 属性会创建新的层叠上下文。**当元素祖先的 transform  属性非 none 时，容器由视口改为该祖先。**
 - sticky(粘性定位)
-可以被认为是相对定位和固定定位的混合。元素在跨越特定阈值前为相对定位，之后为固定定位。position: sticky 对 table 元素的效果与 position: relative 相同。
+可以被认为是相对定位和固定定位的混合。元素在进入特定阈值前为相对定位，之后为固定定位。举个例子：当top=20px时，在元素往上移动的过程中，一旦进入top=20px的范围，就会固定定位。position: sticky 对 table 元素的效果与 position: relative 相同。
 
 
 填充规则：
