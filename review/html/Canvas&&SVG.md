@@ -32,9 +32,9 @@ Canvas 元素创造了一块固定大小的画布，用于使用 Javascript 在�
   cxt.fillRect(0,0,150,75); //(x坐标，y坐标，宽度，高度)
 ```
 
-![在这里插入图片描述](<https://github.com/glbb666/myNote/blob/master/review/html/images/canvas_1.png>)
+![canvas_1](images/canvas_1.png)
 
-### 给Canvas设置宽高
+### 给Canvas画布设置宽高
 
 我们先试试用css设置
 
@@ -45,19 +45,11 @@ Canvas 元素创造了一块固定大小的画布，用于使用 Javascript 在�
         }
 ```
 
-![在这里插入图片描述](<https://github.com/glbb666/myNote/blob/master/review/html/images/canvas_2.png>)
-
 矩形的宽高比例发生了改变！！！
 
-因为canvas的默认宽高为300px*150px，在css中设置canvas的宽高，`实际上是把canvas在300px*150px的基础上进行了拉伸`。
+因为canvas的默认宽高为300px*150px，在css中设置canvas的宽高，实际上是把canvas在300px*150px的基础上进行了拉伸。
 
-
-
-### 给Canvas设置宽高
-
-因为canvas的默认宽高为300px*150px，在css中设置canvas的宽高，实际上是**把canvas在300px * 150px的基础上进行了拉伸**。
-
-![在这里插入图片描述](<https://github.com/glbb666/myNote/blob/master/review/html/images/canvas_1.png>)
+![canvas_2](images/canvas_2.png)
 
 所以给Canvas设置宽高有**两种方法**
 

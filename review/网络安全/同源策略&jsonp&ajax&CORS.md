@@ -276,7 +276,7 @@ xhr.withCredentials = true;
      - `text/plain`
 	   - `multipart/form-data`
        - `application/x-www-form-urlencoded`
-  
+    
    - HTML头部header field字段：`DPR、Download、Save-Data、Viewport-Width、WIdth`
 
 3. 请求中的任意`XMLHttpRequestUpload` 对象均没有注册任何事件监听器；XMLHttpRequestUpload 对象可以使用 XMLHttpRequest.upload 属性访问
@@ -371,7 +371,7 @@ iframe.onload = function() {
 
 #### 4. 通过document.domain跨域
 
-> 比如，有一个页面，它的地址是`www.damona.cn/a.html`， 在这个页面里面有一个`iframe`，它的`src`是`damona.cn/b.html`, 很显然，这里产生了跨域问题。这个时候，我们只要把`www.damona.cn/a.html` 和 `damona.cn/b.html`这两个页面的document.domain都设成相同的域名就可以了。但要注意的是，<font color='red'>我们只能把document.domain设置成自身或更高一级的父域，且主域必须相同。</font>
+> `www.damona.cn/a.html`页面中`iframe`的`src`是`damona.cn/b.html`。这个时候，我们只要把`www.damona.cn/a.html` 和 `damona.cn/b.html`这两个页面的document.domain都设成相同的域名就可以了。但要注意的是，<font color='red'>我们只能把document.domain设置成自身或更高一级的父域，且主域必须相同。</font>
 
 - 在页面www.damona.cn/a.html 中设置document.domain:
 
@@ -389,7 +389,7 @@ iframe.onload = function() {
 
 ```javascript
 <script type="text/javascript">
-    document.domain = 'damonare.cn';//在iframe载入这个页面也设置document.domain，使之与主页面的document.domain相同
+    document.domain = 'damona.cn';//在iframe载入这个页面也设置document.domain，使之与主页面的document.domain相同
 </script>
 ```
 

@@ -50,13 +50,13 @@ eg: GET index.html HTTP/1.1
 
 🌟`GET`和`POST`有什么区别？
 
-#### 请求报头
+#### 请求头
 
 请求报头允许客户端向服务器传递请求的**附加信息**和**客户端自身的信息**。
 
 常见的请求报头有: Accept, Accept-Charset, Accept-Encoding, Accept-Language, Content-Type, Authorization, Cookie, User-Agent等。
 
-#### 请求正文
+#### 请求体
 
 当使用`POST`, `PUT`等方法时，通常需要客户端向服务器传递数据。这些**数据就储存在请求正文**中。在请求包头中有一些与请求正文相关的信息，例如: 现在的`Web`应用通常采用`Rest`架构，请求的数据格式一般为`json`。这时就需要设置`Content-Type: application/json`。
 

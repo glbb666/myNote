@@ -74,7 +74,7 @@ ws.onevent = function(event){
 用于指定连接关闭后的回调函数
 ## 两个方法
 
-#### send(data: string | ArrayBuffer | Blob): **void**
+#### `send(data: string | ArrayBuffer | Blob): **void**`
 
 实例对象的send()方法用于向服务器发送信息（三种信息）
 - 发字符串
@@ -100,16 +100,16 @@ for (var i = 0; i < img.data.length; i++) {
 ws.send(binary.buffer);
 ```
 >其中，字符串是文本信息，ArrayBuffer和blob是二进制信息
-#### close(code?: number, reason?: string): void
+#### `close(code?: number, reason?: string): void`
 
-关闭WebSocket连接或停止正在进行的连接请求。如果连接的状态已经是closed，这个方法不会有任何效果。
+关闭`WebSocket`连接或停止正在进行的连接请求。如果连接的状态已经是closed，这个方法不会有任何效果。
 
 - code 表示关闭连接的**状态号**，表示**关闭原因**。如果这个参数没有被指定，默认的取值是 1000 ，即正常连接关闭。更多取值查看 [CloseEvent](<https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent>) 页面。
 - reason 一个**描述性**的字符串，表示连接被关闭的原因。
 
-#### WebSocket.bufferedAmount
+#### `WebSocket.bufferedAmount`
 
-实例的bufferedAmount属性，表示还有多少字节的二进制数据还没有发送出去，它可以用来判断发送是否结束
+实例的`bufferedAmount`属性，表示还有多少字节的二进制数据还没有发送出去，它可以用来判断发送是否结束
 ```js
 var data = new ArrayBuffer(10000000);
 socket.send(data);
@@ -122,7 +122,7 @@ if (socket.bufferedAmount === 0) {
 ```
 ### 服务器端
 
-在执行客户端程序前，需要创建一个支持websocket的服务，也就是说需要服务端语言环境支持。我使用nodejs来作为服务端环境，通过安装`nodejs-websocket`模块来支持websocket。
+在执行客户端程序前，需要创建一个支持`websocket`的服务，也就是说需要服务端语言环境支持。我使用`nodejs`来作为服务端环境，通过安装`nodejs-websocket`模块来支持`websocket`。
 #### 创建连接
 
 ```js

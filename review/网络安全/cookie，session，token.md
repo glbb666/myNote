@@ -1,13 +1,12 @@
-
+`http`协议是无状态的，当用户登陆后，服务器可以在响应头设置一个`setCookie`的字段，这样客户端在之后的每一次请求都会带上这个`cookie`，但是因为`cookie`存在客户端，所以别人可以分析和篡改，并不会很安全，所以我们就有了`session`，`session`是存在客户端的，它的存储空间更大，`session`是通过`cookie`实现的，用户登陆成功后，服务器会生成一个`session`，并且把这个`session`的唯一标识，`session_id`存在`cookie`里，但是`session`的缺点就是，`session`需要存储所有用户的`session_id`，这个负担是很重的，因为`session_id`还是存在`cookie`里的，所以说`session`会被劫持，也就是我们`xxs`攻击，攻击者通过插入`js`脚本，脚本内部可以通过`document.cookie`来获取`cookie`内部的`session_id`，冒充用户身份。而且还有`csrf`攻击，用户登录一个A网站后未登出，服务器端就在浏览器上对这个网页`setCookie`，此时用户再登陆危险网站B，B网站中对A网站进行访问，就会造成攻击。为了预防`csrf`攻击，以及不给服务器造成那么大的存储负担。`token`出现了，`token`是无状态的，当用户登陆的时候，服务端会把用户名和密码进行加密，生成一个token令牌，保存在用户客户端的`localStorage`中，用户每次请求可以以参数的形式加入`token`，`token`不会被请求自动携带，也不可伪造，而且存储在客户端，不会给服务器带来负担，这样就解决了`session`出现的问题。
 
 ## cookie和session的区别
 
 1. **存放位置不同。**`cookie`数据存放在客户的浏览器上，session数据放在服务器上。
 2. **安全性不同。**`cookie`对客户端可见，别人可以分析存放在本地的`COOKIE`并进行`COOKIE`欺骗，考虑到安全应当使用`session`。为了提高安全性，可以把Cookie信息加密，提交到服务器后再进行解密，保证`Cookie`中的信息只要本人能读得懂。
-3. **服务器压力不同**。`session`会在一定时间内保存在服务器上。当访问增多，会比较占用你服务器的性能，考虑到减轻服务器性能方面，应当使用`COOKIE`。
 4. 单个`cookie`保存的数据不能超过`4K`，很多浏览器都限制一个站点最多保存20个`cookie`。
 5. **<font color='red'>有效期不同</font>**。`session`依赖于`cookie`，`cookie`中存储的`sessionId`的默认值为-1，只要关闭浏览器`session`就会失效，因而`session`不能完成信息永久有效的效果。假如设置`session`的超时时间过长，服务器累计的`session`过多会造成内存溢出。
-6. **跨域支持上的不同。Cookie支持跨域名访问**，例如将`domain`属性设置为`“.biaodianfu.com”`，则以`“.biaodianfu.com”`为后缀的一切域名均能够访问该`Cookie`。跨域名`Cookie`如今被普遍用在网络中，例如`Google`、`Baidu`、`Sina`等。而`Session`则不会支持跨域名访问。**`Session`仅在他所在的域名内有效**。
+6. **域支持上的范围不同**，域的支持范围不一样，比方说`a.com`的`Cookie`在`a.com`下都能用，而`www.a.com`的Session在`api.a.com`下都不能用，**`Session`仅在他所在的域名内有效**。
 
 ## Cookie
 
@@ -29,7 +28,13 @@
 
 顶级域名只能获取和设置domain设置为顶级域名的cookie，否则cookie无法生成。二级域名或者三级域名，只能获取和设置domain设置为顶级域名或者二级域名或者三级域名本身，不能设置和读取其他二级域名的cookie。所以要想`cookie`在多个二级域名中共享，需要设置`domain`为顶级域名。
 
-`path`:可以访问此`cookie`的页面路径。  这个属性设置的`url`且带有这个前缀的`url`路径都是有效的 。
+`path`：为服务器特定文档指定Cookie 。 这个属性设置的`url`且带有这个前缀的`url`路径都是有效的 。也就是子路径有效
+
+> 例如，设置 `Path=/docs`，则以下地址都会匹配：
+>
+> - `/docs`
+> - `/docs/Web/`
+> - `/docs/Web/HTTP`
 
 🌟路径和域一起构成cookie的作用范围
 
@@ -98,18 +103,12 @@ document.cookie = "name=xiaoming; age=12 "
 >这里的cookie只是一个存储机制，不是一个认证机制，所以没有`CSRF`攻击的风险
 
 4. 客户端每次像服务器发起请求，都要带上Token。
+5. 服务端收到请求，（用同样的算法和密钥， 对数据再计算一次签名 ）如果通过就返回数据,否则提示报错信息。
 
-5. 服务端收到请求，做解密和签名认证，判断其有效性
+### 关于这三种方式的提升
 
-#### 为什么使用token
-
-- token可以避开同源策略
-
-- token可以避免[CSRF](https://www.cnblogs.com/shanyou/p/5038794.html)攻击
-
-  >`CSRF`（Cross-site request forgery）跨站请求伪造：登陆受信任网站A并在本地生成cookie，在不登出A的情况下访问危险网站B。要抵御 `CSRF`，关键在于在请求中放入黑客所不能伪造的信息，并且该信息不存在于 cookie 之中。可以在 HTTP 请求中以参数的形式加入 `token`，并在服务器端建立一个拦截器来验证这个` token`，如果请求中没有` token` 或者` token `内容不正确，则认为可能是 `CSRF` 攻击而拒绝该请求。
-
-- token可以是无状态的，可以在多个服务间共享
+- `session`相对于`cookie`来说在`xss`和`csrf`攻击上来说，并没有什么提升。提升在于，`session`只是一个`sessionID`，`session`可以将重要信息存储在服务器，来防止泄露或篡改。
+- token可以预防`csrf`是因为token在发送请求时不会被自动携带，相对`session`还有一点的提升是不用像session一样存储大量`sessionId`，只是对发来的`token`和后台新计算的`token`进行对比从而鉴权，减少了服务器的压力，token可以避开同源策略
 
 #### Token有效期
 

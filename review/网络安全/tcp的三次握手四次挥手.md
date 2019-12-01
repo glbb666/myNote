@@ -6,8 +6,6 @@
 
 ## TCP报文格式
 
-TCP/IP协议的详细信息参看《TCP/IP协议详解》三卷本。下面是TCP报文格式图：
-
 ![img](https://user-gold-cdn.xitu.io/2017/11/9/156658d59583ec0274d5e1f9a23ac2e9?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
 
 上图中有几个字段需要重点介绍下：
