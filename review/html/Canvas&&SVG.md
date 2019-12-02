@@ -10,9 +10,7 @@ Canvas 元素创造了一块固定大小的画布，用于使用 Javascript 在�
 
 ```js
   let canvas = document.getElementById('#myCanvas');
-
   // 或者
-
   let myCanvas = document.createElement('canvas');
   document.body.append(myCanvas);
 ```
