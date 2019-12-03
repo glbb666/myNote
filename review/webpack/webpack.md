@@ -163,6 +163,8 @@ var baseConfig = {
 
 ### 常用的loader
 
+从下往上从右往左执行
+
 - `style-loader`：在 `DOM` 里插入一个 `<style>` 标签，并且将 `CSS` 写入这个标签内。
 
 - `css-loader`解析`CSS`文件后，使用 `import `加载，并且返回 CSS 代码
@@ -193,7 +195,7 @@ var baseConfig = {
 
 ### plugins和loader区别
 
-`loader`负责处理**源文件**，如`css`、`jsx`，一次处理一个文件。而`plugins`并不是直接操作单个文件，它直接对**整个构建过程**起作用，在特定的生命周期处理回调。
+`loader`负责处理**源文件**，如`css`、`jsx`，一次处理一个文件。而`plugins`并不是直接操作单个文件，它直接对**整个构建过程**起作用，在特定的生命周期用特定的钩子处理回调。
 
 ### 常用的`plugins`的用法
 #### `ExtractTextWebpackPlugin`（`webpack 4.x`版本不可用)

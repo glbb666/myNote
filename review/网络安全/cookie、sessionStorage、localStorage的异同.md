@@ -58,4 +58,43 @@
 
 #### 显示速度
 
-有的数据存储在`WebStorage`上，再加上浏览器本身的缓存。获取数据时可以从本地获取会比从服务器端获取快得多，所以速度更快；
+有的数据存储在`WebStorage`上，再加上浏览器本身的缓存。获取数据时可以从本地获取会比从服务器端获取快得多，所以速度更快
+
+#### 检测`localStorage`的最大容量
+
+检测`localStorage`的剩余容量只要把`localStorage`的最大容量减去`localStorage`的已用容量即可。
+
+`js`中一个英文占一个字节
+
+1kb = 1024b
+
+```javascript
+(function() {
+   if(!window.localStorage) {
+       console.log('当前浏览器不支持localStorage!')
+   }
+   var test = '0123456789';
+   var add = function(num) {
+     num += num;
+     if(num.length == 10240) {//10kb
+       test = num;
+       return;
+     }
+     add(num);
+   }
+   add(test);
+   var sum = test;
+   var show = setInterval(function(){
+      sum += test;
+      try {
+       window.localStorage.removeItem('test');
+       window.localStorage.setItem('test', sum);
+       console.log(sum.length / 1024 + 'KB');
+      } catch(e) {
+       console.log(sum.length / 1024 + 'KB超出最大限制');
+       clearInterval(show);
+      }
+   }, 0.1)
+ })()
+```
+

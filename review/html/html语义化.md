@@ -21,8 +21,6 @@
 
 ### h5 新增语义化标签
 
-![HTML5 语义化](<https://github.com/glbb666/myNote/blob/master/review/html/images/html5-layout.jpg>)
-
 ### header
 
 > 定义 section 或 page 的页眉
@@ -145,4 +143,6 @@ The Epcot Center is a theme park in Disney World, Florida.
 - **布局灵活**，能够通过样式选择来实现界面设计要求。
 - **改版方便**，通常只要更换相应的css样式就可改变网页风格。
 - **SEO**，table有表格嵌套问题，搜索引擎一般不抓取三层以上的表格嵌套。CSS的设计有助于SEO**让搜寻机器人更加轻易辨识网页内容**
+
+![1575365749661](images/1575365749661.png)
 

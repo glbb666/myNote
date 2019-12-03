@@ -74,27 +74,37 @@ flex 的核心的概念就是 **容器** 和 **轴**。容器有 **父容器** �
 
 
 
-  **子容器是有弹性的（flex 即弹性），它们会自动填充剩余空间，子容器的伸缩比例由 `flex` 属性确定。**
-
-  `flex` 的值可以是无单位数字（如：1, 2, 3），也可以是有单位数字（如：`15px，30px，60px`），还可以是 `none` 关键字。子容器会按照 `flex` 定义的尺寸比例自动伸缩，如果取值为 `none` 则不伸缩。
-
-  虽然 `flex` 是多个属性的缩写，允许 1 - 3 个值连用，但通常用 1 个值就可以满足需求，它的全部写法可参考下图。
-
-![img](images/78e9030183f686e0b6ed.png)
-
 flex的取值：
 
+**单值**
+
+- 无单位数：flex-grow的值
+- 有效的宽度：当作flex-basis的值
+
 - `initial(flex: 0 1 auto)`元素不会伸长会缩短
-
 - `auto(flex: 1 1 auto)`元素会伸长缩短
-
 - `none(flex: 0 0 auto)`元素不会伸长缩短
+
+**双值**
+
+第一个值必须为无单位数，当作`flex-grow`的值，第二个值必须为以下之一
+
+- 一个无单位数：`flex-shrink`的值
+- 一个有效的宽度值：它会被当作`flex-basis`的值
+
+💛<font color='red'>当使用一个或两个无单位数时, flex-basis会从auto变为0</font>
+
+**三值**
+
+- 第一个值必须为一个无单位数，并且它会被当作 `<flex-grow>` 的值。
+- 第二个值必须为一个无单位数，并且它会被当作  `<flex-shrink>` 的值。
+- 第三个值必须为一个有效的宽度值， 并且它会被当作 `<flex-basis>` 的值。
 
 🌟注意：
 
--  [`flex-basis`](https://developer.mozilla.org/zh-CN/docs/Web/CSS/flex-basis) 属性默认值为 `auto`。若值为`0`，**则必须加上单位**，以免被视作伸缩性。指定了 `flex-basis` 后，`width` 属性被忽略、不再起作用。但`flex-basis`会受到`min-width`和`max-width`的制约。当使用一个或两个无单位数时, flex-basis会从auto变为0。
-
-- `flex-basis` 表示在不伸缩的情况下子容器的原始尺寸。**主轴为横向时代表宽度，主轴为纵向时代表高度**。
+**flex-grow**默认值为 `0`，负值无效。
+**flex-shrink**默认值为`1`，负值无效。
+**flex-basis**默认值为 `auto`。`flex-basis` 表示在不伸缩的情况下子容器的原始尺寸。**主轴为横向时代表宽度，主轴为纵向时代表高度**。指定了 `flex-basis` 后，`width`/height 属性被忽略、不再起作用。但`flex-basis`会受到`min-width`和`max-width`的制约。
 
 ##### 单独设置子容器如何沿交叉轴排列：**align-self**
 
