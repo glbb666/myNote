@@ -4,7 +4,7 @@
 
 ### 两种模式
 
-#### 1. hash 模式
+#### 1. `hash` 模式
 
 **Hash模式就是通过改变#后面的hash值,实现浏览器渲染指定的组件**。因为hash 值的变化，并不会导致浏览器向服务器发出请求，也就不会刷新页面。所以我们可以通过监听`window.hashchange` 这个事件进行路由跳转，更新页面部分内容。
 
@@ -16,7 +16,7 @@ window.addEventListener('hashchange', matchAndUpdate)
 ```
 但是由于`#`不够美观，所以又有了`history`模式。
 
-#### 2. history 模式
+#### 2. `history `模式
 
 通过`pushState` 和 `replaceState`分别对当前历史记录进行添加和修改，不会发送请求。`popstate`事件，会在用户点击浏览器倒退按钮和前进按钮，或者调用 `history` 的`back`、`forward`、`go`方法时才会触发。
 
@@ -280,3 +280,4 @@ const Foo = {
 ```
 
 ### `Vue-router`的实现原理
+
