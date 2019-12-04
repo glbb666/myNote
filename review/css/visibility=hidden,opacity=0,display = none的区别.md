@@ -1,6 +1,5 @@
-### visibility=hidden,opacity=0,display = none的区别
-
-- `opacity = 0`：该元素隐藏起来了，但不会改变页面布局，并且，如果该元素已经绑定一些事件，如`click`事件，那么点击该区域，还是能触发该事件
-- `visibility = hidden`：该元素隐藏起来了，但不会改变页面布局，也不会触发该元素已经绑定的事件
-- `display = none`：把元素隐藏起来，并且会改变页面布局，可以理解成在页面中把该元素删除掉一样
+### display = none,visibility=hidden,opacity=0的区别
+- `display = none`：不占据空间，引起重绘和回流，不会被子元素继承，`transition`无效，无法触发绑定事件
+- `visibility = hidden`：占据空间，引起重绘，会继承，子元素可用`visibility:visible`显示，`transition`无效，无法触发绑定事件
+- `opacity = 0`：占据空间，引起重绘，会继承，子元素设置`opacity=1`依然不能显示，可以触发绑定事件
 
