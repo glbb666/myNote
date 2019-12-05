@@ -15,7 +15,7 @@
 - 网格元素（`display`为` grid` 或` inline-grid` 元素的直接子元素）
 - 多列容器（元素的 `column-count` 或 `column-width` 不为 `auto`，包括 `column-count`为1）
 
-#### display:flow-root的生效条件
+#### `display:flow-root`的生效条件
 
 - `float` 的值`不是none`。
 -  `overflow`的使用值`不是 visible`

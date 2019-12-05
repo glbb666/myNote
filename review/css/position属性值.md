@@ -34,15 +34,17 @@
 填充规则：
 
 - `height`和`width`被设定为`auto`的绝对定位元素，按其内容大小调整尺寸。但，被绝对定位的元素可以通过指定`top`和`bottom` ，保留`height`未指定（即`auto`），来填充可用的垂直空间。它们同样可以通过指定`left `和 `right`并将`width `指定为`auto`来填充可用的水平空间。
-- `top`,`bottom`同时设定时`top`优先。`left`,` right`同时设置，当 `direction`设置为 `ltr`时 `left` 优先， 当`direction`设置为` rtl`时` right `优先。
 
-### sticky生效以及失效
-- 须**指定 top, right, bottom 或 left 四个阈值其中之一，才可使粘性定位生效**。否则其行为与**相对定位**相同。
-- 元素自身在文档流中的位置
-上面已经讲过了，如果设置了**top: 50px**，那么元素在达到距离顶部50px时才会发生定位，否则并不会发生定位。
-- 该元素的父容器的边缘
-sticky元素在到达父容器的底部时，则不会再发生定位，如果父容器高度并没有比sticky元素高，那么sticky元素一开始就达到了底部，并不会有定位的效果。
-- 父元素的**overflow**属性，如果父元素的**overflow**属性并不是默认的**visible**属性，那么**sticky**元素则相对于该父元素定位。也就是如果要定位在顶部的话，此时这个效果就无效了。
+>  根元素(<html>)所在的包含块是一个被称为**初始包含块**的矩形。
+
+#### 根据包含块计算百分值
+
+如上所述，如果某些属性被赋予一个百分值的话，它的计算值是由这个元素的包含块计算而来的。这些属性包括盒模型属性和偏移属性：
+
+1. 要计算 [`height`](https://developer.mozilla.org/zh-CN/docs/Web/CSS/height) [`top`](https://developer.mozilla.org/zh-CN/docs/Web/CSS/top) 及 [`bottom`](https://developer.mozilla.org/zh-CN/docs/Web/CSS/bottom) 中的百分值，是通过包含块的 `height` 的值。如果包含块的 `height` 值会根据它的内容变化，而且包含块的 `position` 属性的值被赋予 `relative` 或 `static` ，那么，这些值的计算值为 `0`。
+2. 要计算 [`width`](https://developer.mozilla.org/zh-CN/docs/Web/CSS/width), [`left`](https://developer.mozilla.org/zh-CN/docs/Web/CSS/left), [`right`](https://developer.mozilla.org/zh-CN/docs/Web/CSS/right), [`padding`](https://developer.mozilla.org/zh-CN/docs/Web/CSS/padding), [`margin`](https://developer.mozilla.org/zh-CN/docs/Web/CSS/margin) 这些属性由包含块的 `width` 属性的值来计算它的百分值。
+
+
 
 ![image](images/bbcdaa41c5d4338434c3dfc2e5b5c47f_articlex.png)
 

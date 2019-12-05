@@ -154,8 +154,8 @@ function selectSort(arr) {
 
 ```js
 function bubbleSort(arr) {
-  for (let i = 0; i < arr.length; i++) {
-    for (let j = 0; j < arr.length - 1; j++) {
+  for (let i = 1; i < arr.length; i++) {
+    for (let j = 0; j < arr.length - i; j++) {
       if (arr[j] > arr[j + 1]) {
         [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]]
       }
@@ -177,8 +177,6 @@ function printListFromTailToHead(h) {
   console.log(h.val)
 }
 ```
-
-
 
 ### 原地翻转非递归
 
@@ -491,7 +489,7 @@ function testType(target) {
 }
 ```
 
-### 深克隆
+### 深拷贝
 
 ```js
 function deepclone(target, map = new WeakMap()) {
@@ -513,10 +511,11 @@ function deepclone(target, map = new WeakMap()) {
 ### 函数柯里化
 
 ```js
-function currying(fn, ...args1) {
-  return args1.length >= fn.length
-    ? fn(...args1)
-    : (...args2) => currying(fn, ...args1, ...args2)
+function curry(fn, ...args) {
+    return function(){
+        var _args = [...args,...arguments];
+        return _args.length<fn.length?curry.call(this, fn, ..._args):fn.apply(this,_args);
+    }
 }
 ```
 
@@ -642,8 +641,6 @@ function Ajax(options) {
 
 
 ```
-
-
 
 ### reduce实现map
 
@@ -771,3 +768,4 @@ function promiseAll(promises) {
   })
 }
 ```
+

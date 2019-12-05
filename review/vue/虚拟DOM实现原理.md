@@ -1,42 +1,14 @@
-## 一、真实`DOM`和其解析流程
+## 一、`Virtual-DOM` 基础
 
-​	本节我们主要介绍真实   `DOM` 的解析过程，通过介绍其解析过程以及存在的问题，从而引出为什么需要虚拟`DOM`。一图胜千言，如下图为 `webkit` 渲染引擎工作流程图
+### 1.1、虚拟 `DOM` 的好处
 
+原生 `JS` 操作 `DOM` 时，浏览器会从构建 DOM 树开始从头到尾执行一遍流程。若一次操作中有 10 次更新 `DOM` 的动作，浏览器收到第一个 `DOM` 请求后并不知道还有 9 次更新操作，因此会马上执行流程，最终执行10 次。例如，第一次计算完，紧接着下一个 `DOM` 更新请求，这个节点的坐标值就变了，前一次计算为无用功。虚拟 `DOM` 就是为了解决浏览器性能问题而被设计出来的。虚拟 `DOM` 不会立即操作 `DOM`，而是将这 10 次更新的 `diff` 内容保存到本地一个 `JS` 对象中，最终将这个 `JS` 对象一次性 `attch` 到 `DOM` 树上，再进行后续操作，避免大量无谓的计算量。所以，用 `JS` 对象模拟 `DOM` 节点的好处是，页面的更新可以先全部反映在 `JS` 对象(虚拟 `DOM` )上，操作内存中的 `JS` 对象的速度显然要更快，等更新完成后，再将最终的 `JS` 对象映射成真实的 `DOM`，交由浏览器去绘制。
 
+### 1.2、算法实现
 
-![img](images/16c1e10922325215)
+#### 1.2.1、用 `JS` 对象模拟 `DOM` 树
 
-
-
-​	所有的浏览器渲染引擎工作流程大致分为5步：创建`DOM` 树 —> 创建 `Style Rules` -> 构建 `Render` 树 —> 布局 `Layout` -—> 绘制 `Painting`。
-
-- 第一步，构建 DOM 树：用 HTML 分析器，分析 HTML 元素，构建一棵 DOM 树；
-- 第二步，生成样式表：用 CSS 分析器，分析 CSS 文件和元素上的 inline 样式，生成页面的样式表；
-- 第三步，构建 Render 树：将 DOM 树和样式表关联起来，构建一棵 Render 树（Attachment）。每个 DOM 节点都有 attach 方法，接受样式信息，返回一个 render 对象（又名 renderer），这些 render 对象最终会被构建成一棵 Render 树；
-- 第四步，确定节点坐标：根据 Render 树结构，为每个 Render 树上的节点确定一个在显示屏上出现的精确坐标；
-- 第五步，绘制页面：根据 Render 树和节点显示坐标，然后调用每个节点的 paint 方法，将它们绘制出来。
-
-**注意点：**
-
-**1、`DOM` 树的构建是文档加载完成开始的？** 构建 `DOM` 树是一个渐进过程，为达到更好的用户体验，渲染引擎会尽快将内容显示在屏幕上，它不必等到整个 `HTML` 文档解析完成之后才开始构建 `render` 树和布局。
-
-**2、`Render` 树是 `DOM `树和` CSS` 样式表构建完毕后才开始构建的？** 这三个过程在实际进行的时候并不是完全独立的，而是会有交叉，会一边加载，一边解析，以及一边渲染。
-
-**3、`CSS `的解析注意点？** `CSS` 的解析是从右往左逆向解析的，嵌套标签越多，解析越慢。
-
-**4、`JS `操作真实` DOM `的代价？** 用我们传统的开发模式，原生 `JS` 或 `JQ` 操作 `DOM` 时，浏览器会从构建 DOM 树开始从头到尾执行一遍流程。在一次操作中，我需要更新 10 个 `DOM` 节点，浏览器收到第一个 `DOM` 请求后并不知道还有 9 次更新操作，因此会马上执行流程，最终执行10 次。例如，第一次计算完，紧接着下一个 `DOM` 更新请求，这个节点的坐标值就变了，前一次计算为无用功。计算 `DOM` 节点坐标值等都是白白浪费的性能。即使计算机硬件一直在迭代更新，操作 `DOM` 的代价仍旧是昂贵的，频繁操作还是会出现页面卡顿，影响用户体验
-
-## 二、`Virtual-DOM` 基础
-
-### 2.1、虚拟 `DOM` 的好处
-
-​	虚拟 `DOM` 就是为了解决浏览器性能问题而被设计出来的。如前，若一次操作中有 10 次更新 `DOM` 的动作，虚拟 `DOM` 不会立即操作 `DOM`，而是将这 10 次更新的 `diff` 内容保存到本地一个 `JS` 对象中，最终将这个 `JS` 对象一次性 `attch` 到 `DOM` 树上，再进行后续操作，避免大量无谓的计算量。所以，用 `JS` 对象模拟 `DOM` 节点的好处是，页面的更新可以先全部反映在 `JS` 对象(虚拟 `DOM` )上，操作内存中的 `JS` 对象的速度显然要更快，等更新完成后，再将最终的 `JS` 对象映射成真实的 `DOM`，交由浏览器去绘制。
-
-### 2.2、算法实现
-
-#### 2.2.1、用 `JS` 对象模拟 `DOM` 树
-
-**（1）如何用 JS 对象模拟 DOM 树**
+**（1）如何用` JS` 对象模拟 `DOM `树**
 
 例如一个真实的 `DOM` 节点如下：
 
@@ -65,7 +37,7 @@
  */
 function Element(tagName, props, children) {
     this.tagName = tagName
-    this.props = props
+    this.props = props//属性值,一个对象
     this.children = children
     // dom 元素的 key 值，用作唯一标识符
     if(props.key){
@@ -83,11 +55,9 @@ function Element(tagName, props, children) {
     // 子元素个数
     this.count = count
 }
-
 function createElement(tagName, props, children){
- return new Element(tagName, props, children);
+	return new Element(tagName, props, children);
 }
-
 module.exports = createElement;
 ```
 
@@ -161,7 +131,7 @@ document.body.appendChild(ulRoot);
 
 #### 2.2.2、比较两棵虚拟 `DOM` 树的差异 — `diff` 算法
 
-`diff` 算法用来比较两棵 `Virtual DOM` 树的差异，如果需要两棵树的完全比较，那么 `diff` 算法的时间复杂度为`O(n^3)`。但是在前端当中，你很少会跨越层级地移动 `DOM` 元素，所以 `Virtual DOM` 只会对同一个层级的元素进行对比，如下图所示， `div` 只会和同一层级的 `div` 对比，第二层级的只会跟第二层级对比，这样算法复杂度就可以达到 `O(n)`。
+`diff` 算法用来比较两棵 `Virtual DOM` 树的差异，如果需要两棵树的完全比较，那么 `diff` 算法的时间复杂度为`O(n^3)`。但是在前端当中很少会跨越层级地移动 `DOM` 元素，所以 `Virtual DOM` 只会对同层元素进行对比，如下图所示， `div` 只会和同一层级的 `div` 对比，第二层级的只会跟第二层级对比，这样算法复杂度就可以达到 `O(n)`。
 
 
 
@@ -173,15 +143,11 @@ document.body.appendChild(ulRoot);
 
 在实际的代码中，会对新旧两棵树进行一个深度优先的遍历，这样每个节点都会有一个唯一的标记：
 
-
-
 ![dfs-walk](images/16c1e0e2873e42b1)
-
-
 
 在深度优先遍历的时候，每遍历到一个节点就把该节点和新的的树进行对比。如果有差异的话就记录到一个对象里面。
 
-```
+```javascript
 // diff 函数，对比两棵树
 function diff(oldTree, newTree) {
   var index = 0 // 当前节点的标志
@@ -189,7 +155,6 @@ function diff(oldTree, newTree) {
   dfsWalk(oldTree, newTree, index, patches)
   return patches
 }
-
 // 对两棵树进行深度优先遍历
 function dfsWalk(oldNode, newNode, index, patches) {
   var currentPatch = []
@@ -223,7 +188,6 @@ function dfsWalk(oldNode, newNode, index, patches) {
     patches[index] = currentPatch
   }
 } 
-复制代码
 ```
 
 从以上可以得出，`patches[1]` 表示 `p` ，`patches[3]` 表示 `ul` ，以此类推。
@@ -244,14 +208,13 @@ var REPLACE = 0 // 替换原先的节点
 var REORDER = 1 // 重新排序
 var PROPS = 2 // 修改了节点的属性
 var TEXT = 3 // 文本内容改变 
-复制代码
 ```
 
 **（3）列表对比算法**
 
-​	子节点的对比算法，例如      `p, ul, div` 的顺序换成了 `div, p, ul`。这个该怎么对比？如果按照同层级进行顺序对比的话，它们都会被替换掉。如 `p` 和 `div` 的 `tagName` 不同，`p` 会被 `div` 所替代。最终，三个节点都会被替换，这样 `DOM` 开销就非常大。而实际上是不需要替换节点，而只需要经过节点移动就可以达到，我们只需知道怎么进行移动。
+子节点的对比算法，例如 `p, ul, div` 的顺序换成了 `div, p, ul`。这个该怎么对比？如果按照同层级进行顺序对比的话，它们都会被替换掉。如 `p` 和 `div` 的 `tagName` 不同，`p` 会被 `div` 所替代。最终，三个节点都会被替换，这样 `DOM` 开销就非常大。而实际上是不需要替换节点，而只需要经过节点移动就可以达到，我们只需知道怎么进行移动。
 
-​	将这个问题抽象出来其实就是字符串的最小编辑距离问题（`Edition Distance`），最常见的解决方法是 `Levenshtein Distance` , `Levenshtein Distance` 是一个度量两个字符序列之间差异的字符串度量标准，两个单词之间的 `Levenshtein Distance` 是将一个单词转换为另一个单词所需的单字符编辑（插入、删除或替换）的最小数量。`Levenshtein Distance` 是1965年由苏联数学家 Vladimir Levenshtein 发明的。`Levenshtein Distance` 也被称为编辑距离（`Edit Distance`），通过**动态规划**求解，时间复杂度为 `O(M*N)`。
+将这个问题抽象出来其实就是字符串的最小编辑距离问题（`Edition Distance`），最常见的解决方法是 `Levenshtein Distance` , `Levenshtein Distance` 是一个度量两个字符序列之间差异的字符串度量标准，两个单词之间的 `Levenshtein Distance` 是将一个单词转换为另一个单词所需的单字符编辑（插入、删除或替换）的最小数量。`Levenshtein Distance` 是1965年由苏联数学家 Vladimir Levenshtein 发明的。`Levenshtein Distance` 也被称为编辑距离（`Edit Distance`），通过**动态规划**求解，时间复杂度为 `O(M*N)`。
 
 定义：对于两个字符串 `a、b`，则他们的 `Levenshtein Distance` 为：
 
@@ -310,9 +273,9 @@ console.log('patches:',patches);
 
 **（1）深度优先遍历 DOM 树**
 
-​	因为步骤一所构建的         `JavaScript` 对象树和 `render` 出来真正的 `DOM` 树的信息、结构是一样的。所以我们可以对那棵 `DOM` 树也进行深度优先的遍历，遍历的时候从步骤二生成的 `patches` 对象中找出当前遍历的节点差异，如下相关代码所示：
+​	因为步骤一所构建的`JavaScript` 对象树和 `render` 出来真正的 `DOM` 树的信息、结构是一样的。所以我们可以对那棵 `DOM` 树也进行深度优先的遍历，遍历的时候从步骤二生成的 `patches` 对象中找出当前遍历的节点差异，如下相关代码所示：
 
-```
+```javascript
 function patch (node, patches) {
   var walker = {index: 0}
   dfsWalk(node, walker, patches)
@@ -336,14 +299,13 @@ function dfsWalk (node, walker, patches) {
     applyPatches(node, currentPatches)
   }
 } 
-复制代码
 ```
 
 **（2）对原有 DOM 树进行 DOM 操作**
 
 我们根据不同类型的差异对当前节点进行不同的 `DOM` 操作 ，例如如果进行了节点替换，就进行节点替换 `DOM` 操作；如果节点文本发生了改变，则进行文本替换的 `DOM` 操作；以及子节点重排、属性改变等 `DOM` 操作，相关代码如 `applyPatches` 所示 ：
 
-```
+```javascript
 function applyPatches (node, currentPatches) {
   currentPatches.forEach(currentPatch => {
     switch (currentPatch.type) {
@@ -367,7 +329,6 @@ function applyPatches (node, currentPatches) {
     }
   })
 } 
-复制代码
 ```
 
 **（3）DOM结构改变**
@@ -388,7 +349,7 @@ function applyPatches (node, currentPatches) {
 
 - 用 `JS` 对象模拟 `DOM` 树 — `element.js`
 
-  ```
+  ```html
   <div id="virtual-dom">
   <p>Virtual DOM</p>
   <ul id="list">
@@ -398,9 +359,8 @@ function applyPatches (node, currentPatches) {
   </ul>
   <div>Hello World</div>
   </div> 
-  复制代码
   ```
-
+  
 - 比较两棵虚拟 `DOM` 树的差异 — `diff.js`
 
 
@@ -411,7 +371,7 @@ function applyPatches (node, currentPatches) {
 
 - 将两个虚拟 `DOM` 对象的差异应用到真正的 `DOM` 树 — `patch.js`
 
-  ```
+  ```javascript
   function applyPatches (node, currentPatches) {
     currentPatches.forEach(currentPatch => {
       switch (currentPatch.type) {
@@ -435,7 +395,6 @@ function applyPatches (node, currentPatches) {
       }
     })
   } 
-  复制代码
   ```
 
 ## 三、`Vue` 源码 `Virtual-DOM` 简析
@@ -448,7 +407,7 @@ function applyPatches (node, currentPatches) {
 
 在 `Vue.js` 中，`Virtual DOM` 是用 `VNode` 这个 `Class` 去描述，它定义在 `src/core/vdom/vnode.js` 中 ，从以下代码块中可以看到 `Vue.js` 中的 `Virtual DOM` 的定义较为复杂一些，因为它这里包含了很多 `Vue.js` 的特性。实际上 `Vue.js` 中 `Virtual DOM` 是借鉴了一个开源库  [snabbdom](https://github.com/snabbdom/snabbdom) 的实现，然后加入了一些 `Vue.js` 的一些特性。
 
-```
+```javascript
 export default class VNode {
   tag: string | void;
   data: VNodeData | void;
@@ -513,7 +472,6 @@ export default class VNode {
     this.isAsyncPlaceholder = false
   }
 }
-复制代码
 ```
 
 这里千万不要因为 `VNode` 的这么属性而被吓到，或者咬紧牙去摸清楚每个属性的意义，其实，我们主要了解其几个核心的关键属性就差不多了，例如：
@@ -531,7 +489,7 @@ export default class VNode {
 
 我们在实例化一个 `vue` 实例，也即 `new Vue( )` 时，实际上是执行 `src/core/instance/index.js`  中定义的 `Function` 函数。
 
-```
+```javascript
 function Vue (options) {
   if (process.env.NODE_ENV !== 'production' &&
     !(this instanceof Vue)
@@ -540,12 +498,11 @@ function Vue (options) {
   }
   this._init(options)
 }
-复制代码
 ```
 
 通过查看 `Vue` 的 `function`，我们知道 `Vue` 只能通过 `new` 关键字初始化，然后调用 `this._init` 方法，该方法在 `src/core/instance/init.js` 中定义。
 
-```
+```javascript
   Vue.prototype._init = function (options?: Object) {
     const vm: Component = this
       
@@ -556,7 +513,6 @@ function Vue (options) {
       vm.$mount(vm.$options.el)
     }
   }
-复制代码
 ```
 
 **（2）Vue 实例挂载**
@@ -918,7 +874,7 @@ function sameVnode (a, b) {
 
 ​	这里着重分析下`updateChildren`方法，它也是整个 `diff` 过程中最重要的环节，以下为 `Vue.js` 的源码过程，为了更形象理解 `diff` 过程，我们给出相关的示意图来讲解。
 
-```
+```javascript
   function updateChildren (parentElm, oldCh, newCh, insertedVnodeQueue, removeOnly) {
     // 为oldCh和newCh分别建立索引，为之后遍历的依据
     let oldStartIdx = 0
@@ -930,7 +886,6 @@ function sameVnode (a, b) {
     let newStartVnode = newCh[0]
     let newEndVnode = newCh[newEndIdx]
     let oldKeyToIdx, idxInOld, vnodeToMove, refElm
-
     // 直到oldCh或者newCh被遍历完后跳出循环
     while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
       if (isUndef(oldStartVnode)) {
@@ -983,50 +938,31 @@ function sameVnode (a, b) {
       removeVnodes(parentElm, oldCh, oldStartIdx, oldEndIdx)
     }
   }
-复制代码
 ```
 
 在开始遍历 `diff` 前，首先给 `oldCh`和 `newCh` 分别分配一个 `startIndex` 和 `endIndex` 来作为遍历的索引，当`oldCh` 或者 `newCh` 遍历完后(遍历完的条件就是 `oldCh` 或者 `newCh` 的 `startIndex >= endIndex` )，就停止`oldCh` 和 `newCh` 的 `diff` 过程。接下来通过实例来看下整个 `diff` 的过程(节点属性中不带 `key` 的情况)。
 
-**（2）无 key 的 diff 过程**
+**（2）无 `key `的` diff `过程**
 
 我们通过以下示意图对以上代码过程进行讲解：
 
 （2.1）首先从第一个节点开始比较，不管是 `oldCh` 还是 `newCh` 的起始或者终止节点都不存在 `sameVnode` ，同时节点属性中是不带 `key`标记的，因此第一轮的 `diff` 完后，`newCh`的 `startVnode` 被添加到 `oldStartVnode`的前面，同时 `newStartIndex`前移一位；
 
-
-
 ![å¾çæè¿°](images/16c1e0e2878c44dc)
 
-
-
-（2.2）第二轮的 `diff`中，满足 `sameVnode(oldStartVnode, newStartVnode)`，因此对这2个 `vnode` 进行`diff`，最后将 `patch` 打到 `oldStartVnode` 上，同时 `oldStartVnode`和 `newStartIndex` 都向前移动一位 ；
-
-
+（2.2）第二轮的 `diff`中，满足 `sameVnode(oldStartVnode, newStartVnode)`，因此对这2个 `vnode` 进行`diff`，最后将 `patch` 打到 `oldStartVnode` 上，同时 `oldStartVnode`和 `newStartIndex` 都向前移动一位 
 
 ![å¾çæè¿°](images/16c1e0e28889eaff)
 
-
-
 （2.3）第三轮的 `diff` 中，满足 `sameVnode(oldEndVnode, newStartVnode)`，那么首先对  `oldEndVnode`和`newStartVnode` 进行 `diff`，并对 `oldEndVnode`进行 `patch`，并完成  `oldEndVnode` 移位的操作，最后`newStartIndex`前移一位，`oldStartVnode` 后移一位；
-
-
 
 ![å¾çæè¿°](images/16c1e0e289a351b2)
 
-
-
 （2.4）第四轮的 `diff`中，过程同步骤3；
-
-
 
 ![å¾çæè¿°](images/16c1e0e289f9213e)
 
-
-
 （2.5）第五轮的 `diff` 中，同过程1；
-
-
 
 ![å¾çæè¿°](images/16c1e0e28aee99a1)
 
@@ -1040,7 +976,7 @@ function sameVnode (a, b) {
 
 
 
-**（3）有 key 的 diff 流程**
+**（3）有 `key `的 `diff `流程**
 
 在 `vnode` 不带 `key` 的情况下，每一轮的 `diff` 过程当中都是`起始`和`结束`节点进行比较，直到 `oldCh` 或者`newCh` 被遍历完。而当为 `vnode` 引入 `key` 属性后，在每一轮的 `diff` 过程中，当`起始`和`结束`节点都没有找到`sameVnode` 时，然后再判断在 `newStartVnode` 的属性中是否有 `key`，且是否在 `oldKeyToIndx` 中找到对应的节点 ：
 
@@ -1129,12 +1065,4 @@ export function removeChild (node: Node, child: Node) {
 
 ## 四、总结
 
-本文从通过介绍真实 `DOM` 结构其解析过程以及存在的问题，从而引出为什么需要虚拟 `DOM`；然后分析虚拟`DOM` 的好处，以及其一些理论基础和基础算法的实现；最后根据我们已经掌握的基础知识，再一步步去查看`Vue.js` 的源码如何实现的。从存在问题 —> 理论基础 —> 具体实践，一步步深入，帮助大家更好的了解什么是`Virtual DOM`、为什么需要 `Virtual DOM`、以及 `Virtual DOM`的具体实现，希望本文对您有帮助。
-
-作者：我是你的超级英雄
-
-链接：https://juejin.im/post/5d36cc575188257aea108a74
-
-来源：掘金
-
-著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
+本文从通过介绍真实 `DOM` 结构其解析过程以及存在的问题，从而引出为什么需要虚拟 `DOM`；然后分析虚拟`DOM` 的好处，以及其一些理论基础和基础算法的实现；最后根据我们已经掌握的基础知识，再一步步去查看`Vue.js` 的源码如何实现的。从存在问题 —> 理论基础 —> 具体实践，一步步深入，帮助大家更好的了解什么是`Virtual DOM`、为什么需要 `Virtual DOM`、以及 `Virtual DOM`的具体实现，希望本文对您有帮助
