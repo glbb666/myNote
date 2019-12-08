@@ -10,23 +10,8 @@
 
 ###  同源策略和跨域？
 
-> 如果两个页面的协议，端口和主机都相同，则两个页面具有相同的**源**不满足同源策列就会导致跨域。
+> 如果两个页面的协议，端口和主机都相同，则两个页面具有相同的**源**。不满足同源策列，谷歌浏览器跨域请求不会发起，其他浏览器可发送跨域请求，但是相应会被浏览器拦截。
 >
-
-#### 同源策略的限制
-
-同源资源都是可读写的
-
-不同源：
-
-- `iframe`：访问跨域页面时, 只读，不同的框架之间是可以获取window对象的，但却无法获取相应的属性和方法。
-
-- `Ajax`：跨域请求会直接**被浏览器拦截**(chrome下跨域请求不会发起, 其他浏览器一般是可发送跨域请求, 但响应被浏览器拦截)
-
-##### 还限制了
-
-- `DOM`结点
-- `cookie`，`localStorage`，`IndexDB`等存储型内容
 
 🌟但是有三种标签允许跨域加载资源
 
@@ -34,38 +19,15 @@
 - `<link href=XXX>`
 - `<script src=XXX>`
 
-#### 理解域名
-
-##### 顶级域名&二级域名&三级域名
-
-**顶级域名**是域名中最高的一级，每个域名都以顶级域名结尾。顶级域名下面是二级域名，它位于顶级域名的左侧，二级域名下面是三级域名。例如，在`zh.wikipedia.org`中，`org`是顶级域名，`wikipedia`是二级域名。，`zh`是三级域名。
-
-##### 子域
-
-**子域**是属于更高一层域的域。比如，`mail.example.com`和`calendar.example.com`是`example.com`的两个子域，而`example.com`则是顶级域`.com`的子域。
-
-**域名带不带`www`的区别**
-`www`代表的是主机名，`www.baidu.com`为三级域名，`baidu.com`属于二级域名。
-
-🌟注意：
-
-1. 如果是**协议**和**端口**造成的跨域问题“前台”是无能为力的；
-2. 域不会判断相同的`ip`地址对应着两个域或两个域是否在同一个`ip`上。
-
 ### AJAX
 
 #### `AJAX`是什么
 
-`AJAX`是一种无需刷新页面就可以从服务器获取到数据的技术,它的核心是`XMLHttpRequest`对象
-
-#### `AJAX`的原理
-
-Ajax相当于在用户和服务器之间加了一个中间层(ajax引擎)，让用户的操作与服务器响应异步化。并不是所有的用户请求都提交给服务器，像—些数据验证(比如判断用户是否输入了数据)和数据处理(比如判断用户输入数据是否是数字)等都交给Ajax引擎自己来做, 只有确定需要从服务器读取新数据时再由Ajax引擎代为向服务器提交请求。把这些交给了Ajax引擎，用户操作起来也就感觉更加流畅了。
+`AJAX`是的核心是`XMLHttpRequest`对象，它不必刷新页面就可以从服务器获取到新数据。
 
 #### 创建步骤
 
 ```javascript
- 	var url = 'http://localhost:8080/';
     function ajax(url){
         var xhr = new XMLHttpRequest();
         //注意onreadystatechange全小写
@@ -104,15 +66,9 @@ Ajax相当于在用户和服务器之间加了一个中间层(ajax引擎)，让�
   //所有数据变成键值对的形式，并且特殊字符需要转义成utf-8编号
   ```
   
-  对于`GET`请求，格式化的字符串将直接拼接在`url`后发送到服务端；对于`POST`请求，在`chrome`的`network`面板下，格式化的字符串将放在`http body`的`Form Data`中发送，如下![1574322417300](images/1574322417300.png)
-  
 - `multipart/form-data`：不对字符编码。在使用表单上传文件时，必须使用该值。请求体被` --boundary`分割成多部分
 
-- `application/json`：用来告诉服务器消息主题是序列化后的JSON字符串，一般用来传递复杂的数据对象
-
-🌟注意：`ContentType`为 `application/json`时会发两次请求，第一次先发`Method`为`OPTIONS`的请求询问服务器支持哪些请求方法(比如`GET`,`POST`)等。如果这个请求支持跨域的话，才会发送第二个请求，否则的话在控制台会报错，第二个请求不会发送。
-
-![img](images/561794-20180430230355691-288861275.png)
+- `application/json`：用来告诉服务器消息主题是序列化后的JSON字符串，一般用来传递复杂的数据对象。用这个值时发送的是非简单请求，非简单请求就是会触发预检的请求。
 
 
 #### AJAX返回的状态
@@ -139,7 +95,7 @@ Ajax相当于在用户和服务器之间加了一个中间层(ajax引擎)，让�
 
 ##### `fecth`
 
-优点:`API`基于`promise`方便异步,支持`node`,比较轻量
+优点:基于`promise`，支持`node`,比较轻量
 
 缺点：除了**网络故障或者请求被阻止**时会将`promise`状态标记为`reject`，其他情况下`fecth`返回的`promise`状态都为`resolve`(但是会将 resolve 的返回值的 `ok` 属性设置为 `false` )，默认情况下，`fecth`不会从服务器接受或发送`cookie`，必须设置`credenitials`选项，所以需要我们再次封装
 
@@ -163,10 +119,6 @@ axios.all([getUserAccount(), getUserPermissions()])
   }));
 //并发案例
 ```
-
-这个支持防止`CSRF`其实挺好玩的，是怎么做到的呢，就是让你的每个请求都带一个从`cookie`中拿到的`key`, 根据浏览器同源策略，假冒的网站是拿不到你`cookie`中得`key`的，这样，后台就可以轻松辨别出这个请求是否是用户在假冒网站上的误导输入，从而采取正确的策略。
-
-🌟注意:`ajax`请求是不能跨域的
 
 ### 单向跨域
 
@@ -241,7 +193,7 @@ server.all('*',function(req,res,next){
     
     //CORS默认是不带cookie的, 设置以下字段将允许浏览器发送cookie
     res.header('Access-Control-Allow-Credentials', true);
-   
+  
     next()
 })
 ```
@@ -254,7 +206,7 @@ xhr.withCredentials = true;
 
 ##### `简单请求`和`预检请求（preflighted requests）`
 
-另外，规范要求，对那些可能对服务器数据产生副作用的 HTTP 请求方法（特别是 GET 以外的 HTTP 请求，或者搭配某些 MIME 类型的 POST 请求），**浏览器必须首先使用 OPTIONS 方法发起一个预检请求（preflight request），从而获知服务端是否允许该跨域请求。**
+对于非简单请求，**浏览器必须首先使用 OPTIONS 方法发起一个预检请求（preflight request），从而获知服务端是否允许该跨域请求。**
 
 **服务器确认允许之后，才发起实际的 HTTP 请求**。在预检请求的返回中，服务器端也可以通知客户端，是否需要携带身份凭证（包括 Cookies 和 HTTP 认证相关数据）。
 
@@ -276,7 +228,7 @@ xhr.withCredentials = true;
      - `text/plain`
 	   - `multipart/form-data`
        - `application/x-www-form-urlencoded`
-    
+   
    - HTML头部header field字段：`DPR、Download、Save-Data、Viewport-Width、WIdth`
 
 3. 请求中的任意`XMLHttpRequestUpload` 对象均没有注册任何事件监听器；XMLHttpRequestUpload 对象可以使用 XMLHttpRequest.upload 属性访问
@@ -285,7 +237,7 @@ xhr.withCredentials = true;
 
 预检请求要求必须**首先使用 `OPTIONS` 方法发起一个预检请求到服务器，以获知服务器是否允许该实际请求**。"预检请求“的使用，可以避免跨域请求对服务器的用户数据产生未预期的影响
 
-下面的请求会触发预检请求，其实非简单请求之外的就会触发预检，就不用记那么多了
+非简单请求就是会触发的预检请求
 
 1. 使用了`PUT、DELETE、CONNECT、OPTIONS、TRACE、PATCH`方法
 2. 人为设置了非规定内的其他首部字段，参考上面简单请求的安全字段集合，还要特别注意`Content-Type`的类型
@@ -471,6 +423,24 @@ if (typeof window.addEventListener != 'undefined') {
 ```
 
 同理，也可以B页面发送消息，然后A页面监听并接受消息。
+
+#### 理解域名
+
+##### 顶级域名&二级域名&三级域名
+
+**顶级域名**是域名中最高的一级，每个域名都以顶级域名结尾。顶级域名下面是二级域名，它位于顶级域名的左侧，二级域名下面是三级域名。例如，在`zh.wikipedia.org`中，`org`是顶级域名，`wikipedia`是二级域名。，`zh`是三级域名。
+
+##### 子域
+
+**子域**是属于更高一层域的域。比如，`mail.example.com`和`calendar.example.com`是`example.com`的两个子域，而`example.com`则是顶级域`.com`的子域。
+
+**域名带不带`www`的区别**
+`www`代表的是主机名，`www.baidu.com`为三级域名，`baidu.com`属于二级域名。
+
+🌟注意：
+
+1. 如果是**协议**和**端口**造成的跨域问题“前台”是无能为力的；
+2. 域不会判断相同的`ip`地址对应着两个域或两个域是否在同一个`ip`上。
 
 ### 后记
 

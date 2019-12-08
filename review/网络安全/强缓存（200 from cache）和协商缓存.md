@@ -8,7 +8,7 @@
 
 ### 强缓存的问题
 
-我们知道，强缓存主要是通过http请求头中的`Cache-Control`和`Expire`两个字段控制。`Expire`是HTTP1.0标准下的字段，在这里我们可以忽略。我们重点来讨论的`Cache-Control`这个字段。
+我们知道，强缓存主要是通过`http`请求头中的`Cache-Control`和`Expire`两个字段控制。`Expire`是`HTTP1.0`标准下的字段，在这里我们可以忽略。我们重点来讨论的`Cache-Control`这个字段。
 
 一般，我们会设置Cache-Control的值为“public, max-age=xxx”，表示在xxx秒内再次访问该资源，均使用本地的缓存，不再向服务器发起请求。
 

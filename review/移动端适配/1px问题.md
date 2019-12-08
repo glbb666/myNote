@@ -8,7 +8,33 @@ iphone6的屏幕宽度为375px，设计师做的`视觉稿`一般是750px，也�
 
 #  解决方案
 
+## viewport + rem
+
+在devicePixelRatio = 2 时，输出viewport：
+
+```html
+<meta name="viewport" content="initial-scale=0.5, maximum-scale=0.5, minimum-scale=0.5, user-scalable=no">
+
+```
+
+在devicePixelRatio = 3 时，输出viewport：
+
+```html
+<meta name="viewport" content="initial-scale=0.3333333333333333, maximum-scale=0.3333333333333333, minimum-scale=0.3333333333333333, user-scalable=no">
+
+```
+
+**优点：**
+
+- 所有场景都能满足
+- 一套代码，可以兼容基本所有布局
+
+**缺点：**
+
+- 老项目修改代价过大，只适用于新项目
+
 ## 用小数写边框
+
  由于retina 屏的浏览器可能不认识0.5px的边框，将会把它解释成0px，没有边框。包括 iOS 7 和之前版本，OS X Mavericks 及以前版本，还有 Android 设备。
 **通过 JavaScript 检测浏览器能否处理0.5px的边框，如果可以，给html标签元素添加个class。**
 以下是检测方法
@@ -169,30 +195,6 @@ background-image 跟border-image的方法一样，你要先准备一张符合你
 **缺点：**
 
 - 边框有阴影，颜色变浅
-
-## viewport + rem
-
-在devicePixelRatio = 2 时，输出viewport：
-
-```html
-<meta name="viewport" content="initial-scale=0.5, maximum-scale=0.5, minimum-scale=0.5, user-scalable=no">
-
-```
-在devicePixelRatio = 3 时，输出viewport：
-
-```html
-<meta name="viewport" content="initial-scale=0.3333333333333333, maximum-scale=0.3333333333333333, minimum-scale=0.3333333333333333, user-scalable=no">
-
-```
-
-**优点：**
-
-- 所有场景都能满足
-- 一套代码，可以兼容基本所有布局
-
-**缺点：**
-
-- 老项目修改代价过大，只适用于新项目
 
 ## transform: scale()+伪类标签
 
