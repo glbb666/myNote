@@ -6,7 +6,7 @@
 - `requestAnimationFrame `是由浏览器专门为动画提供的 `API`，在运行时浏览器会自动优化方法的调用，并且如果页面不是激活状态下的话，动画会自动暂停，有效节省了 CPU 开销
 ### 应用
 #### js动画
-requestAnimationFrame 本就是为动画而生，与定时器的用法非常相似，下面是一个例子，点击元素时开始转动，再次点击转动速速增加。
+`requestAnimationFrame `本就是为动画而生，与定时器的用法非常相似，下面是一个例子，点击元素时开始转动，再次点击转动速速增加。
 ```html
 <!DOCTYPE html>
 <html lang="en">
