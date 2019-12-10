@@ -131,11 +131,9 @@ function createObj (o) {
 
 目的：为了解决组合继承中父类被调用两次(1.在子类中调用父类2.把父类实例作为子类原型)
 
-想法：其实我们想要的只是父类的原型上的方法
-
 做法：用寄生式继承对组合继承进行优化(创建父类和子类的中间层)
 
-组合继承最大的缺点是会调用两次父构造函数。
+组合继承最大的缺点是会调用两次父构造函数，但是我们想要的只是父类的原型上的方法
 
 ```javascript
 function Parent (name) {
@@ -165,26 +163,19 @@ function Parent (name) {
     this.name = name;
     this.colors = ['red', 'blue', 'green'];
 }
-
 Parent.prototype.getName = function () {
     console.log(this.name)
 }
-
 function Child (name, age) {
     Parent.call(this, name);
     this.age = age;
 }
-
-// 关键的三步
+//关键的三步----------------------------------------------------------------------------
 var F = function () {};
-
 F.prototype = Parent.prototype;
-
 Child.prototype = new F();
-
-
+--------------------------------------------------------------------------------------
 var child1 = new Child('kevin', '18');
-
 console.log(child1);
 ```
 
@@ -196,13 +187,11 @@ function object(o) {
     F.prototype = o;
     return new F();
 }
-
 function prototype(child, parent) {
     var prototype = object(parent.prototype);
     prototype.constructor = child;
     child.prototype = prototype;
 }
-
 // 当我们使用的时候：
 prototype(Child, Parent);
 ```
@@ -222,20 +211,18 @@ function MyClass() {
      SuperClass.call(this);
      OtherSuperClass.call(this);
 }
-
 // 继承一个类
 MyClass.prototype = Object.create(SuperClass.prototype);
 // 混合其它
 Object.assign(MyClass.prototype, OtherSuperClass.prototype);
 // 重新指定constructor
 MyClass.prototype.constructor = MyClass;
-
 MyClass.prototype.myMethod = function() {
      // do something
 };
 ```
 
-`Object.assign`会把 `OtherSuperClass`原型上的函数拷贝到 `MyClass`原型上，使 MyClass 的所有实例都可用 OtherSuperClass 的方法。
+`Object.assign`会把 `OtherSuperClass`原型上的函数拷贝到 `MyClass`原型上，使 `MyClass` 的所有实例都可用 `OtherSuperClass` 的方法。
 
 ## 8. Class的继承
 ### 简介
@@ -259,7 +246,6 @@ class A {
     console.log('hello world');
   }
 }
-
 class B extends A {
 }
 
