@@ -23,7 +23,7 @@ const promise = new Promise(function(resolve, reject) {})
 
 - then方法接收两个函数（第二个可选），分别为resolve和reject状态的回调函数
 - 这两个函数都接受promise传出的值作为参数
-- then方法返回的是一个新的Promise实例。因此可采用链式写法，前一个状态改变，才会进到下一个
+- then方法**返回的是一个新的Promise实例**。因此可采用链式写法，前一个状态改变，才会进到下一个
 
 ```javascript
 const promise = new Promise(function(resolve, reject) {

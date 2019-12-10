@@ -1,7 +1,3 @@
-[TOC]
-
-
-
 ## 二叉树
 
 ### 二叉树深度遍历
@@ -18,30 +14,32 @@ var deepth = function(root) {
 }
 ```
 
-### 二叉树前序遍历
+### 二叉树先序遍历：根左右
+
+先序中序后序表示的是根的顺序，先序中序后续都是深度优先，用的是栈
 
 ```js
-function perOder(root) {
-  let res = []
+function preOrder(root) {
+  let result = []
   let stack = []
   let p = root
   while (stack.length != 0 || p != null) {
     if (p != null) {
       stack.push(p)
-      res.push(p.data)
+      result.push(p.data)
       p = p.left
     } else {
       p = stack.pop().right
     }
   }
-  return res
+  return result
 }
 ```
 
-### 二叉树中序遍历
+### 二叉树中序遍历：左根右
 
 ```js
-function midOder(root) {
+function midOrder(root) {
   let stack = []
   let res = []
   let p = root
@@ -59,9 +57,7 @@ function midOder(root) {
 }
 ```
 
-
-
-### 二叉树后序遍历
+### 二叉树后序遍历：左右根
 
 ```js
 function laterOrder(root) {
@@ -82,7 +78,9 @@ function laterOrder(root) {
 }
 ```
 
-### 二叉树深度优先遍历
+### 二叉树广度优先遍历
+
+广度优先用的是队列
 
 ```js
 function BFS(root) {
@@ -166,9 +164,7 @@ function bubbleSort(arr) {
 ```
 
 ## 链表
-
-### 原地翻转递归
-
+### 反序输出递归
 ```js
 function printListFromTailToHead(h) {
   if (h && h.next) {
@@ -177,8 +173,25 @@ function printListFromTailToHead(h) {
   console.log(h.val)
 }
 ```
+### 反序输出非递归（开辟空间）
 
+思路：用栈存储，pop输出
+
+```js
+function printListFromTailToHead(h) {
+  let stack = []
+  while (h) {
+    stack.push(h)
+    h = h.next
+  }
+  while (stack.length != 0) {
+    console.log(stack.pop().val)
+  }
+}
+```
 ### 原地翻转非递归
+
+思想：一个旧头一个新头，利用cur把旧头之后的结点放在最前面（指向新头）作为头节点，新头始终指向头节点，当旧头后面没有东西了，即head.next = null，说明遍历结束。
 
 ```js
 function reserveList(head) {
@@ -194,38 +207,29 @@ function reserveList(head) {
   return newHead
 }
 ```
+### 删除链表给定val节点
 
-### 反序输出
-
-```js
-function printListFromTailToHead(h) {
-  let stack = []
-  while (h) {
-    stack.push(h)
-    h = h.next
-  }
-  while (stack.length != 0) {
-    console.log(stack.pop().val)
-  }
-}
-```
-
-### 删除链表节点
+思路：把头节点当作节点temp的后继结点，进行操作，这样就可以删除头节点了。最后以temp.next的形式返回头节点。注意的是，如果后续结点被删除，则不需要后移，因为后续结点已经不是之前的那一个结点了。
 
 ```js
-function deleteListNode(head, val) {
-  if (head === null) return null
-  let temp = { val: -1, next: head }
-  let p = temp
-  while (p.next.val != val) {
-    p = p.next
-  }
-  p.next = p.next.next
-  return temp.next
-}
+var removeElements = function(head, val) {
+    var temp = new ListNode(-1);
+    temp.next = head;
+    var p = temp;
+    while(p.next){
+        if(p.next.val==val){
+            p.next = p.next.next;
+        }else{
+            p = p.next;
+        }
+    }
+    return temp.next;
+};
 ```
 
 ### 两个有序链表合并
+
+思路：创建一个新的链表，把两个链表依次往后遍历，比较小的拼接到新链表尾部。
 
 ```js
 function mergeTowList(h1, h2) {
@@ -287,7 +291,9 @@ var removeNthFromEnd = function(head, k) {
 }
 ```
 
+### 判断是不是环形链表
 
+- hash表，不存在就把结点保存，存在说明对同一个结点存在两次引用，存在环形链表
 
 ## 算法
 
@@ -722,7 +728,7 @@ function shuffle(a) {
 }
 ```
 
-## 获取URL参数
+### 获取URL参数
 
 ```js
 function getUrlParam(sUrl, sKey) {

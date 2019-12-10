@@ -2,136 +2,11 @@
 
 ### 1.1、虚拟 `DOM` 的好处
 
-原生 `JS` 操作 `DOM` 时，浏览器会从构建 DOM 树开始从头到尾执行一遍流程。若一次操作中有 10 次更新 `DOM` 的动作，浏览器收到第一个 `DOM` 请求后并不知道还有 9 次更新操作，因此会马上执行流程，最终执行10 次。例如，第一次计算完，紧接着下一个 `DOM` 更新请求，这个节点的坐标值就变了，前一次计算为无用功。虚拟 `DOM` 就是为了解决浏览器性能问题而被设计出来的。虚拟 `DOM` 不会立即操作 `DOM`，而是将这 10 次更新的 `diff` 内容保存到本地一个 `JS` 对象中，最终将这个 `JS` 对象一次性 `attch` 到 `DOM` 树上，再进行后续操作，避免大量无谓的计算量。所以，用 `JS` 对象模拟 `DOM` 节点的好处是，页面的更新可以先全部反映在 `JS` 对象(虚拟 `DOM` )上，操作内存中的 `JS` 对象的速度显然要更快，等更新完成后，再将最终的 `JS` 对象映射成真实的 `DOM`，交由浏览器去绘制。
+原生 `JS` 操作 `DOM` 时，每更新一次`DOM`浏览器会从构建 `DOM` 树开始从头到尾执行一遍流程。若一次操作中有多次更新 `DOM` 的动作，`DOM`结点坐标值的改变会导致计算的浪费。虚拟 `DOM` 就是为了解决浏览器性能问题而被设计出来的。虚拟 `DOM` 不会立即操作 `DOM`，而是将这多次更新的 `diff` 内容保存到本地一个 `JS` 对象中，最终将这个 `JS` 对象一次性 `attch` 到 `DOM` 树上，再进行后续操作，避免大量无谓的计算量。所以，用 `JS` 对象模拟 `DOM` 节点的好处是，页面的更新可以先全部反映在 `JS` 对象(虚拟 `DOM` )上，操作内存中的 `JS` 对象的速度显然要更快，等更新完成后，再将最终的 `JS` 对象映射成真实的 `DOM`，交由浏览器去绘制。
 
-### 1.2、算法实现
+### 1.2、比较两棵虚拟 `DOM` 树的差异 — `diff` 算法
 
-#### 1.2.1、用 `JS` 对象模拟 `DOM` 树
-
-**（1）如何用` JS` 对象模拟 `DOM `树**
-
-例如一个真实的 `DOM` 节点如下：
-
-```javascript
-<div id="virtual-dom">
-<p>Virtual DOM</p>
-<ul id="list">
-  <li class="item">Item 1</li>
-  <li class="item">Item 2</li>
-  <li class="item">Item 3</li>
-</ul>
-<div>Hello World</div>
-</div> 
-```
-
-我们用 `JavaScript` 对象来表示 `DOM` 节点，使用对象的属性记录节点的类型、属性、子节点等。
-
-`element.js` 中表示节点对象代码如下：
-
-```javascript
-/**
- * Element virdual-dom 对象定义
- * @param {String} tagName - dom 元素名称
- * @param {Object} props - dom 属性
- * @param {Array<Element|String>} - 子节点
- */
-function Element(tagName, props, children) {
-    this.tagName = tagName
-    this.props = props//属性值,一个对象
-    this.children = children
-    // dom 元素的 key 值，用作唯一标识符
-    if(props.key){
-       this.key = props.key
-    }
-    var count = 0
-    children.forEach(function (child, i) {
-        if (child instanceof Element) {
-            count += child.count
-        } else {
-            children[i] = '' + child
-        }
-        count++
-    })
-    // 子元素个数
-    this.count = count
-}
-function createElement(tagName, props, children){
-	return new Element(tagName, props, children);
-}
-module.exports = createElement;
-```
-
-根据 `element` 对象的设定，则上面的 `DOM` 结构就可以简单表示为：
-
-```javascript
-var el = require("./element.js");
-var ul = el('div',{id:'virtual-dom'},[
-  el('p',{},['Virtual DOM']),
-  el('ul', { id: 'list' }, [
-	el('li', { class: 'item' }, ['Item 1']),
-	el('li', { class: 'item' }, ['Item 2']),
-	el('li', { class: 'item' }, ['Item 3'])
-  ]),
-  el('div',{},['Hello World'])
-]) 
-```
-
-现在 `ul` 就是我们用  `JavaScript` 对象表示的 `DOM` 结构，我们输出查看 `ul` 对应的数据结构如下：
-
-
-
-![img](images/16c1e14fcff074f0)
-
-
-
-**（2）渲染用 `JS` 表示的 `DOM` 对象**
-
-但是页面上并没有这个结构，下一步我们介绍如何将 `ul` 渲染成页面上真实的 `DOM` 结构，相关渲染函数如下：
-
-```javascript
-/**
- * render 将virdual-dom 对象渲染为实际 DOM 元素
- */
-Element.prototype.render = function () {
-    var el = document.createElement(this.tagName)
-    var props = this.props
-    // 设置节点的DOM属性
-    for (var propName in props) {
-        var propValue = props[propName]
-        el.setAttribute(propName, propValue)
-    }
-
-    var children = this.children || []
-    children.forEach(function (child) {
-        var childEl = (child instanceof Element)
-            ? child.render() // 如果子节点也是虚拟DOM，递归构建DOM节点
-            : document.createTextNode(child) // 如果字符串，只构建文本节点
-        el.appendChild(childEl)
-    })
-    return el
-} 
-```
-
-我们通过查看以上 `render` 方法，会根据  `tagName` 构建一个真正的 `DOM` 节点，然后设置这个节点的属性，最后递归地把自己的子节点也构建起来。
-
-我们将构建好的 `DOM` 结构添加到页面 `body` 上面，如下：
-
-```javascript
-ulRoot = ul.render();
-document.body.appendChild(ulRoot); 
-```
-
-这样，页面 `body` 里面就有真正的 `DOM` 结构，效果如下图所示：
-
-
-
-![img](images/16c1e179a748d425)
-
-
-
-#### 2.2.2、比较两棵虚拟 `DOM` 树的差异 — `diff` 算法
-
-`diff` 算法用来比较两棵 `Virtual DOM` 树的差异，如果需要两棵树的完全比较，那么 `diff` 算法的时间复杂度为`O(n^3)`。但是在前端当中很少会跨越层级地移动 `DOM` 元素，所以 `Virtual DOM` 只会对同层元素进行对比，如下图所示， `div` 只会和同一层级的 `div` 对比，第二层级的只会跟第二层级对比，这样算法复杂度就可以达到 `O(n)`。
+`diff` 算法用来比较两棵 `Virtual DOM` 树的差异，`Virtual DOM` 只会对同层元素进行对比，如下图所示， `div` 只会和同一层级的 `div` 对比，第二层级的只会跟第二层级对比，这样算法复杂度就可以达到 `O(n)`。如果需要两棵树的完全比较，那么 `diff` 算法的时间复杂度为`O(n^3)`。
 
 
 
@@ -139,58 +14,7 @@ document.body.appendChild(ulRoot);
 
 
 
-**（1）深度优先遍历，记录差异**
-
-在实际的代码中，会对新旧两棵树进行一个深度优先的遍历，这样每个节点都会有一个唯一的标记：
-
-![dfs-walk](images/16c1e0e2873e42b1)
-
-在深度优先遍历的时候，每遍历到一个节点就把该节点和新的的树进行对比。如果有差异的话就记录到一个对象里面。
-
-```javascript
-// diff 函数，对比两棵树
-function diff(oldTree, newTree) {
-  var index = 0 // 当前节点的标志
-  var patches = {} // 用来记录每个节点差异的对象
-  dfsWalk(oldTree, newTree, index, patches)
-  return patches
-}
-// 对两棵树进行深度优先遍历
-function dfsWalk(oldNode, newNode, index, patches) {
-  var currentPatch = []
-  if (typeof (oldNode) === "string" && typeof (newNode) === "string") {
-    // 文本内容改变
-    if (newNode !== oldNode) {
-      currentPatch.push({ type: patch.TEXT, content: newNode })
-    }
-  } else if (newNode!=null && oldNode.tagName === newNode.tagName && oldNode.key === newNode.key) {
-    // 节点相同，比较属性
-    var propsPatches = diffProps(oldNode, newNode)
-    if (propsPatches) {
-      currentPatch.push({ type: patch.PROPS, props: propsPatches })
-    }
-    // 比较子节点，如果子节点有'ignore'属性，则不需要比较
-    if (!isIgnoreChildren(newNode)) {
-      diffChildren(
-        oldNode.children,
-        newNode.children,
-        index,
-        patches,
-        currentPatch
-      )
-    }
-  } else if(newNode !== null){
-    // 新节点和旧节点不同，用 replace 替换
-    currentPatch.push({ type: patch.REPLACE, node: newNode })
-  }
-
-  if (currentPatch.length) {
-    patches[index] = currentPatch
-  }
-} 
-```
-
-从以上可以得出，`patches[1]` 表示 `p` ，`patches[3]` 表示 `ul` ，以此类推。
+**（1）深度优先遍历，记录差异**到一个对象里面。
 
 **（2）差异类型**
 
@@ -201,868 +25,276 @@ function dfsWalk(oldNode, newNode, index, patches) {
 - 属性更改：修改了节点的属性，例如把上面 `li` 的 `class` 样式类删除；
 - 文本改变：改变文本节点的文本内容，例如将上面 `p` 节点的文本内容更改为 “`Real Dom`”；
 
-以上描述的几种差异类型在代码中定义如下所示：
-
-```
-var REPLACE = 0 // 替换原先的节点
-var REORDER = 1 // 重新排序
-var PROPS = 2 // 修改了节点的属性
-var TEXT = 3 // 文本内容改变 
-```
-
-**（3）列表对比算法**
-
-子节点的对比算法，例如 `p, ul, div` 的顺序换成了 `div, p, ul`。这个该怎么对比？如果按照同层级进行顺序对比的话，它们都会被替换掉。如 `p` 和 `div` 的 `tagName` 不同，`p` 会被 `div` 所替代。最终，三个节点都会被替换，这样 `DOM` 开销就非常大。而实际上是不需要替换节点，而只需要经过节点移动就可以达到，我们只需知道怎么进行移动。
-
-将这个问题抽象出来其实就是字符串的最小编辑距离问题（`Edition Distance`），最常见的解决方法是 `Levenshtein Distance` , `Levenshtein Distance` 是一个度量两个字符序列之间差异的字符串度量标准，两个单词之间的 `Levenshtein Distance` 是将一个单词转换为另一个单词所需的单字符编辑（插入、删除或替换）的最小数量。`Levenshtein Distance` 是1965年由苏联数学家 Vladimir Levenshtein 发明的。`Levenshtein Distance` 也被称为编辑距离（`Edit Distance`），通过**动态规划**求解，时间复杂度为 `O(M*N)`。
-
-定义：对于两个字符串 `a、b`，则他们的 `Levenshtein Distance` 为：
-
-
-
-![img](images/16c1e1953b479b3d)
-
-
-
-示例：字符串 `a` 和 `b`，`a=“abcde” ，b=“cabef”`，根据上面给出的计算公式，则他们的 `Levenshtein Distance` 的计算过程如下：
-
-
-
-![img](images/16c1e19bb3962ba1)
-
-
-
-本文的 `demo` 使用插件 `list-diff2` 算法进行比较，该算法的时间复杂度伟 `O(n*m)`，虽然该算法并非最优的算法，但是用于对于 `dom` 元素的常规操作是足够的。该算法具体的实现过程这里不再详细介绍，该算法的具体介绍可以参照：[github.com/livoras/lis…](https://github.com/livoras/list-diff)
-
-**（4）实例输出**
-
-两个虚拟 `DOM` 对象如下图所示，其中 `ul1` 表示原有的虚拟 `DOM` 树，`ul2` 表示改变后的虚拟 `DOM` 树
-
-```
-var ul1 = el('div',{id:'virtual-dom'},[
-  el('p',{},['Virtual DOM']),
-  el('ul', { id: 'list' }, [
-	el('li', { class: 'item' }, ['Item 1']),
-	el('li', { class: 'item' }, ['Item 2']),
-	el('li', { class: 'item' }, ['Item 3'])
-  ]),
-  el('div',{},['Hello World'])
-]) 
-var ul2 = el('div',{id:'virtual-dom'},[
-  el('p',{},['Virtual DOM']),
-  el('ul', { id: 'list' }, [
-	el('li', { class: 'item' }, ['Item 21']),
-	el('li', { class: 'item' }, ['Item 23'])
-  ]),
-  el('p',{},['Hello World'])
-]) 
-var patches = diff(ul1,ul2);
-console.log('patches:',patches);
-复制代码
-```
-
-我们查看输出的两个虚拟 `DOM` 对象之间的差异对象如下图所示，我们能通过差异对象得到，两个虚拟 `DOM` 对象之间进行了哪些变化，从而根据这个差异对象（`patches`）更改原先的真实 `DOM` 结构，从而将页面的 `DOM` 结构进行更改。
-
-
-
-![img](images/16c1e1a5bff0b71a)
-
-
-
-#### 2.2.3、将两个虚拟 `DOM` 对象的差异应用到真正的 `DOM` 树
-
-**（1）深度优先遍历 DOM 树**
-
-​	因为步骤一所构建的`JavaScript` 对象树和 `render` 出来真正的 `DOM` 树的信息、结构是一样的。所以我们可以对那棵 `DOM` 树也进行深度优先的遍历，遍历的时候从步骤二生成的 `patches` 对象中找出当前遍历的节点差异，如下相关代码所示：
-
-```javascript
-function patch (node, patches) {
-  var walker = {index: 0}
-  dfsWalk(node, walker, patches)
-}
-
-function dfsWalk (node, walker, patches) {
-  // 从patches拿出当前节点的差异
-  var currentPatches = patches[walker.index]
-
-  var len = node.childNodes
-    ? node.childNodes.length
-    : 0
-  // 深度遍历子节点
-  for (var i = 0; i < len; i++) {
-    var child = node.childNodes[i]
-    walker.index++
-    dfsWalk(child, walker, patches)
-  }
-  // 对当前节点进行DOM操作
-  if (currentPatches) {
-    applyPatches(node, currentPatches)
-  }
-} 
-```
-
-**（2）对原有 DOM 树进行 DOM 操作**
-
-我们根据不同类型的差异对当前节点进行不同的 `DOM` 操作 ，例如如果进行了节点替换，就进行节点替换 `DOM` 操作；如果节点文本发生了改变，则进行文本替换的 `DOM` 操作；以及子节点重排、属性改变等 `DOM` 操作，相关代码如 `applyPatches` 所示 ：
-
-```javascript
-function applyPatches (node, currentPatches) {
-  currentPatches.forEach(currentPatch => {
-    switch (currentPatch.type) {
-      case REPLACE:
-        var newNode = (typeof currentPatch.node === 'string')
-          ? document.createTextNode(currentPatch.node)
-          : currentPatch.node.render()
-        node.parentNode.replaceChild(newNode, node)
-        break
-      case REORDER:
-        reorderChildren(node, currentPatch.moves)
-        break
-      case PROPS:
-        setProps(node, currentPatch.props)
-        break
-      case TEXT:
-        node.textContent = currentPatch.content
-        break
-      default:
-        throw new Error('Unknown patch type ' + currentPatch.type)
-    }
-  })
-} 
-```
-
-**（3）DOM结构改变**
-
-通过将第 2.2.2 得到的两个 `DOM` 对象之间的差异，应用到第一个（原先）`DOM` 结构中，我们可以看到 `DOM` 结构进行了预期的变化，如下图所示：
-
-
-
-![img](images/16c1e1ae714e9779)
-
-
-
-### 2.3、结语
-
-相关代码实现已经放到 github 上面，有兴趣的同学可以clone运行实验，github地址为：[github.com/fengshi123/…](https://github.com/fengshi123/virtual-dom-example。)
-
-`Virtual DOM` 算法主要实现上面三个步骤来实现：
-
-- 用 `JS` 对象模拟 `DOM` 树 — `element.js`
-
-  ```html
-  <div id="virtual-dom">
-  <p>Virtual DOM</p>
-  <ul id="list">
-    <li class="item">Item 1</li>
-    <li class="item">Item 2</li>
-    <li class="item">Item 3</li>
-  </ul>
-  <div>Hello World</div>
-  </div> 
-  ```
-  
-- 比较两棵虚拟 `DOM` 树的差异 — `diff.js`
-
-
-
-![img](images/16c1e1bb518a2951)
-
-
-
-- 将两个虚拟 `DOM` 对象的差异应用到真正的 `DOM` 树 — `patch.js`
-
-  ```javascript
-  function applyPatches (node, currentPatches) {
-    currentPatches.forEach(currentPatch => {
-      switch (currentPatch.type) {
-        case REPLACE:
-          var newNode = (typeof currentPatch.node === 'string')
-            ? document.createTextNode(currentPatch.node)
-            : currentPatch.node.render()
-          node.parentNode.replaceChild(newNode, node)
-          break
-        case REORDER:
-          reorderChildren(node, currentPatch.moves)
-          break
-        case PROPS:
-          setProps(node, currentPatch.props)
-          break
-        case TEXT:
-          node.textContent = currentPatch.content
-          break
-        default:
-          throw new Error('Unknown patch type ' + currentPatch.type)
-      }
-    })
-  } 
-  ```
-
-## 三、`Vue` 源码 `Virtual-DOM` 简析
-
-我们从第二章节（`Virtual-DOM` 基础）中已经掌握 `Virtual DOM` 渲染成真实的 `DOM` 实际上要经历 `VNode` 的定义、`diff`、`patch` 等过程，所以本章节 `Vue` 源码的解析也按这几个过程来简析。
-
-### 3.1、`VNode` 模拟 `DOM` 树
-
-#### **3.1.1、VNode 类简析**
-
-在 `Vue.js` 中，`Virtual DOM` 是用 `VNode` 这个 `Class` 去描述，它定义在 `src/core/vdom/vnode.js` 中 ，从以下代码块中可以看到 `Vue.js` 中的 `Virtual DOM` 的定义较为复杂一些，因为它这里包含了很多 `Vue.js` 的特性。实际上 `Vue.js` 中 `Virtual DOM` 是借鉴了一个开源库  [snabbdom](https://github.com/snabbdom/snabbdom) 的实现，然后加入了一些 `Vue.js` 的一些特性。
-
-```javascript
-export default class VNode {
-  tag: string | void;
-  data: VNodeData | void;
-  children: ?Array<VNode>;
-  text: string | void;
-  elm: Node | void;
-  ns: string | void;
-  context: Component | void; // rendered in this component's scope
-  key: string | number | void;
-  componentOptions: VNodeComponentOptions | void;
-  componentInstance: Component | void; // component instance
-  parent: VNode | void; // component placeholder node
-
-  // strictly internal
-  raw: boolean; // contains raw HTML? (server only)
-  isStatic: boolean; // hoisted static node
-  isRootInsert: boolean; // necessary for enter transition check
-  isComment: boolean; // empty comment placeholder?
-  isCloned: boolean; // is a cloned node?
-  isOnce: boolean; // is a v-once node?
-  asyncFactory: Function | void; // async component factory function
-  asyncMeta: Object | void;
-  isAsyncPlaceholder: boolean;
-  ssrContext: Object | void;
-  fnContext: Component | void; // real context vm for functional nodes
-  fnOptions: ?ComponentOptions; // for SSR caching
-  devtoolsMeta: ?Object; // used to store functional render context for devtools
-  fnScopeId: ?string; // functional scope id support
-
-  constructor (
-    tag?: string,
-    data?: VNodeData,
-    children?: ?Array<VNode>,
-    text?: string,
-    elm?: Node,
-    context?: Component,
-    componentOptions?: VNodeComponentOptions,
-    asyncFactory?: Function
-  ) {
-    this.tag = tag
-    this.data = data
-    this.children = children
-    this.text = text
-    this.elm = elm
-    this.ns = undefined
-    this.context = context
-    this.fnContext = undefined
-    this.fnOptions = undefined
-    this.fnScopeId = undefined
-    this.key = data && data.key
-    this.componentOptions = componentOptions
-    this.componentInstance = undefined
-    this.parent = undefined
-    this.raw = false
-    this.isStatic = false
-    this.isRootInsert = true
-    this.isComment = false
-    this.isCloned = false
-    this.isOnce = false
-    this.asyncFactory = asyncFactory
-    this.asyncMeta = undefined
-    this.isAsyncPlaceholder = false
-  }
-}
-```
-
-这里千万不要因为 `VNode` 的这么属性而被吓到，或者咬紧牙去摸清楚每个属性的意义，其实，我们主要了解其几个核心的关键属性就差不多了，例如：
-
-- `tag` 属性即这个`vnode`的标签属性
-- `data` 属性包含了最后渲染成真实`dom`节点后，节点上的`class`，`attribute`，`style`以及绑定的事件
-- `children` 属性是`vnode`的子节点
-- `text` 属性是文本属性
-- `elm` 属性为这个`vnode`对应的真实`dom`节点
-- `key` 属性是`vnode`的标记，在`diff`过程中可以提高`diff`的效率
-
-#### 3.1.2、源码创建 `VNode` 过程
-
-（1）初始化vue
-
-我们在实例化一个 `vue` 实例，也即 `new Vue( )` 时，实际上是执行 `src/core/instance/index.js`  中定义的 `Function` 函数。
-
-```javascript
-function Vue (options) {
-  if (process.env.NODE_ENV !== 'production' &&
-    !(this instanceof Vue)
-  ) {
-    warn('Vue is a constructor and should be called with the `new` keyword')
-  }
-  this._init(options)
-}
-```
-
-通过查看 `Vue` 的 `function`，我们知道 `Vue` 只能通过 `new` 关键字初始化，然后调用 `this._init` 方法，该方法在 `src/core/instance/init.js` 中定义。
-
-```javascript
-  Vue.prototype._init = function (options?: Object) {
-    const vm: Component = this
-      
-    // 省略一系列其它初始化的代码
-      
-    if (vm.$options.el) {
-      console.log('vm.$options.el:',vm.$options.el);
-      vm.$mount(vm.$options.el)
-    }
-  }
-```
-
-**（2）Vue 实例挂载**
-
-`Vue` 中是通过 `$mount` 实例方法去挂载 `dom` 的，下面我们通过分析 `compiler` 版本的 `mount` 实现，相关源码在目录 `src/platforms/web/entry-runtime-with-compiler.js` 文件中定义：。
-
-```
-const mount = Vue.prototype.$mount
-Vue.prototype.$mount = function (
-  el?: string | Element,
-  hydrating?: boolean
-): Component {
-  el = el && query(el)
-  
-   // 省略一系列初始化以及逻辑判断代码  
- 
-  return mount.call(this, el, hydrating)
-}
-复制代码
-```
-
-我们发现最终还是调用用原先原型上的 `$mount` 方法挂载 ，原先原型上的 `$mount` 方法在 `src/platforms/web/runtime/index.js` 中定义 。
-
-```
-Vue.prototype.$mount = function (
-  el?: string | Element,
-  hydrating?: boolean
-): Component {
-  el = el && inBrowser ? query(el) : undefined
-  return mountComponent(this, el, hydrating)
-}
-复制代码
-```
-
-我们发现`$mount` 方法实际上会去调用 `mountComponent` 方法，这个方法定义在 `src/core/instance/lifecycle.js` 文件中
-
-```
-export function mountComponent (
-  vm: Component,
-  el: ?Element,
-  hydrating?: boolean
-): Component {
-  vm.$el = el
-  // 省略一系列其它代码
-  let updateComponent
-  /* istanbul ignore if */
-  if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
-    updateComponent = () => {
-      // 生成虚拟 vnode   
-      const vnode = vm._render()
-      // 更新 DOM
-      vm._update(vnode, hydrating)
-     
-    }
-  } else {
-    updateComponent = () => {
-      vm._update(vm._render(), hydrating)
-    }
-  }
-
-  // 实例化一个渲染Watcher，在它的回调函数中会调用 updateComponent 方法  
-  new Watcher(vm, updateComponent, noop, {
-    before () {
-      if (vm._isMounted && !vm._isDestroyed) {
-        callHook(vm, 'beforeUpdate')
-      }
-    }
-  }, true /* isRenderWatcher */)
-  hydrating = false
-
-  return vm
-}
-复制代码
-```
-
-从上面的代码可以看到，`mountComponent` 核心就是先实例化一个渲染`Watcher`，在它的回调函数中会调用 `updateComponent` 方法，在此方法中调用 `vm._render` 方法先生成虚拟 Node，最终调用 `vm._update` 更新 `DOM`。
-
-**（3）创建虚拟 Node**
-
-`Vue` 的 `_render` 方法是实例的一个私有方法，它用来把实例渲染成一个虚拟 `Node`。它的定义在 `src/core/instance/render.js` 文件中：
-
-```
- Vue.prototype._render = function (): VNode {
-    const vm: Component = this
-    const { render, _parentVnode } = vm.$options
-    let vnode
-    try {
-      // 省略一系列代码  
-      currentRenderingInstance = vm
-      // 调用 createElement 方法来返回 vnode
-      vnode = render.call(vm._renderProxy, vm.$createElement)
-    } catch (e) {
-      handleError(e, vm, `render`){}
-    }
-    // set parent
-    vnode.parent = _parentVnode
-    console.log("vnode...:",vnode);
-    return vnode
-  }
-复制代码
-```
-
-`Vue.js` 利用 `_createElement` 方法创建 `VNode`，它定义在 `src/core/vdom/create-elemenet.js` 中：
-
-```
-export function _createElement (
-  context: Component,
-  tag?: string | Class<Component> | Function | Object,
-  data?: VNodeData,
-  children?: any,
-  normalizationType?: number
-): VNode | Array<VNode> {
-    
-  // 省略一系列非主线代码
-  
-  if (normalizationType === ALWAYS_NORMALIZE) {
-    // 场景是 render 函数不是编译生成的
-    children = normalizeChildren(children)
-  } else if (normalizationType === SIMPLE_NORMALIZE) {
-    // 场景是 render 函数是编译生成的
-    children = simpleNormalizeChildren(children)
-  }
-  let vnode, ns
-  if (typeof tag === 'string') {
-    let Ctor
-    ns = (context.$vnode && context.$vnode.ns) || config.getTagNamespace(tag)
-    if (config.isReservedTag(tag)) {
-      // 创建虚拟 vnode
-      vnode = new VNode(
-        config.parsePlatformTagName(tag), data, children,
-        undefined, undefined, context
-      )
-    } else if ((!data || !data.pre) && isDef(Ctor = resolveAsset(context.$options, 'components', tag))) {
-      // component
-      vnode = createComponent(Ctor, data, context, children, tag)
-    } else {
-      vnode = new VNode(
-        tag, data, children,
-        undefined, undefined, context
-      )
-    }
-  } else {
-    vnode = createComponent(tag, data, context, children)
-  }
-  if (Array.isArray(vnode)) {
-    return vnode
-  } else if (isDef(vnode)) {
-    if (isDef(ns)) applyNS(vnode, ns)
-    if (isDef(data)) registerDeepBindings(data)
-    return vnode
-  } else {
-    return createEmptyVNode()
-  }
-}
-复制代码
-```
-
-`_createElement` 方法有 5 个参数，`context` 表示 VNode 的上下文环境，它是 `Component` 类型；`tag`表示标签，它可以是一个字符串，也可以是一个 `Component`；`data` 表示 VNode 的数据，它是一个 `VNodeData` 类型，可以在 `flow/vnode.js` 中找到它的定义；`children` 表示当前 VNode 的子节点，它是任意类型的，需要被规范为标准的 `VNode` 数组；
-
-#### **3.1.3、实例查看**
-
-为了更直观查看我们平时写的 `Vue` 代码如何用 `VNode` 类来表示，我们通过一个实例的转换进行更深刻了解。
-
-例如，实例化一个 `Vue` 实例：
-
-```
-  var app = new Vue({
-    el: '#app',
-    render: function (createElement) {
-      return createElement('div', {
-        attrs: {
-          id: 'app',
-          class: "class_box"
-        },
-      }, this.message)
-    },
-    data: {
-      message: 'Hello Vue!'
-    }
-  })
-复制代码
-```
-
-我们打印出其对应的 `VNode` 表示：
-
-
-
-![img](images/16c1e23b7481b16f)
-
-
-
-### 3.2、`diff` 过程
-
-#### 3.2.1、`Vue.js` 源码的 `diff` 调用逻辑
-
-`Vue.js` 源码实例化了一个 `watcher`，这个 ~ 被添加到了在模板当中所绑定变量的依赖当中，一旦 `model` 中的响应式的数据发生了变化，这些响应式的数据所维护的 `dep` 数组便会调用 `dep.notify()` 方法完成所有依赖遍历执行的工作，这包括视图的更新，即 `updateComponent` 方法的调用。`watcher` 和 `updateComponent`方法定义在  `src/core/instance/lifecycle.js` 文件中 。
-
-```
-export function mountComponent (
-  vm: Component,
-  el: ?Element,
-  hydrating?: boolean
-): Component {
-  vm.$el = el
-  // 省略一系列其它代码
-  let updateComponent
-  /* istanbul ignore if */
-  if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
-    updateComponent = () => {
-      // 生成虚拟 vnode   
-      const vnode = vm._render()
-      // 更新 DOM
-      vm._update(vnode, hydrating)
-     
-    }
-  } else {
-    updateComponent = () => {
-      vm._update(vm._render(), hydrating)
-    }
-  }
-
-  // 实例化一个渲染Watcher，在它的回调函数中会调用 updateComponent 方法  
-  new Watcher(vm, updateComponent, noop, {
-    before () {
-      if (vm._isMounted && !vm._isDestroyed) {
-        callHook(vm, 'beforeUpdate')
-      }
-    }
-  }, true /* isRenderWatcher */)
-  hydrating = false
-
-  return vm
-}
-复制代码
-```
-
-完成视图的更新工作事实上就是调用了`vm._update`方法，这个方法接收的第一个参数是刚生成的`Vnode`，调用的`vm._update`方法定义在 `src/core/instance/lifecycle.js`中。
-
-```
-  Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
-    const vm: Component = this
-    const prevEl = vm.$el
-    const prevVnode = vm._vnode
-    const restoreActiveInstance = setActiveInstance(vm)
-    vm._vnode = vnode
-    if (!prevVnode) {
-      // 第一个参数为真实的node节点，则为初始化
-      vm.$el = vm.__patch__(vm.$el, vnode, hydrating, false /* removeOnly */)
-    } else {
-      // 如果需要diff的prevVnode存在，那么对prevVnode和vnode进行diff
-      vm.$el = vm.__patch__(prevVnode, vnode)
-    }
-    restoreActiveInstance()
-    // update __vue__ reference
-    if (prevEl) {
-      prevEl.__vue__ = null
-    }
-    if (vm.$el) {
-      vm.$el.__vue__ = vm
-    }
-    // if parent is an HOC, update its $el as well
-    if (vm.$vnode && vm.$parent && vm.$vnode === vm.$parent._vnode) {
-      vm.$parent.$el = vm.$el
-    }
-  }
-复制代码
-```
-
-在这个方法当中最为关键的就是 `vm.__patch__` 方法，这也是整个 `virtual-dom` 当中最为核心的方法，主要完成了`prevVnode` 和 `vnode` 的 `diff` 过程并根据需要操作的 `vdom` 节点打 `patch`，最后生成新的真实 `dom` 节点并完成视图的更新工作。
-
-接下来，让我们看下 `vm.__patch__`的逻辑过程， `vm.__patch__` 方法定义在 `src/core/vdom/patch.js` 中。
-
-```
-function patch (oldVnode, vnode, hydrating, removeOnly) {
-    ......
-    if (isUndef(oldVnode)) {
-      // 当oldVnode不存在时，创建新的节点
-      isInitialPatch = true
-      createElm(vnode, insertedVnodeQueue)
-    } else {
-      // 对oldVnode和vnode进行diff，并对oldVnode打patch  
-      const isRealElement = isDef(oldVnode.nodeType)
-      if (!isRealElement && sameVnode(oldVnode, vnode)) {
-        // patch existing root node
-        patchVnode(oldVnode, vnode, insertedVnodeQueue, null, null, removeOnly)
-      } 
-	......
-  }
-}
-复制代码
-```
-
-在 `patch` 方法中，我们看到会分为两种情况，一种是当 `oldVnode` 不存在时，会创建新的节点；另一种则是已经存在 `oldVnode` ，那么会对 `oldVnode` 和 `vnode` 进行 `diff` 及 `patch` 的过程。其中 `patch` 过程中会调用 `sameVnode` 方法来对对传入的2个 `vnode` 进行基本属性的比较，只有当基本属性相同的情况下才认为这个2个`vnode` 只是局部发生了更新，然后才会对这2个 `vnode` 进行 `diff`，如果2个 `vnode` 的基本属性存在不一致的情况，那么就会直接跳过 `diff` 的过程，进而依据 `vnode` 新建一个真实的 `dom`，同时删除老的 `dom`节点。
-
-```
-function sameVnode (a, b) {
-  return (
-    a.key === b.key &&
-    a.tag === b.tag &&
-    a.isComment === b.isComment &&
-    isDef(a.data) === isDef(b.data) &&
-    sameInputType(a, b)
-  )
-}
-复制代码
-```
-
-`diff` 过程中主要是通过调用 `patchVnode` 方法进行的:
-
-```
-  function patchVnode (oldVnode, vnode, insertedVnodeQueue, ownerArray, index, removeOnly) {
-    ...... 
-    const elm = vnode.elm = oldVnode.elm
-    const oldCh = oldVnode.children
-    const ch = vnode.children
-    // 如果vnode没有文本节点
-    if (isUndef(vnode.text)) {
-      // 如果oldVnode的children属性存在且vnode的children属性也存在  
-      if (isDef(oldCh) && isDef(ch)) {
-        // updateChildren，对子节点进行diff  
-        if (oldCh !== ch) updateChildren(elm, oldCh, ch, insertedVnodeQueue, removeOnly)
-      } else if (isDef(ch)) {
-        if (process.env.NODE_ENV !== 'production') {
-          checkDuplicateKeys(ch)
-        }
-        // 如果oldVnode的text存在，那么首先清空text的内容,然后将vnode的children添加进去  
-        if (isDef(oldVnode.text)) nodeOps.setTextContent(elm, '')
-        addVnodes(elm, null, ch, 0, ch.length - 1, insertedVnodeQueue)
-      } else if (isDef(oldCh)) {
-        // 删除elm下的oldchildren
-        removeVnodes(elm, oldCh, 0, oldCh.length - 1)
-      } else if (isDef(oldVnode.text)) {
-        // oldVnode有子节点，而vnode没有，那么就清空这个节点  
-        nodeOps.setTextContent(elm, '')
-      }
-    } else if (oldVnode.text !== vnode.text) {
-      // 如果oldVnode和vnode文本属性不同，那么直接更新真是dom节点的文本元素
-      nodeOps.setTextContent(elm, vnode.text)
-    }
-    ......
-  }
-复制代码
-```
-
-从以上代码得知，
-
-`diff` 过程中又分了好几种情况，`oldCh` 为 `oldVnode`的子节点，`ch` 为 `Vnode`的子节点：
-
-- 首先进行文本节点的判断，若 `oldVnode.text !== vnode.text`，那么就会直接进行文本节点的替换；
-- 在`vnode`  没有文本节点的情况下，进入子节点的 `diff`；
-- 当 `oldCh` 和 `ch` 都存在且不相同的情况下，调用 `updateChildren` 对子节点进行 `diff`；
-- 若 `oldCh`不存在，`ch` 存在，首先清空 `oldVnode` 的文本节点，同时调用 `addVnodes` 方法将 `ch` 添加到`elm`真实 `dom` 节点当中；
-- 若 `oldCh`存在，`ch`不存在，则删除 `elm` 真实节点下的 `oldCh` 子节点；
-- 若 `oldVnode` 有文本节点，而 `vnode` 没有，那么就清空这个文本节点。
-
 #### 3.2.2、子节点 `diff` 流程分析
 
-**（1）Vue.js 源码**
+### patch
 
-​	这里着重分析下`updateChildren`方法，它也是整个 `diff` 过程中最重要的环节，以下为 `Vue.js` 的源码过程，为了更形象理解 `diff` 过程，我们给出相关的示意图来讲解。
+来看看`patch`是怎么打补丁的（代码只保留核心部分）
 
 ```javascript
-  function updateChildren (parentElm, oldCh, newCh, insertedVnodeQueue, removeOnly) {
-    // 为oldCh和newCh分别建立索引，为之后遍历的依据
-    let oldStartIdx = 0
-    let newStartIdx = 0
+function patch (oldVnode, vnode) {
+    // some code
+    if (sameVnode(oldVnode, vnode)) {
+    	patchVnode(oldVnode, vnode)
+    } else {
+    	const oEl = oldVnode.el // 当前oldVnode对应的真实元素节点
+    	let parentEle = api.parentNode(oEl)  // 父元素
+    	createEle(vnode)  // 根据Vnode生成新元素
+    	if (parentEle !== null) {
+            api.insertBefore(parentEle, vnode.el, api.nextSibling(oEl)) // 将新元素添加进父元素
+            api.removeChild(parentEle, oldVnode.el)  // 移除以前的旧元素节点
+            oldVnode = null
+    	}
+    }
+    // some code 
+    return vnode
+}
+```
+
+patch函数接收两个参数`oldVnode`和`Vnode`分别代表新的节点和之前的旧节点
+
+- 判断两节点是否值得比较，值得比较则执行`patchVnode`进行打补丁
+
+```javascript
+function sameVnode (a, b) {
+  return (
+    a.key === b.key &&  // key值
+    a.tag === b.tag &&  // 标签名
+    a.isComment === b.isComment &&  // 是否为注释节点
+    // 是否都定义了data，data包含一些具体信息，例如onclick , style
+    isDef(a.data) === isDef(b.data) &&  
+    sameInputType(a, b) // 当标签是<input>的时候，type必须相同
+  )
+}
+```
+
+- 不值得比较则用`Vnode`替换`oldVnode`
+
+如果两个节点都是一样的，那么就深入检查他们的子节点。如果两个节点不一样那就说明`Vnode`完全被改变了，就可以直接替换`oldVnode`。
+
+虽然这两个节点不一样但是他们的子节点一样怎么办？别忘了，diff可是逐层比较的，如果第一层不一样那么就不会继续深入比较第二层了。（我在想这算是一个缺点吗？相同子节点不能重复利用了...）
+
+### patchVnode
+
+当我们确定两个节点值得比较之后我们会对两个节点指定`patchVnode`方法。那么这个方法做了什么呢？
+
+```javascript
+patchVnode (oldVnode, vnode) {
+    const el = vnode.el = oldVnode.el
+    let i, oldCh = oldVnode.children, ch = vnode.children
+    if (oldVnode === vnode) return
+    if (oldVnode.text !== null && vnode.text !== null && oldVnode.text !== vnode.text) {
+        api.setTextContent(el, vnode.text)
+    }else {
+        updateEle(el, vnode, oldVnode)
+    	if (oldCh && ch && oldCh !== ch) {
+            updateChildren(el, oldCh, ch)
+    	}else if (ch){
+            createEle(vnode) //create el's children dom
+    	}else if (oldCh){
+            api.removeChildren(el)
+    	}
+    }
+}
+```
+
+这个函数做了以下事情：
+
+- 找到对应的真实dom，称为`el`
+- 判断`Vnode`和`oldVnode`是否指向同一个对象，如果是，那么直接`return`
+- 如果他们都有文本节点并且不相等，那么将`el`的文本节点设置为`Vnode`的文本节点。
+- 如果`oldVnode`有子节点而`Vnode`没有，则删除`el`的子节点
+- 如果`oldVnode`没有子节点而`Vnode`有，则将`Vnode`的子节点真实化之后添加到`el`
+- 如果两者都有子节点，则执行`updateChildren`函数比较子节点，这一步很重要
+
+其他几个点都很好理解，我们详细来讲一下updateChildren
+
+### updateChildren
+
+代码量很大，不方便一行一行的讲解，所以下面结合一些示例图来描述一下。
+
+```javascript
+updateChildren (parentElm, oldCh, newCh) {
+    let oldStartIdx = 0, newStartIdx = 0
     let oldEndIdx = oldCh.length - 1
     let oldStartVnode = oldCh[0]
     let oldEndVnode = oldCh[oldEndIdx]
     let newEndIdx = newCh.length - 1
     let newStartVnode = newCh[0]
     let newEndVnode = newCh[newEndIdx]
-    let oldKeyToIdx, idxInOld, vnodeToMove, refElm
-    // 直到oldCh或者newCh被遍历完后跳出循环
+    let oldKeyToIdx
+    let idxInOld
+    let elmToMove
+    let before
     while (oldStartIdx <= oldEndIdx && newStartIdx <= newEndIdx) {
-      if (isUndef(oldStartVnode)) {
-        oldStartVnode = oldCh[++oldStartIdx] // Vnode has been moved left
-      } else if (isUndef(oldEndVnode)) {
-        oldEndVnode = oldCh[--oldEndIdx]
-      } else if (sameVnode(oldStartVnode, newStartVnode)) {
-        patchVnode(oldStartVnode, newStartVnode, insertedVnodeQueue, newCh, newStartIdx)
-        oldStartVnode = oldCh[++oldStartIdx]
-        newStartVnode = newCh[++newStartIdx]
-      } else if (sameVnode(oldEndVnode, newEndVnode)) {
-        patchVnode(oldEndVnode, newEndVnode, insertedVnodeQueue, newCh, newEndIdx)
-        oldEndVnode = oldCh[--oldEndIdx]
-        newEndVnode = newCh[--newEndIdx]
-      } else if (sameVnode(oldStartVnode, newEndVnode)) { // Vnode moved right
-        patchVnode(oldStartVnode, newEndVnode, insertedVnodeQueue, newCh, newEndIdx)
-        canMove && nodeOps.insertBefore(parentElm, oldStartVnode.elm, nodeOps.nextSibling(oldEndVnode.elm))
-        oldStartVnode = oldCh[++oldStartIdx]
-        newEndVnode = newCh[--newEndIdx]
-      } else if (sameVnode(oldEndVnode, newStartVnode)) { // Vnode moved left
-        patchVnode(oldEndVnode, newStartVnode, insertedVnodeQueue, newCh, newStartIdx)
-        canMove && nodeOps.insertBefore(parentElm, oldEndVnode.elm, oldStartVnode.elm)
-        oldEndVnode = oldCh[--oldEndIdx]
-        newStartVnode = newCh[++newStartIdx]
-      } else {
-        if (isUndef(oldKeyToIdx)) oldKeyToIdx = createKeyToOldIdx(oldCh, oldStartIdx, oldEndIdx)
-        idxInOld = isDef(newStartVnode.key)
-          ? oldKeyToIdx[newStartVnode.key]
-          : findIdxInOld(newStartVnode, oldCh, oldStartIdx, oldEndIdx)
-        if (isUndef(idxInOld)) { // New element
-          createElm(newStartVnode, insertedVnodeQueue, parentElm, oldStartVnode.elm, false, newCh, newStartIdx)
-        } else {
-          vnodeToMove = oldCh[idxInOld]
-          if (sameVnode(vnodeToMove, newStartVnode)) {
-            patchVnode(vnodeToMove, newStartVnode, insertedVnodeQueue, newCh, newStartIdx)
-            oldCh[idxInOld] = undefined
-            canMove && nodeOps.insertBefore(parentElm, vnodeToMove.elm, oldStartVnode.elm)
-          } else {
-            // same key but different element. treat as new element
-            createElm(newStartVnode, insertedVnodeQueue, parentElm, oldStartVnode.elm, false, newCh, newStartIdx)
-          }
+        if (oldStartVnode == null) {   // 对于vnode.key的比较，会把oldVnode = null
+            oldStartVnode = oldCh[++oldStartIdx] 
+        }else if (oldEndVnode == null) {
+            oldEndVnode = oldCh[--oldEndIdx]
+        }else if (newStartVnode == null) {
+            newStartVnode = newCh[++newStartIdx]
+        }else if (newEndVnode == null) {
+            newEndVnode = newCh[--newEndIdx]
+        }else if (sameVnode(oldStartVnode, newStartVnode)) {
+            patchVnode(oldStartVnode, newStartVnode)
+            oldStartVnode = oldCh[++oldStartIdx]
+            newStartVnode = newCh[++newStartIdx]
+        }else if (sameVnode(oldEndVnode, newEndVnode)) {
+            patchVnode(oldEndVnode, newEndVnode)
+            oldEndVnode = oldCh[--oldEndIdx]
+            newEndVnode = newCh[--newEndIdx]
+        }else if (sameVnode(oldStartVnode, newEndVnode)) {
+            patchVnode(oldStartVnode, newEndVnode)
+            api.insertBefore(parentElm, oldStartVnode.el, api.nextSibling(oldEndVnode.el))
+            oldStartVnode = oldCh[++oldStartIdx]
+            newEndVnode = newCh[--newEndIdx]
+        }else if (sameVnode(oldEndVnode, newStartVnode)) {
+            patchVnode(oldEndVnode, newStartVnode)
+            api.insertBefore(parentElm, oldEndVnode.el, oldStartVnode.el)
+            oldEndVnode = oldCh[--oldEndIdx]
+            newStartVnode = newCh[++newStartIdx]
+        }else {
+           // 使用key时的比较
+            if (oldKeyToIdx === undefined) {
+                oldKeyToIdx = createKeyToOldIdx(oldCh, oldStartIdx, oldEndIdx) // 有key生成index表
+            }
+            idxInOld = oldKeyToIdx[newStartVnode.key]
+            if (!idxInOld) {
+                api.insertBefore(parentElm, createEle(newStartVnode).el, oldStartVnode.el)
+                newStartVnode = newCh[++newStartIdx]
+            }
+            else {
+                elmToMove = oldCh[idxInOld]
+                if (elmToMove.sel !== newStartVnode.sel) {
+                    api.insertBefore(parentElm, createEle(newStartVnode).el, oldStartVnode.el)
+                }else {
+                    patchVnode(elmToMove, newStartVnode)
+                    oldCh[idxInOld] = null
+                    api.insertBefore(parentElm, elmToMove.el, oldStartVnode.el)
+                }
+                newStartVnode = newCh[++newStartIdx]
+            }
         }
-        newStartVnode = newCh[++newStartIdx]
-      }
     }
     if (oldStartIdx > oldEndIdx) {
-      refElm = isUndef(newCh[newEndIdx + 1]) ? null : newCh[newEndIdx + 1].elm
-      addVnodes(parentElm, refElm, newCh, newStartIdx, newEndIdx, insertedVnodeQueue)
-    } else if (newStartIdx > newEndIdx) {
-      removeVnodes(parentElm, oldCh, oldStartIdx, oldEndIdx)
+        before = newCh[newEndIdx + 1] == null ? null : newCh[newEndIdx + 1].el
+        addVnodes(parentElm, before, newCh, newStartIdx, newEndIdx)
+    }else if (newStartIdx > newEndIdx) {
+        removeVnodes(parentElm, oldCh, oldStartIdx, oldEndIdx)
     }
-  }
-```
-
-在开始遍历 `diff` 前，首先给 `oldCh`和 `newCh` 分别分配一个 `startIndex` 和 `endIndex` 来作为遍历的索引，当`oldCh` 或者 `newCh` 遍历完后(遍历完的条件就是 `oldCh` 或者 `newCh` 的 `startIndex >= endIndex` )，就停止`oldCh` 和 `newCh` 的 `diff` 过程。接下来通过实例来看下整个 `diff` 的过程(节点属性中不带 `key` 的情况)。
-
-**（2）无 `key `的` diff `过程**
-
-我们通过以下示意图对以上代码过程进行讲解：
-
-（2.1）首先从第一个节点开始比较，不管是 `oldCh` 还是 `newCh` 的起始或者终止节点都不存在 `sameVnode` ，同时节点属性中是不带 `key`标记的，因此第一轮的 `diff` 完后，`newCh`的 `startVnode` 被添加到 `oldStartVnode`的前面，同时 `newStartIndex`前移一位；
-
-![å¾çæè¿°](images/16c1e0e2878c44dc)
-
-（2.2）第二轮的 `diff`中，满足 `sameVnode(oldStartVnode, newStartVnode)`，因此对这2个 `vnode` 进行`diff`，最后将 `patch` 打到 `oldStartVnode` 上，同时 `oldStartVnode`和 `newStartIndex` 都向前移动一位 
-
-![å¾çæè¿°](images/16c1e0e28889eaff)
-
-（2.3）第三轮的 `diff` 中，满足 `sameVnode(oldEndVnode, newStartVnode)`，那么首先对  `oldEndVnode`和`newStartVnode` 进行 `diff`，并对 `oldEndVnode`进行 `patch`，并完成  `oldEndVnode` 移位的操作，最后`newStartIndex`前移一位，`oldStartVnode` 后移一位；
-
-![å¾çæè¿°](images/16c1e0e289a351b2)
-
-（2.4）第四轮的 `diff`中，过程同步骤3；
-
-![å¾çæè¿°](images/16c1e0e289f9213e)
-
-（2.5）第五轮的 `diff` 中，同过程1；
-
-![å¾çæè¿°](images/16c1e0e28aee99a1)
-
-
-
-（2.6）遍历的过程结束后，`newStartIdx > newEndIdx`，说明此时 `oldCh` 存在多余的节点，那么最后就需要将这些多余的节点删除。
-
-
-
-![å¾çæè¿°](images/16c1e0e2ca893b49)
-
-
-
-**（3）有 `key `的 `diff `流程**
-
-在 `vnode` 不带 `key` 的情况下，每一轮的 `diff` 过程当中都是`起始`和`结束`节点进行比较，直到 `oldCh` 或者`newCh` 被遍历完。而当为 `vnode` 引入 `key` 属性后，在每一轮的 `diff` 过程中，当`起始`和`结束`节点都没有找到`sameVnode` 时，然后再判断在 `newStartVnode` 的属性中是否有 `key`，且是否在 `oldKeyToIndx` 中找到对应的节点 ：
-
-- 如果不存在这个 `key`，那么就将这个 `newStartVnode`作为新的节点创建且插入到原有的 `root` 的子节点中；
-- 如果存在这个 `key`，那么就取出 `oldCh` 中的存在这个 `key` 的 `vnode`，然后再进行 `diff` 的过；
-
-通过以上分析，给`vdom`上添加 `key`属性后，遍历 `diff` 的过程中，当**起始点**，**结束点**的**搜寻**及 `diff` 出现还是无法匹配的情况下时，就会用 `key` 来作为唯一标识，来进行 `diff`，这样就可以提高 `diff` 效率。
-
-带有 `Key`属性的 `vnode`的 `diff` 过程可见下图：
-
-（3.1）首先从第一个节点开始比较，不管是 `oldCh` 还是 `newCh` 的起始或者终止节点都不存在 `sameVnode`，但节点属性中是带 `key` 标记的， 然后在 `oldKeyToIndx` 中找到对应的节点，这样第一轮 `diff` 过后 `oldCh` 上的`B节点`被删除了，但是 `newCh` 上的`B节点`上 `elm` 属性保持对 `oldCh` 上 `B节点` 的`elm`引用。
-
-
-
-![å¾çæè¿°](images/16c1e0e2db1c4812)
-
-
-
-（3.2）第二轮的 `diff` 中，满足 `sameVnode(oldStartVnode, newStartVnode)`，因此对这2个 `vnode` 进行`diff`，最后将 `patch` 打到 `oldStartVnode`上，同时 `oldStartVnode` 和 `newStartIndex` 都向前移动一位 ；
-
-
-
-![å¾çæè¿°](images/16c1e0e2d7df4fbf)
-
-
-
-（3.3）第三轮的 `diff`中，满足 `sameVnode(oldEndVnode, newStartVnode)`，那么首先对 `oldEndVnode` 和`newStartVnode` 进行 `diff`，并对 `oldEndVnode` 进行 `patch`，并完成 `oldEndVnode` 移位的操作，最后`newStartIndex` 前移一位，`oldStartVnode`后移一位；
-
-
-
-![å¾çæè¿°](images/16c1e0e2e2a2835e)
-
-
-
-（3.4）第四轮的`diff`中，过程同步骤2；
-
-
-
-![å¾çæè¿°](images/16c1e0e2e507aec0)
-
-
-
-（3.5）第五轮的`diff`中，因为此时 `oldStartIndex` 已经大于 `oldEndIndex`，所以将剩余的 `Vnode` 队列插入队列最后。
-
-
-
-![å¾çæè¿°](images/16c1e0e3178398fc)
-
-
-
-### 3.3、`patch` 过程
-
-通过3.2章节介绍的 `diff` 过程中，我们会看到 `nodeOps` 相关的方法对真实 `DOM` 结构进行操作，`nodeOps` 定义在 `src/platforms/web/runtime/node-ops.js` 中，其为基本 `DOM` 操作，这里就不在详细介绍。
-
-```javascript
-export function createElementNS (namespace: string, tagName: string): Element {
-  return document.createElementNS(namespaceMap[namespace], tagName)
-}
-
-export function createTextNode (text: string): Text {
-  return document.createTextNode(text)
-}
-
-export function createComment (text: string): Comment {
-  return document.createComment(text)
-}
-
-export function insertBefore (parentNode: Node, newNode: Node, referenceNode: Node) {
-  parentNode.insertBefore(newNode, referenceNode)
-}
-
-export function removeChild (node: Node, child: Node) {
-  node.removeChild(child)
 }
 ```
 
-### 3.4、总结
+先说一下这个函数做了什么
 
-通过前三小节简析，我们从主线上把模板和数据如何渲染成最终的 `DOM` 的过程分析完毕了，我们可以通过下图更直观地看到从初始化 `Vue` 到最终渲染的整个过程。
+- 将`Vnode`的子节点`Vch`和`oldVnode`的子节点`oldCh`提取出来
+- `oldCh`和`vCh`各有两个头尾的变量`StartIdx`和`EndIdx`，它们的2个变量相互比较，一共有4种比较方式。如果4种比较都没匹配，如果设置了`key`，就会用`key`进行比较，在比较的过程中，变量会往中间靠，一旦`StartIdx>EndIdx`表明`oldCh`和`vCh`至少有一个已经遍历完了，就会结束比较。
+
+#### 图解updateChildren
+
+终于来到了这一部分，上面的总结相信很多人也看得一脸懵逼，下面我们好好说道说道。（这都是我自己画的，求推荐好用的画图工具...）
+
+粉红色的部分为oldCh和vCh
 
 
 
-![img](images/16c1e2486c7e0ed7)
+![img](images/163783b76bc005cf)
 
 
 
-## 四、总结
+我们将它们取出来并分别用s和e指针指向它们的头child和尾child
 
-本文从通过介绍真实 `DOM` 结构其解析过程以及存在的问题，从而引出为什么需要虚拟 `DOM`；然后分析虚拟`DOM` 的好处，以及其一些理论基础和基础算法的实现；最后根据我们已经掌握的基础知识，再一步步去查看`Vue.js` 的源码如何实现的。从存在问题 —> 理论基础 —> 具体实践，一步步深入，帮助大家更好的了解什么是`Virtual DOM`、为什么需要 `Virtual DOM`、以及 `Virtual DOM`的具体实现，希望本文对您有帮助
+
+
+![img](images/163783eb58bfdb34)
+
+
+
+现在分别对`oldS、oldE、S、E`两两做`sameVnode`比较，有四种比较方式，当其中两个能匹配上那么真实dom中的相应节点会移到Vnode相应的位置，这句话有点绕，打个比方
+
+- 如果是oldS和E匹配上了，那么真实dom中的第一个节点会移到最后
+- 如果是oldE和S匹配上了，那么真实dom中的最后一个节点会移到最前，匹配上的两个指针向中间移动
+- 如果四种匹配没有一对是成功的，分为两种情况 
+  - 如果新旧子节点都存在key，那么会根据`oldChild`的key生成一张hash表，用`S`的key与hash表做匹配，匹配成功就判断`S`和匹配节点是否为`sameNode`，如果是，就在真实dom中将成功的节点移到最前面，否则，将`S`生成对应的节点插入到dom中对应的`oldS`位置，`oldS`和`S`指针向中间移动。
+  - 如果没有key,则直接将`S`生成新的节点插入`真实DOM`（ps：这下可以解释为什么v-for的时候需要设置key了，如果没有key那么就只会做四种匹配，就算指针中间有可复用的节点都不能被复用了）
+
+再配个图（假设下图中的所有节点都是有key的，且key为自身的值） 
+
+![img](images/16378648ea5046c2)
+
+
+
+- 第一步
+
+```
+oldS = a, oldE = d；
+S = a, E = b;
+```
+
+`oldS`和`S`匹配，则将dom中的a节点放到第一个，已经是第一个了就不管了，此时dom的位置为：a  b  d
+
+- 第二步
+
+```
+oldS = b, oldE = d；
+S = c, E = b;
+```
+
+`oldS`和`E`匹配，就将原本的b节点移动到最后，因为`E`是最后一个节点，他们位置要一致，这就是上面说的：**当其中两个能匹配上那么真实dom中的相应节点会移到Vnode相应的位置**，此时dom的位置为：a  d  b
+
+- 第三步
+
+```
+oldS = d, oldE = d；
+S = c, E = d;
+```
+
+`oldE`和`E`匹配，位置不变此时dom的位置为：a  d  b
+
+- 第四步
+
+```
+oldS++;
+oldE--;
+oldS > oldE;
+```
+
+遍历结束，说明`oldCh`先遍历完。就将剩余的`vCh`节点根据自己的的index插入到真实dom中去，此时dom位置为：a  c  d  b
+
+一次模拟完成。
+
+这个匹配过程的结束有两个条件：
+
+- `oldS > oldE`表示`oldCh`先遍历完，那么就将多余的`vCh`根据index添加到dom中去（如上图）
+
+- ```
+  S > E
+  ```
+
+  表示vCh先遍历完，那么就在真实dom中将区间为
+
+  ```
+  [oldS, oldE]
+  ```
+
+  的多余节点删掉 
+
+  ![img](images/163b0616bcb545ff)
+
+下面再举一个例子，可以像上面那样自己试着模拟一下
+
+
+
+![img](images/1637871f447465bb)
+
+
+
+当这些节点`sameVnode`成功后就会紧接着执行`patchVnode`了，可以看一下上面的代码
+
+```
+if (sameVnode(oldStartVnode, newStartVnode)) {
+    patchVnode(oldStartVnode, newStartVnode)
+}
+```
+
+就这样层层递归下去，直到将oldVnode和Vnode中的所有子节点比对完。也将dom的所有补丁都打好啦。那么现在再回过去看updateChildren的代码会不会容易很多呢？

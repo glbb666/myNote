@@ -4,60 +4,26 @@
 
 缺点：
 
-- 多个实例引用类型的指向相同，存在篡改的可能
-- 子类无法向父类传参
+- 子类实例共享父类实例的引用类型值，存在篡改的可能
+- 创建子类无法向父类传参
 
 ```javascript
 function Parent () {
     this.name = 'kevin';
 }
-
 Parent.prototype.getName = function () {
     console.log(this.name);
 }
-
 function Child () {
-
 }
-
 Child.prototype = new Parent();
-
 var child1 = new Child();
-
 console.log(child1.getName()) // kevin
 ```
 
-缺点：
-
-1.**引用类型的属性**被所有实例共享，举个例子：
-
-```javascript
-function Parent () {
-    this.names = ['kevin', 'daisy'];
-}
-
-function Child () {
-
-}
-
-Child.prototype = new Parent();
-
-var child1 = new Child();
-
-child1.names.push('yayu');
-
-console.log(child1.names); // ["kevin", "daisy", "yayu"]
-
-var child2 = new Child();
-
-console.log(child2.names); // ["kevin", "daisy", "yayu"]
-```
-
-2.在创建 Child 的实例时，不能向Parent传参
-
 ## 2.借用构造函数(经典继承)
 
-做法：子类调用父类
+做法：子类用`call`调用父类
 
 优点：原型链模式的缺点（1、引用类型不被实例共享2、子类可向父类传参）
 
@@ -70,49 +36,21 @@ console.log(child2.names); // ["kevin", "daisy", "yayu"]
 function Parent () {
     this.names = ['kevin', 'daisy'];
 }
-
 function Child () {
     Parent.call(this);
 }
-
 var child1 = new Child();
-
 child1.names.push('yayu');
-
 console.log(child1.names); // ["kevin", "daisy", "yayu"]
-
 var child2 = new Child();
-
 console.log(child2.names); // ["kevin", "daisy"]
 ```
-
-举个例子：
-
-```javascript
-function Parent (name) {
-    this.name = name;
-}
-
-function Child (name) {
-    Parent.call(this, name);
-}
-
-var child1 = new Child('kevin');
-
-console.log(child1.name); // kevin
-
-var child2 = new Child('daisy');
-
-console.log(child2.name); // daisy
-```
-
-
 
 ## 3.组合继承
 
 原型链继承和经典继承双剑合璧。
 
-做法：1.父类实例作为子类原型，方法写在父类原型上2.子类调用父类
+做法：1.父类实例作为子类原型，方法写在父类原型上2.子类用`call`调用父类
 
 缺点：父类调用两遍，子类原型有冗余属性
 
@@ -121,42 +59,29 @@ function Parent (name) {
     this.name = name;
     this.colors = ['red', 'blue', 'green'];
 }
-
 Parent.prototype.getName = function () {
     console.log(this.name)
 }
-
 function Child (name, age) {
-
     Parent.call(this, name);
-    
     this.age = age;
-
 }
-
 Child.prototype = new Parent();
 Child.prototype.constructor = Child;
-
 var child1 = new Child('kevin', '18');
-
 child1.colors.push('black');
-
 console.log(child1.name); // kevin
 console.log(child1.age); // 18
 console.log(child1.colors); // ["red", "blue", "green", "black"]
-
 var child2 = new Child('daisy', '20');
-
 console.log(child2.name); // daisy
 console.log(child2.age); // 20
 console.log(child2.colors); // ["red", "blue", "green"]
 ```
 
-
-
 ## 4.原型式继承
 
-做法：利用一个空函数作为中介，创造一个继承指向传入对象属性的空对象。
+做法：传入一个对象作为函数实例的原型。
 
 ```javascript
 function createObj(o) {
@@ -172,24 +97,6 @@ function createObj(o) {
 
 - 多个实例引用类型的指向相同，存在篡改的可能
 - 子类无法向父类传参
-
-```javascript
-var person = {
-    name: 'kevin',
-    friends: ['daisy', 'kelly']
-}
-
-var person1 = createObj(person);
-var person2 = createObj(person);
-
-person1.name = 'person1';
-console.log(person2.name); // kevin
-
-person1.firends.push('taylor');
-console.log(person2.friends); // ["daisy", "kelly", "taylor"]
-```
-
-注意：修改`person1.name`的值，`person2.name`的值并未发生改变，并不是因为`person1`和`person2`有独立的 name 值，而是因为`person1.name = 'person1'`，给`person1`添加了 name 值，并非修改了原型上的 name 值。
 
 ## 5. 寄生式继承
 
@@ -228,51 +135,26 @@ function createObj (o) {
 
 做法：用寄生式继承对组合继承进行优化(创建父类和子类的中间层)
 
-为了方便大家阅读，在这里重复一下组合继承的代码：
+组合继承最大的缺点是会调用两次父构造函数。
 
 ```javascript
 function Parent (name) {
     this.name = name;
     this.colors = ['red', 'blue', 'green'];
 }
-
 Parent.prototype.getName = function () {
     console.log(this.name)
 }
-
 function Child (name, age) {
     Parent.call(this, name);
     this.age = age;
 }
-
-Child.prototype = new Parent();
-
-var child1 = new Child('kevin', '18');
-
+Child.prototype = new Parent()//第一次是设置子类型实例的原型的时候
+var child1 = new Child('kevin', '18');//第二次在创建子类型实例的时候
 console.log(child1)
 ```
 
-组合继承最大的缺点是会调用两次父构造函数。
-
-第一次是设置子类型实例的原型的时候：
-
-```javascript
-Child.prototype = new Parent();
-```
-
-第二次在创建子类型实例的时候：
-
-```javascript
-var child1 = new Child('kevin', '18');
-```
-
-回想下 new 的模拟实现，其实第一次中，我们会执行：
-
-```javascript
-Parent.call(this, name);
-```
-
-所以，如果我们打印 child1 对象，我们会发现 Child.prototype 和 child1 都有一个属性为`colors`，属性值为`['red', 'blue', 'green']`。
+所以，`Child.prototype` 和 `child1` 都有一个属性为`colors`，属性值为`['red', 'blue', 'green']`。
 
 为了避免这一次重复调用，我们不使用 Child.prototype = new Parent() ，而是间接的让 Child.prototype 访问到 Parent.prototype
 

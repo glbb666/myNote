@@ -98,4 +98,4 @@ foo = {}; // TypeError: "foo" is read-only
 ### 全局声明区别
 
 - 全局`var`声明，成为`Global(window)`属性。具有覆盖性
-- `let const`声明的变量保存在名为Script的作用域中
+- `let const`声明的变量保存在名为`Script`的作用域中

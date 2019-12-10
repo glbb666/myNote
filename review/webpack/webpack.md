@@ -240,7 +240,9 @@ var baseConfig = {
 }
 ```
 
-`HotModuleReplacementPlugin`: 它允许你在修改组件代码时，自动刷新实时预览修改后的结果注意永远不要在生产环境中使用HMR。这儿说一下一般情况分为开发环境，测试环境，生产环境。
+#### `HotModuleReplacementPlugin`
+
+它允许你在修改组件代码时，自动刷新实时预览修改后的结果注意永远不要在生产环境中使用`HMR`。这儿说一下一般情况分为开发环境，测试环境，生产环境。
 用法如 `new webpack.HotModuleReplacementPlugin()`
 webapck.config.js的全部内容
 
