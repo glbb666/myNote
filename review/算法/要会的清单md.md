@@ -102,65 +102,140 @@ function BFS(root) {
 }
 ```
 
-## 排序
+## 三种简单排序
+- 时间复杂度：`O(n^2)`
+- 空间复杂度： `O(1)`
+- 稳定性：冒泡和插入稳定，选择不稳定
+### 冒泡
 
-### 快排
+- 外层控制轮次，表示第几轮
 
-```js
-function quickSort(arr, start, end) {
-  if (end - start < 1) {
-    return
-  }
-  let l = start
-  let r = end
-  const target = arr[start]
-  while (l < r) {
-    while (l < r && arr[r] >= target) {
-      r--
-    }
-    arr[l] = arr[r]
-    while (l < r && arr[l] < target) {
-      l++
-    }
-    arr[r] = arr[l]
-  }
-  arr[l] = target
-  quickSort(arr, start, l - 1)
-  quickSort(arr, l + 1, end)
-  return arr
+- 内层控制交换，若`arr[j]>arr[j+1]`则交换`arr[j]`和`arr[j+1]`，`j`代表被排序的前一个值的下标
+
+  (不写错可以判断临界值有没有越界)
+
+```javascript
+function bubble(arr){
+	for(let i = 1;i<arr.length;i++){//外层控制轮次,表示第几轮
+		for(let j = 0;j<arr.length-i;j++){//内层控制交换
+			if(arr[j]>arr[j+1]){
+				[arr[j],arr[j+1]] = [arr[j+1],arr[j]]
+			}
+		}
+	}
+}
+```
+
+### 插入
+
+将左边的序列看作有序序列，每次循环将一个数字插入有序序列
+
+从有序序列最右边开始比较，若比较的数较大，通过交换后移一位
+
+```javascript
+function insert(arr){
+	for(let i = 1;i<arr.length;i++){
+		let target = i;
+		for(let j = i-1;j>=0;j--){
+			if(arr[target]<arr[j]){
+             [arr[target], arr[j]] = [arr[j], arr[target]]
+                target = j;
+            }else{
+                break;
+            }
+		}
+	}
 }
 ```
 
 ### 选择
 
-```js
-function selectSort(arr) {
-  for (let i = 0; i < arr.length; i++) {
-    let minIdex = i
-    for (let j = i + 1; j < arr.length; j++) {
-      if (arr[minIdex] > arr[j]) {
-        minIdex = j
-      }
+每次循环选取一个最小的数字放到前面的有序序列中
+
+```javascript
+function select(arr){
+        for(let i = 0;i<arr.length-1;i++){
+            let min = i;
+            for(let j = i+1;j<arr.length;j++){
+                if(arr[min]>arr[j]){
+                    min = j;
+                }
+            }
+            [arr[i],arr[min]] = [arr[min],arr[i]];
+        }
     }
-    [arr[minIdex], arr[i]] = [arr[i], arr[minIdex]]
-  }
-  return arr
+```
+
+## 快速排序
+
+- 时间复杂度，`O(n^2)`,平均`O(nlogn)`，大多数情况下小于平均值
+- 空间复杂度：`O(logn)`
+- 稳定性：不稳定
+
+```javascript
+function quickSort(arr,start,end){
+        if(end-start<1){
+            return;
+        }
+        let l = start;
+        let r = end;
+        const target = arr[start];
+        while(l<r){
+            while(l<r&&arr[r]>=target){
+                r--;
+            }
+            arr[l] = arr[r];
+            while(l<r&&arr[l]<target){
+                l++;
+            }
+            arr[r] = arr[l];
+        }
+        arr[l] = target;
+        quickSort(arr,start,l-1);
+        quickSort(arr,l+1,end)
+        return arr
 }
 ```
 
-### 冒泡
+## 归并排序
 
-```js
-function bubbleSort(arr) {
-  for (let i = 1; i < arr.length; i++) {
-    for (let j = 0; j < arr.length - i; j++) {
-      if (arr[j] > arr[j + 1]) {
-        [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]]
-      }
+归并排序是建立在归并操作上的一种有效的排序算法，该算法是采用**分治法**的一个非常典型的应用。将已有的子序列合并，得到完全有序的序列，即先使每个子序列有序，再使子序列段间有序。若将两个有序表合并成一个有序表，称为二路归并。
+
+- 时间复杂度`O(nlog(n))`
+- 空间复杂度`O(n)`
+- 稳定性：稳定
+
+```javascript
+let arr = [65,54,34,432,213,6,34]
+function mergeSortRec(arr){
+    if(arr.length===1){
+        return arr;
     }
-  }
-  return arr
+    var mid = Math.floor(arr.length/2);
+    var left = arr.slice(0,mid);
+    var right = arr.slice(mid);
+    return merge(mergeSortRec(left),mergeSortRec(right))
 }
+function merge(left,right){
+    var il = 0;
+    var ir = 0;
+    var result = [];
+    while(il<left.length&&ir<right.length){
+        if(left[il]<right[ir]){
+            result.push(left[il++]);
+        }else{
+            result.push(right[ir++]);
+        }
+    }
+    while(il<left.length){
+        result.push(left[il++]);
+    }
+    while(ir<right.length){
+        result.push(right[ir++]);
+    }
+    return result;
+}
+arr = mergeSortRec(arr) 
 ```
 
 ## 链表
@@ -294,6 +369,25 @@ var removeNthFromEnd = function(head, k) {
 ### 判断是不是环形链表
 
 - hash表，不存在就把结点保存，存在说明对同一个结点存在两次引用，存在环形链表
+- 快慢指针，如果是环形，总是会相遇的
+
+### 链表的中间结点
+
+快慢指针
+
+```javascript
+var middleNode = function(head) {
+    var fast = head;
+    var slow = head;
+    while(fast&&fast.next){
+        fast = fast.next.next;
+        slow = slow.next
+    }
+    return slow;
+};
+```
+
+
 
 ## 算法
 
@@ -340,19 +434,6 @@ var searchMatrix = function(matrix, target) {
     j++
   }
   return false
-}
-```
-
-### 从尾到头打印链表
-
-```js
-function printListFromTailToHead(h) {
-  var arr = []
-  while (h) {
-    arr.unshift(head.val)
-    h = h.next
-  }
-  return arr
 }
 ```
 
