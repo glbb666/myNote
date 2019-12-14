@@ -7,8 +7,24 @@
 #### `CMD`
 
 用于服务器，它把模块作为一个对象，整体引入，输入时必须查找对象属性，因为只有运行时才能得到这个对象，导致完全没办法在编译时做“静态优化”。
+
+`CommonJS` 模块的输出都定义在`module.exports`这个属性上面。`Node` 的`import`命令加载 CommonJS 模块，Node 会自动将`module.exports`属性，当作模块的默认输出，即等同于`export default xxx`。
+
 ```javascript
-// CommonJS模块
+module.exports = {
+  foo: 'hello',
+  bar: 'world'
+};
+// 等同于
+export default {
+  foo: 'hello',
+  bar: 'world'
+};
+```
+
+
+
+```javascript
 let { stat, exists, readFile } = require('fs');
 // 等同于
 let _fs = require('fs');
@@ -17,31 +33,74 @@ let exists = _fs.exists;
 let readfile = _fs.readfile;
 ```
 #### `esModule`
-`esModule`模块成为浏览器和服务器通用的模块解决方案。它的设计思想是尽量的静态化，**使得编译时就能确定模块的依赖关系，以及输入和输出的变量**。
+`esModule`是浏览器和服务器通用的模块方案。它的设计思想是尽量的静态化，**使得编译时就能确定模块的依赖关系，以及输入和输出的变量，完成模块的加载。**
 
-`ES6` 模块不是对象，而是通过`export`命令显式指定输出的代码，再通过`import`命令输入。 `ES6` 可以在编译时就完成模块加载。
+`export`命令用于规定模块的对外接口，在接口名与模块内部变量之间，必须建立一一对应的关系。
 
 ```javascript
-// ES6模块
+// 报错
+var m = 1;
+export m;
+// 写法一
+export var m = 1;
+// 写法二
+var m = 1;
+export {m};
+//写法三,给输出变量重命名
+var n = 1;
+export {n as m};
+```
+
+`import`命令用于输入其他模块提供的功能。`import`命令输入的变量都是只读的，不允许在加载模块的脚本里面，改写接口。
+
+```javascript
 import { stat, exists, readFile } from 'fs';
+import { lastName as surname } from './profile.js';//用as将输入的变量重命名
+import {a} from './xxx.js'
+a = {}; //不允许改写接口
+a.foo = 'hello'; // 但是如果接口是一个对象,可以改写它的属性
+import * as circle from './circle';//整体加载模块的值
+//模块整体加载所在的那个对象（circle），应该是可以静态分析的，所以不允许运行时改变。
+//下面是不允许的
+circle.foo = 'hello';
 ```
 
-模块功能主要由两个命令构成：`export`命令用于规定模块的对外接口，在接口名与模块内部变量之间，必须建立一一对应的关系。`import`命令用于输入其他模块提供的功能。`import`命令输入的变量都是只读的，不允许在加载模块的脚本里面，改写接口。
+`export`和`import`命令都不能放在块级作用域内，否则就没有办法做静态优化了
 
-但是，如果`a`是一个对象，改写`a`的属性是允许的。
+`import`具有提升效果，会提升到整个模块的头部，首先执行
+
+如果多次重复执行同一句`import`语句，那么只会执行一次，而不会执行多次，因为`import`是单例模式
+
+`export default`命令其实只是输出一个叫做`default`的默认变量，所以它后面不能跟变量声明语句。一个模块只能有一个默认输出，因此`export default`命令只能使用一次。`import`命令可以为该匿名函数指定任意名字。
 
 ```javascript
-import {a} from './xxx.js'
-a.foo = 'hello'; // 合法操作
+export default function () {
+  console.log('foo');
+}
+import customName from './export-default';//import后不加{}，因为只唯一对应export default
+// 错误
+export default var a = 1;
+// 正确
+var a = 1;
+export default a;//将变量a的值赋给变量default
+//export default也可以用来输出类[
+export default class { ... }
+```
+#### 浏览器加载和`node`加载
+
+浏览器加载` ES6 `模块，也使用`<script>`标签，但是要加入`type="module"`属性。
+
+
+```html
+<script type="module" src="./foo.js"></script>//等同于打开了<script>标签的defer属性
+<script type="module" src="./foo.js" async></script>//按async的规则 
 ```
 
-`import`命令具有提升效果，会提升到整个模块的头部，首先执行
+Node 有自己的 `CommonJS `模块格式，与 `ES6 `模块格式是不兼容的。
 
-如果多次重复执行同一句`import`语句，那么只会执行一次，而不会执行多次。
-
-除了指定加载某个输出值，还可以使用整体加载，即用星号（`*`）指定一个对象，所有输出值都加载在这个对象上面。注意，模块整体加载所在的那个对象（上例是`circle`），应该是可以静态分析的，所以不允许运行时改变。
+Node 要求 `ES6` 模块采用`.mjs`后缀文件名。`import`或者`export`命令，那么就必须采用`.mjs`后缀名。`require`命令不能用来加载或者使用在`.mjs`文件中，`import`可以。
 
 ## `commonJS `与` ESmodule`差异
 
 - `commonJs`是被加载的时候运行，`esModule`是编译的时候运行，效率要比` CommonJS` 高，但是没法引用` ES6` 模块本身，因为它不是对象。
-- `esModule`输出接口与对应的值动态绑定，所以可以取到模块内部实时的值。`commentJs`在第一次被加载时，会完整运行整个文件并输出一个对象的浅拷贝，缓存在内存中。下次加载文件时，直接从内存中取值。
+- `esModule`输出接口与模块内的值动态绑定，所以可以取到模块内部实时的值。`commentJs`在第一次被加载时，会完整运行整个文件并输出一个对象的浅拷贝，缓存在内存中。下次加载文件时，直接从内存中取值。
