@@ -70,8 +70,7 @@ function laterOrder(root) {
       res.unshift(p.data)
       p = p.right
     } else {
-      let node = stack.pop()
-      p = node.left
+      p = stack.pop().left
     }
   }
   return res
@@ -91,12 +90,8 @@ function BFS(root) {
   while (queue.length) {
     p = queue.shift()
     res.push(p.data)
-    if (p.left) {
-      queue.push(p.left)
-    }
-    if (p.right) {
-      queue.push(p.right)
-    }
+    if (p.left)queue.push(p.left)
+    if (p.right) queue.push(p.right)
   }
   return res
 }
@@ -105,7 +100,7 @@ function BFS(root) {
 ## 三种简单排序
 - 时间复杂度：`O(n^2)`
 - 空间复杂度： `O(1)`
-- 稳定性：冒泡和插入稳定，选择不稳定
+- 稳定性：冒泡和插入稳定，选择不稳定（记忆：人的选择就是不一定的）
 ### 冒泡
 
 - 外层控制轮次，表示第几轮
@@ -138,7 +133,7 @@ function insert(arr){
 		let target = i;
 		for(let j = i-1;j>=0;j--){
 			if(arr[target]<arr[j]){
-             [arr[target], arr[j]] = [arr[j], arr[target]]
+             [arr[target], arr[j]] = [arr[j], arr[target]]//交换后移动
                 target = j;
             }else{
                 break;
@@ -387,8 +382,6 @@ var middleNode = function(head) {
 };
 ```
 
-
-
 ## 算法
 
 ### 两个栈实现队列
@@ -617,7 +610,7 @@ function flat(arr) {
 }
 ```
 
-### instanceOf
+### `instanceOf`
 
 ```js
 function myInstanceOf(target, father) {

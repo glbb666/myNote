@@ -19,19 +19,13 @@
 
 #### 存储空间大小
 
-**cookie：**4KB左右
+**cookie：**4KB左右，因为浏览器每次发起请求都会携带`cookie`，`cookie`太大会消耗性能
 
 **localStorage和sessionStorage：**可以保存5MB或更大的信息。
 
 #### 存储格式
 
 **localStorage**和**sessionStorage**只能存储字符串类型
-
-#### http请求
-
-**cookie**：`cookie`数据始终在同源的`http`请求中携带（即使不需要），即`cookie`在浏览器和服务器间来回传递，所以无形中增加了流量。
-
-**localStorage**和**sessionStorage**：仅在客户端（即浏览器）中保存，不参与和服务器的通信
 
 #### 范围
 
