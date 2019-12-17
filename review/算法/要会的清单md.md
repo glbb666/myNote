@@ -97,7 +97,9 @@ function BFS(root) {
 }
 ```
 
-## 三种简单排序
+## 排序
+### 三种简单排序（冒泡，插入，选择）
+
 - 时间复杂度：`O(n^2)`
 - 空间复杂度： `O(1)`
 - 稳定性：冒泡和插入稳定，选择不稳定（记忆：人的选择就是不一定的）
@@ -161,7 +163,7 @@ function select(arr){
     }
 ```
 
-## 快速排序
+### 快速排序
 
 - 时间复杂度，`O(n^2)`,平均`O(nlogn)`，大多数情况下小于平均值
 - 空间复杂度：`O(logn)`
@@ -192,7 +194,7 @@ function quickSort(arr,start,end){
 }
 ```
 
-## 归并排序
+### 归并排序
 
 归并排序是建立在归并操作上的一种有效的排序算法，该算法是采用**分治法**的一个非常典型的应用。将已有的子序列合并，得到完全有序的序列，即先使每个子序列有序，再使子序列段间有序。若将两个有序表合并成一个有序表，称为二路归并。
 
@@ -234,6 +236,7 @@ arr = mergeSortRec(arr)
 ```
 
 ## 链表
+
 ### 反序输出递归
 ```js
 function printListFromTailToHead(h) {
@@ -349,7 +352,7 @@ var removeNthFromEnd = function(head, k) {
     second = head
   while (k > 0) {
     first = first.next
-    k--
+    k--;
   }
   if (!first) return head.next // 删除的是头节点
   while (first.next) {
@@ -382,9 +385,19 @@ var middleNode = function(head) {
 };
 ```
 
+### 回文链表（时间复杂度`O(n)`，空间复杂度`O(1)`）
+
+首先通过快慢指针找出中间结点，接着把后半段链表进行翻转，然后把前后两段链表进行比较。
+
 ## 算法
 
+### 两数之和
+
+遍历数组，把数组的值当作`hash`的键，把数组的下标当作`hash`的值，边存之前的值，边计算当前数的补，只要`hash`表中存在当前数的补，就返回数组的下标即可。
+
 ### 两个栈实现队列
+
+一个栈（`stack1`）负责入队，一个栈(`stack2`)负责出队
 
 ```js
 const stack1 = []
@@ -467,8 +480,6 @@ Function.prototype.myApply = function (context = window, args) {
 }
 ```
 
-
-
 ### bind
 
 ```js
@@ -482,45 +493,6 @@ Function.prototype.myBind = function(context = window, ...args1) {
   this.prototype ? (ft.prototype = this.prototype) : null
   fn.prototype = new ft()
   return fn
-}
-```
-
-### EventEmit
-
-```js
-class EventEmit {
-  constructor() {
-    this._eventpool = {}
-  }
-  on(event, callback) {
-    //绑定
-    if (this._eventpool[event]) {
-      this._eventpool[event].push(callback)
-    } else {
-      this._eventpool[event] = [callback]
-    }
-  }
-  off(event) {
-    //解除
-    if (this._eventpool[event]) {
-      delete this._eventpool[event]
-    }
-  }
-  emit(event, ...args) {
-    //执行全部回调
-    if (this._eventpool[event]) {
-      this._eventpool[event].forEach(fn => {
-        fn(...args)
-      })
-    }
-  }
-  once(event, callback) {
-    //绑定＋执行 一次
-    this.on(event, (...args) => {
-      callback(args)
-      this.off(event)
-    })
-  }
 }
 ```
 
@@ -572,19 +544,22 @@ function testType(target) {
 ### 深拷贝
 
 ```js
-function deepclone(target, map = new WeakMap()) {
-  if (typeof target === 'object') {
-    const cloneT = Array.isArray(target) ? [] : {}
-    if (map.has(target)) return map.get(target)
-    map.set(target)
-
-    for (let i in target) {
-      cloneT[i] = deepclone(target[i])
+function isObject(obj){
+    return typeof obj==='object'&&obj!=null
+}
+function deepClone(obj,map = new WeakMap()){
+    if(!isObject(obj)){
+        return obj;
     }
-
-    return cloneT
-  }
-  return target
+    if(map.has(obj)){
+        return map.get(obj);
+    }
+    var target = Array.isArray(obj)?[]:{};
+    map.set(obj,target)
+    for(let item in obj){
+        target[item] = isObject(obj[item])?deepClone(obj[item],map):obj[item];
+    }
+    return target;
 }
 ```
 
@@ -666,14 +641,6 @@ function jsonp(url, obj, timeout) {
 ### Ajax封装
 
 ```js
-function getXhr() {
-  if (window.XMLHttpRequest) {
-    return new XMLHttpRequest()
-  } else {
-    return new ActiveXObject('Microsoft.XMLHTTP')
-  }
-}
-
 function getParams(data) {
   let arr = []
   for (let i in data) {
@@ -681,41 +648,36 @@ function getParams(data) {
   }
   return arr.join('&')
 }
-
-function Ajax(options) {
-  options = options || {}
-  options.type = (options.type || 'GET').toUpperCase()
-  options.async = options.async || true
-  options.timeout = options.timeout || 8000
-
-  const xhr = getXhr()
+function Ajax(options = {}) {
+  let {type='GET',async=true,timeout=8000,data,url} = options;
+  const xhr = new XMLHttpRequest();
   xhr.onreadystatechange = function(e) {
     if (xhr.readyState === 4) {
-      const s = xhr.status
-      if ((s >= 200 && s < 300) || s == 304) {
+      if ((xhr.status >= 200 && xhr.status < 300) || xhr.status == 304) {
         console.log(xhr.responseText)
       }
     }
   }
-  xhr.timeout = options.timeout
+  xhr.timeout = timeout
   xhr.ontimeout = function(e) {
-    console.log('timeout')
     xhr.abort()
   }
-  if (options.type === 'GET') {
+  if (type === 'GET') {
     xhr.open(
       'GET',
-      options.url + '?' + getParams(options.data),
-      options.async
+      url + '?' + getParams(data),
+      async
     )
-    xhr.send()
-  } else if (options.type === 'POST') {
-    xhr.open('POST', options.url, options.async)
+    xhr.send(null)
+  } else if (type === 'POST') {
+    xhr.open('POST', url, async)
     xhr.setRequestHeader(
       'Content-Type',
       'application/x-www-form-urlencoded'
     )
     xhr.send(options.data)
+  }else{
+      return;
   }
 }
 
@@ -767,28 +729,7 @@ if (IntersectionObserver) {
 }
 ```
 
-### 单例模式
 
-```js
-var Singleton = function(name) {
-    this.name = name;
-};
-
-Singleton.prototype.getName = function() {
-    alert(this.name);
-};
-
-Singleton.getInstance = (function(name) {
-    var instance;
-    return function(name){
-        if (!instance) {
-            instance = new Singleton(name);
-        }
-        return instance;
-    }
-})();
-
-```
 
 ### 数组乱序
 
@@ -849,3 +790,75 @@ function promiseAll(promises) {
 }
 ```
 
+## 设计模式
+
+### `EventEmit`
+
+发布订阅者模式是一个消息范式，发布者把所有的消息分成类别，不需要了解订阅者的存在，订阅者只需要表达自己对某些消息的兴趣，也不需要去了解发布者的存在。
+
+```js
+class EventEmit {
+  //中介对象，以键值对的形式存储存事件以及事件的回调
+  constructor() {
+    this._eventpool = {}
+  }
+  //订阅者用on来订阅事件的回调
+  on(event, callback) {
+    //绑定
+    if (this._eventpool[event]) {
+      this._eventpool[event].push(callback)
+    } else {
+      this._eventpool[event] = [callback]
+    }
+  }
+  off(event) {
+    //解除
+    if (this._eventpool[event]) {
+      delete this._eventpool[event]
+    }
+  }
+  //发布者用emit执行事件的所有回调
+  emit(event, ...args) {
+    //执行全部回调
+    if (this._eventpool[event]) {
+      this._eventpool[event].forEach(fn => {
+        fn(...args)
+      })
+    }
+  }
+  once(event, callback) {
+    //绑定＋执行 一次
+    this.on(event, (...args) => {
+      callback(args)
+      this.off(event)
+    })
+  }
+}
+```
+
+### 单例模式
+
+一个类就只有一个实例对象
+
+- 对于频繁使用的对象，可以省略创建对象所花费的时间，这对于重量级的对象来说很重要
+- 因为不需要频繁创建对象，减轻了`GC`的压力
+
+缺点：复杂的单例模式需要考虑线程安全等并发问题
+
+```js
+var Singleton = function(name) {
+    this.name = name;
+};
+Singleton.prototype.getName = function() {
+    alert(this.name);
+};
+Singleton.getInstance = (function(name) {
+    var instance;
+    return function(name){
+        if (!instance) {
+            instance = new Singleton(name);
+        }
+        return instance;
+    }
+})();
+```

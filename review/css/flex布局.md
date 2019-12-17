@@ -1,6 +1,6 @@
 ## flex 基本概念（常问居中布局和space-between和space-around的区别）
 
-flex 的核心的概念就是 **容器** 和 **轴**。容器有 **父容器** 和内**子容器**，轴有**主轴** 和 **交叉轴**。flex 布局涉及到 12 个 `CSS` 属性（不含 `display: flex`），其中父容器、子容器各 6 个。不过常用的属性只有 4 个，父容器、子容器各 2 个，我们就先从常用的说起吧。
+flex 的核心的概念就是 **容器** 和 **轴**。容器有 **父容器** 和内**子容器**，轴有**主轴** 和 **交叉轴**。
 
 最常用的是水平垂直居中
 
@@ -134,13 +134,13 @@ flex的取值：
 
 #### 比较一下`align-items`、`align-content`、`align-self`
 
-共同点：它们都是设置子容器如何沿交叉轴排列
+共同点：它们都是设置子容器如何**沿交叉轴排列**
 
-不同点：`align-item`和`align-items`都是父元素对子元素设置的，`align-item`设置的是单行，`align-content`设置的是多行，`align-self`是子元素对自身设置的，`align-self`的优先级高于`align-items`和`align-content`。因为`align-content`设置的是多行，所以它可以设置多行在交叉轴的分布，它拥有`justify-content`和`align-content`的所有属性。
+不同点：`align-items`和`align-content`都是父元素对子元素设置的，`align-items`设置的是单行，`align-content`设置的是多行，`align-self`是子元素对自身设置的，`align-self`的优先级高于`align-items`和`align-content`。因为`align-content`设置的是多行，所以它可以设置**多行在交叉轴的分布**，它拥有`justify-content`和`align-content`的所有属性。
 
 ### 2. 轴
 
-如图所示，**轴** 包括 **主轴** 和 **交叉轴**，我们知道 `justify-content` 属性决定子容器沿主轴的排列方式，`align-items` 属性决定子容器沿着交叉轴的排列方式。那么轴本身又是怎样确定的呢？在 flex 布局中，`flex-direction` 属性决定主轴的方向，交叉轴的方向由主轴确定。
+如图所示，**轴** 包括 **主轴** 和 **交叉轴**，`flex-direction` 属性决定主轴的方向，交叉轴的方向由主轴确定。
 
 ![img](images/5f2a17efffe8f3ab78a4.png)
 

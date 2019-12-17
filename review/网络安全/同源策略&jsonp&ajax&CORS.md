@@ -23,7 +23,7 @@
 
 #### `AJAX`是什么
 
-`AJAX`是的核心是`XMLHttpRequest`对象，它不必刷新页面就可以从服务器获取到新数据。
+`AJAX`的核心是`XMLHttpRequest`对象，它不必刷新页面就可以从服务器获取到新数据。
 
 #### 创建步骤
 
@@ -57,7 +57,7 @@
 
 [Content-Type的理解](<https://www.cnblogs.com/tugenhua0707/p/8975121.html>)
 
-**Content-Type**是指http/https发送信息至服务器时的内容编码类型，默认值为`text/plain;charset=UTF-8`
+**Content-Type**是指`http/https`发送信息至服务器时的**内容编码类型**，默认值为`text/plain;charset=UTF-8`
 
 - `application/x-www-form-urlencoded`：在发送前编码所有字符。原生的`form`表单，如果不设置`enctype`属性，那么就以这种方式提交数据，如下
 
