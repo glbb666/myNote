@@ -22,19 +22,19 @@
 
 广义的视口，是指浏览器显示内容的屏幕区域，狭义的视口包括了布局视口、视觉视口和理想视口
 
-### (1) 布局视口（layout viewport）
+### (1) 布局视口（`layout viewport`）
 
-大于实际屏幕， 元素的宽度继承于 layoutviewport，用于保证网站的外观特性与桌面浏览器一样。layoutviewport 到底多宽，每个浏览器不同。iPhone 的 safari 为 980px，通过 document.documentElement.clientWidth 获取。
+大于实际屏幕， 元素的宽度继承于布局视口，用于保证网站的外观特性与桌面浏览器一样。布局视口到底多宽，每个浏览器不同。`iPhone` 的 safari 为 `980px`，通过 `document.documentElement.clientWidth` 获取。
 
-### (2) 视觉视口（visual viewport）
+### (2) 视觉视口（`visual viewport`）
 
 当前显示在屏幕上的页面，即浏览器可视区域的宽度。
 
-### (3) 理想视口（ideal viewport）
+### (3) 理想视口（`ideal viewport`）
 
 理想视口或者应该全称为“理想的布局视口”，在移动设备中就是指设备的分辨率。换句话说，理想视口或者说分辨率就是给定设备物理像素的情况下，最佳的“布局视口”。
 
-此外，在移动端的布局中，我们可以通过viewport元标签来控制布局，比如一般情况下，我们可以通过下述标签使得移动端在理想视口下布局：
+此外，在移动端的布局中，我们可以通过`viewport`元标签来控制布局，比如一般情况下，我们可以通过下述标签使得移动端在理想视口下布局：
 
 ```html
 <meta id="viewport" name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1; user-scalable=no;">
@@ -239,8 +239,6 @@ border-radius不一样，如果设置border-radius为百分比，则是相对于
 
 ![7.jpg](https://github.com/glbb666/myNote/blob/master/review/%E7%A7%BB%E5%8A%A8%E7%AB%AF%E9%80%82%E9%85%8D/images/7.jpg?raw=true)
 
-
-
 ### 3. 百分比单位缺点
 
 从上述对于百分比单位的介绍我们很容易看出如果全部使用百分比单位来实现响应式的布局，有明显的以下两个缺点：
@@ -352,27 +350,15 @@ module.exports = {
 }
 ```
 
-### 4. rem 布局应用举例
+### 4. rem 布局的缺点
 
-网易新闻的移动端页面使用了rem布局，具体例子如下：
-
-
-
-![8.jpg](https://github.com/glbb666/myNote/blob/master/review/%E7%A7%BB%E5%8A%A8%E7%AB%AF%E9%80%82%E9%85%8D/images/8.jpg?raw=true)
-
-
-
-### 5. rem 布局的缺点
-
-通过rem单位，可以实现响应式的布局，特别是引入相应的postcss相关插件，免去了设计稿中的px到rem的计算。rem单位在国外的一些网站也有使用，这里所说的rem来实现布局的缺点，或者说是小缺陷是：
+通过`rem`单位，可以实现响应式的布局，特别是引入相应的`postcss`相关插件，免去了设计稿中的`px`到`rem`的计算。`rem`单位在国外的一些网站也有使用，这里所说的`rem`来实现布局的缺点，或者说是小缺陷是：
 
 ***在响应式布局中，必须通过`js`来动态控制根元素font-size的大小。***
 
 也就是说`css`样式和`js`代码有一定的耦合性。且必须将改变`font-size`的代码放在`css`样式之前。
 
-> 
-
-## 五. 通过vw/vh来实现自适应
+## 五. 通过`vw`/`vh`来实现自适应
 
 ### 1. 什么是vw/vh ?
 

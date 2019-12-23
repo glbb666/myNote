@@ -128,8 +128,8 @@ test: 匹配所处理文件的扩展名的正则表达式（必须）
         }
 ```
 
-要是loader工作，我们需要一个正则表达式来标识我们要修改的文件，然后有一个数组表示
-我们表示我们即将使用的Loader,当然我们需要的loader需要通过npm 进行安装。例如我们需要解析less的文件，那么webpack.config.js的配置如下：
+要是`loader`工作，我们需要一个正则表达式来标识我们要修改的文件，然后有一个数组表示
+我们表示我们即将使用的`Loader`，当然我们需要的`loader`需要通过`npm` 进行安装。例如我们需要解析`less`的文件，那么`webpack.config.js`的配置如下：
 
 ```javascript
 var baseConfig = {
@@ -242,7 +242,7 @@ var baseConfig = {
 
 #### `HotModuleReplacementPlugin`
 
-它允许你在修改组件代码时，自动刷新实时预览修改后的结果注意永远不要在生产环境中使用`HMR`。这儿说一下一般情况分为开发环境，测试环境，生产环境。
+它允许你在修改组件代码时，自动刷新实时预览修改后的结果。注意永远不要在生产环境中使用`HMR`。这儿说一下一般情况分为开发环境，测试环境，生产环境。
 用法如 `new webpack.HotModuleReplacementPlugin()`
 webapck.config.js的全部内容
 

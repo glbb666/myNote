@@ -282,7 +282,7 @@ function reserveList(head) {
 ```
 ### 删除链表给定val节点
 
-思路：把头节点当作节点temp的后继结点，进行操作，这样就可以删除头节点了。最后以temp.next的形式返回头节点。注意的是，如果后续结点被删除，则不需要后移，因为后续结点已经不是之前的那一个结点了。
+思路：把头节点当作哑结点后继结点，这样就可以进行删除操作了。注意的是，如果后续结点被删除，则不需要后移，因为后续结点已经不是之前的那一个结点了。
 
 ```js
 var removeElements = function(head, val) {
@@ -389,6 +389,42 @@ var middleNode = function(head) {
 
 首先通过快慢指针找出中间结点，接着把后半段链表进行翻转，然后把前后两段链表进行比较。
 
+### 插入排序
+
+```js
+var insertionSortList = function(head) {
+    if(head===null || head.next === null){
+        return head;
+    }
+    var temp = new ListNode(-Infinity);
+    temp.next = head;
+    var beforeInsert = head;
+    while(beforeInsert.next){
+        if(beforeInsert.next.val>=beforeInsert.val){
+            beforeInsert = beforeInsert.next;
+            continue;
+        }
+        var p = temp;
+        while(beforeInsert.next.val>=p.next.val&&p !== beforeInsert){
+            p = p.next;
+        }
+        if(p!==beforeInsert){
+            var insertNode = beforeInsert.next;
+            beforeInsert.next = insertNode.next;
+            insertNode.next = p.next;
+            p.next = insertNode;
+        }else{
+            beforeInsert = beforeInsert.next;
+        }
+    }
+    return temp.next;
+};
+```
+
+### 两数相加
+
+哑巴结点+记录进位
+
 ## 算法
 
 ### 两数之和
@@ -445,58 +481,64 @@ var searchMatrix = function(matrix, target) {
 
 ## 模拟
 
-### call
+### call&bind&apply
 
 ```js
-Function.prototype.myCall = function(context = window,...args){
-    if(typeof this !== 'function'){
-        throw TypeError('必须使用函数调用')
-    }
-    const fn = Symbol()
-    context[fn]=this
-    const res = context[fn](...args)
-    delete context[fn]
-    return res
+Function.prototype.call2 = function(context,...args){
+	context =context||window;
+	context.fn = this;
+	var result =context.fn(...args）;
+	delete context.fn;
+	return result;
 }
 ```
 
-### apply
-
 ```js
-Function.prototype.myApply = function (context = window, args) {
-  if (typeof this !== 'function') {
-     throw TypeError('必须使用函数调用')
-  }
-  const fn = Symbol();
-  context[fn] = this;
-  let result;
-  if (Array.isArray(args)) {
-    result = context[fn](...args);
-  } else {
-    result = context[fn]();
-  }
-  delete context[fn];
-  return result;
+Function.prototype.apply2 = function(context,...args){
+	context = context||window;
+	context.fn = this;
+	var result = context.fn(...args);
+	delete context.fn;
+	return result;
 }
 ```
 
-### bind
-
 ```js
-Function.prototype.myBind = function(context = window, ...args1) {
-  if (typeof this !== 'function') throw TypeError('必须使用函数调用')
-  let _this = this
-  let ft = function() {}
-  let fn = function(...args2) {
-    return _this.apply(this instanceof fn ? this : context, args1.concat(args2))
-  }
-  this.prototype ? (ft.prototype = this.prototype) : null
-  fn.prototype = new ft()
-  return fn
+Function.prototype.bind2 = function(context,...args){
+    	if(typeof this!=='function'){
+           throw new Error("Function.prototype.bind - what is trying to be bound is not callable");
+        }
+        var self = this;
+        var fNOP = function(){}
+        var fBound = function(){
+            var bindArgs = [...args,...arguments];
+            var _this = this instanceof self?this:context;
+            _this.fn = self;
+            var result = _this.fn(...bindArgs);
+            delete _this.fn;
+            return result;
+        }
+        fNOP.prototype = this.prototype;
+        fBound.prototype = new fNOP();
+        return fBound;
 }
 ```
 
-### 节流
+### new
+
+```javascript
+function new2(Constructor,...args){
+   var obj = new Object();
+   obj.__proto__ = Constructor.prototype;
+   var ret = Constructor.apply(obj,args);
+   //如果构造函数的返回了对象，new出来的实例只能访问该对象中的属性
+   return  typeof ret==='object'?ret:obj;
+}
+```
+
+
+
+### 节流&防抖
 
 ```js
 function jieliu2(fn, delay) {
@@ -510,8 +552,6 @@ function jieliu2(fn, delay) {
   }
 }
 ```
-
-### 防抖
 
 ```js
 function fangdou(fn, delay) {
@@ -565,23 +605,18 @@ function deepClone(obj,map = new WeakMap()){
 
 ### 函数柯里化
 
+柯里化是一种**将使用多个参数的一个函数转换成一系列使用一个参数的函数**的技术。
+
+换言之，用闭包把参数保存起来，当参数的数量足够执行函数了，就开始执行函数。
+
+它可以减少相同参数的重复传递
+
 ```js
 function curry(fn, ...args) {
     return function(){
         var _args = [...args,...arguments];
         return _args.length<fn.length?curry.call(this, fn, ..._args):fn.apply(this,_args);
     }
-}
-```
-
-### 数组扁平
-
-```js
-function flat(arr) {
-  return arr.reduce(
-    (last, v) => (Array.isArray(v) ? last.concat(flat(v)) : last.concat(v)),
-    []
-  )
 }
 ```
 
@@ -602,40 +637,45 @@ function myInstanceOf(target, father) {
 }
 ```
 
-### JSONP
+### `JSONP`
 
 ```js
-function jsonp(url, obj, timeout) {
-  url += url.indexOf('?') === -1 ? '?' : '&'
-
-  for (let i in obj) {
-    url += encodeURIComponent(i) + '=' + encodeURIComponent(obj[i]) + '&'
-  }
-
-  let callBack =
-    'callback' +
-    Math.random()
-      .toString()
-      .replace('.', '')
-  url += 'callback=' + callBack
-
-  let script = document.createElement('script')
-  script.src = url
-  document.head.appendChild(script)
-
-  let timer = setTimeout(() => {
-    document.head.removeChild(script)
-    window[callBack] = null
-  }, timeout)
-
-  window[callBack] = function(data) {
-    //处理数据
-    callBack(data)
-    document.head.removeChild(script)
-    window[callBack] = null
-    clearTimeout(timer)
-  }
+<script type="text/javascript">
+var url = 'http://localhost:8080/';
+function jsonp(obj,time,url,success,error){
+    //基本类型
+    url+=url.includes('?')?'?':'&';
+    for(let item in obj){
+        url+=encodeURIComponent(item)+'='+encodeURIComponent(obj[item])+'&';
+    }
+    var callBackName =('_jsonp'+Math.random()).replace('.','')
+    url+='callback='+callBackName;
+    var scriptEle = document.createElement('script');
+    scriptEle.src = url;
+    window[callBackName] = function(data){
+       	//这里是对数据进行处理
+        success()
+        window.clearTimeout(timer);//清除定时器
+        window[callBackName] = null;//把回调函数解除引用
+        document.head.removeChild(scriptEle);
+    }
+    //出错处理
+    scriptEle.onerror = function(){
+       error();
+       window.clearTimeout(timer);//清除定时器
+       window[callBackName] = null;//把回调函数解除引用
+       document.head.removeChild(scriptEle);
+    }
+    //超时处理
+    var timer = window.setTimeout(function(){
+        error();
+        document.head.removeChild(scriptEle);//移除script标签
+		window[callBackName] = null;//把回调函数解除引用
+    },time)
+    document.head.appendChild(scriptEle);
 }
+jsonp({name:'dd'},5000,url)
+</script>
 ```
 
 ### Ajax封装
@@ -680,31 +720,6 @@ function Ajax(options = {}) {
       return;
   }
 }
-
-
-```
-
-### reduce实现map
-
-```js
-Array.prototype.reduceToMap = function(callback) {
-  return this.reduce((last, v, i) => {
-    last.push(callback.call(this, v, i))
-    return last
-  }, [])
-}
-```
-
-### reduce实现filter
-
-```js
-Array.prototype.myFilter = function(cb){
-    return this.reduce((last,v,i)=>{
-        if(cb.call(this,v,i))
-            last.push(v)
-        return last
-    },[])
-}
 ```
 
 ### 图片懒加载
@@ -726,20 +741,6 @@ if (IntersectionObserver) {
   for (let i = 0; i < img.length; i++) {
     lazyImageObserver.observe(img[i]);
   }
-}
-```
-
-
-
-### 数组乱序
-
-```js
-function shuffle(a) {
-    for (let i = a.length; i; i--) {
-        let j = Math.floor(Math.random() * i);
-        [a[i - 1], a[j]] = [a[j], a[i - 1]];
-    }
-    return a;
 }
 ```
 
@@ -790,6 +791,71 @@ function promiseAll(promises) {
 }
 ```
 
+## 数组操作
+
+### `reduce`实现`flat`
+
+```js
+Array.prototype.flat = function(){
+  return this.reduce(
+    (p,c)=>(Array.isAr ray(c)?last.concat(c.flat()):last.concat(c)),[])
+}
+```
+
+### `reduce`实现`map`
+
+```js
+Array.prototype.map1 = function(fn){
+    return this.reduce((p,c)=>{
+        p.push(fn(c))
+        return p;
+    },[])
+}
+```
+
+### `reduce`实现`flatMap`
+
+```js
+Array.prototype.flatMap2 = function(fn){
+    return this.reduce(
+    (p,c)=>Array.isArray(c)?p.concat(c.flatMap2(fn)):p.concat(fn(c)),[])
+}
+```
+
+### `reduce`实现`filter`
+
+```js
+Array.prototype.filter1 = function(fn){
+    return this.reduce((p,c)=>{
+        fn(c)?p.push(c):null;
+        return p;
+    },[])
+}
+```
+
+### 数组去重
+
+```javascript
+Array.prototype.unique2 = function(){
+	return this.reduce((p,c)=>{
+		!p.includes(c)?p.push(c):null;
+		return p;
+	},v)
+}
+```
+
+### 数组乱序
+
+```js
+function shuffle(a) {
+    for (let i = a.length; i; i--) {
+        let j = Math.floor(Math.random() * i);
+        [a[i - 1], a[j]] = [a[j], a[i - 1]];
+    }
+    return a;
+}
+```
+
 ## 设计模式
 
 ### `EventEmit`
@@ -811,16 +877,25 @@ class EventEmit {
       this._eventpool[event] = [callback]
     }
   }
-  off(event) {
+  off(event,fn) {
     //解除
-    if (this._eventpool[event]) {
-      delete this._eventpool[event]
+    if (this._eventpool[event]&&this._eventpool[event].length!=0) {
+        if(!fn){
+            delete this._eventpool[event]
+        }else{
+            //如果相同就从缓存列表中删掉
+            this._eventpool[event].forEach((cb,index)=>{
+                if(cb===fn){
+                    this._eventpool[event].splice(index,1);
+                }
+            })
+        }
     }
   }
   //发布者用emit执行事件的所有回调
   emit(event, ...args) {
     //执行全部回调
-    if (this._eventpool[event]) {
+    if (this._eventpool[event]&&this._eventpool[event.length]!==0) {
       this._eventpool[event].forEach(fn => {
         fn(...args)
       })

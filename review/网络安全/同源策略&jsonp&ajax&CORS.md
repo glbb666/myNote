@@ -25,32 +25,51 @@
 
 `AJAX`的核心是`XMLHttpRequest`对象，它不必刷新页面就可以从服务器获取到新数据。
 
+我们先创建一个`XMLHttpRequest`对象，并且监听它的`onreadyStatuschange`事件，当`readyStatus`的值为4，说明已经收到完整响应了，我们在判断`status`，当它的值为`200~300`或`304`的时候，就从`responseText`中读取服务器相应内容的文本。接着我们用`open`启动一个请求，为请求指定`url`地址，方法，同步性，非`get`请求，要`setRequestHeader`，设置`Content-type`的值，`get`请求的`Content-type`为`text/plain`。我们还可以用`timeout`设置超时，并且在`ontimeout`中调用`abort`取消请求。用`onerror`处理请求错误的情况。接着我们调用`send`方法，在`send`方法执行之前，`AJAX`都是同步的。`send`方法执行过后，浏览器就会为`http`请求创建一个`http`请求线程，这个请求独立于`js`引擎线程，是异步的，`js`引擎并不会等待这个异步请求的结果，而是会继续执行下去。当浏览器收到服务器的响应，浏览器事件触发线程就会捕获到`ajax`的回调事件`onreadyStatechange`或者是`onerror`事件，浏览器事件触发线程会把回调事件添加到任务队列末尾，直到`js`引擎线程空闲，任务队列的任务才会被添加到执行栈中依次执行。
+
 #### 创建步骤
 
 ```javascript
-    function ajax(url){
-        var xhr = new XMLHttpRequest();
-        //注意onreadystatechange全小写
-        xhr.onreadystatechange = function(){
-            if(xhr.readyState===4){
-                if(xhr.status>=200&&xhr.status<300||xhr.status===304){
-                    console.log(xhr.responseText)
-                }
-            }
-        }
-        xhr.open('post',url,true);
-        //在get请求中不需要设置请求头，content-type实际上就是指定了发送给服务器的数据的形式
-        xhr.setRequestHeader('Content-Type','application/x-www-form-urlencoded
-')
-        //超时处理
-        xhr.timeout = 5000;
-        xhr.ontimeout = function(){
-            alert('超时了')；
-            console.log(xhr.readyState);
-        }
-        xhr.send();
+function getParams(data) {
+  let arr = []
+  for (let i in data) {
+    arr.push(encodeURIComponent(i) + '=' + encodeURIComponent(data[i]))
+  }
+  return arr.join('&')
+}
+function Ajax(options = {}) {
+  let {type='GET',async=true,timeout=8000,data,url} = options;
+  const xhr = new XMLHttpRequest();
+  xhr.onreadystatechange = function(e) {
+    if (xhr.readyState === 4) {
+      if ((xhr.status >= 200 && xhr.status < 300) || xhr.status == 304) {
+        console.log(xhr.responseText)
+      }
     }
-    ajax(url)
+  }
+  xhr.timeout = timeout
+  xhr.ontimeout = function(e) {
+    xhr.abort()
+    console.log(xhr.readyStatus)//0
+  }
+  if (type === 'GET') {
+    xhr.open(
+      'GET',
+      url + '?' + getParams(data),
+      async
+    )
+    xhr.send(null)
+  } else if (type === 'POST') {
+    xhr.open('POST', url, async)
+    xhr.setRequestHeader(
+      'Content-Type',
+      'application/x-www-form-urlencoded'
+    )
+    xhr.send(options.data)
+  }else{
+      return;
+  }
+}
 ```
 
 #### AJAX请求头Content-Type
@@ -81,11 +100,11 @@
 | 3      | 接收。受到部分响应数据                       |
 | 4      | 完成。接收全部响应数据，且可以在客户端使用。 |
 
-🌟注意：一个`ajax`请求不是完全异步的，在readyState变为2之前，都是同步的(即readyState为0,1时是同步的)
+🌟注意：`send`之前，都是同步的
 
 #### 如何发出一个有序的`AJAX`
 
-回调函数,`Promise.then`,`async`
+回调函数，`Promise.then`,`async`
 
 #### `ajax`和`jquery`, `Fecth`,`Axios`比有什么区别
 
@@ -137,16 +156,18 @@ axios.all([getUserAccount(), getUserPermissions()])
 
 - 把传入对象转换为`url`
 - 给回调函数名设置随机标识，并且拼接到`url`中
-- 动态创建`script`标签并插入到页面
+- 动态创建`script`标签并把`url`赋值给`src`
 - 挂载回调函数
+- 出错处理
 - 超时处理
+- 把`script`标签插入到页面
 
 ```javascript
 <script type="text/javascript">
 var url = 'http://localhost:8080/';
-function jsonp(obj,time,url){
+function jsonp(obj,time,url,success,error){
     //基本类型
-    url+=url.indexOf('?')===-1?'?':'&';
+    url+=url.includes('?')?'?':'&';
     for(let item in obj){
         url+=encodeURIComponent(item)+'='+encodeURIComponent(obj[item])+'&';
     }
@@ -154,18 +175,27 @@ function jsonp(obj,time,url){
     url+='callback='+callBackName;
     var scriptEle = document.createElement('script');
     scriptEle.src = url;
-    document.head.appendChild(scriptEle);
     window[callBackName] = function(data){
        	//这里是对数据进行处理
+        success()
         window.clearTimeout(timer);//清除定时器
         window[callBackName] = null;//把回调函数解除引用
         document.head.removeChild(scriptEle);
     }
+    //出错处理
+    scriptEle.onerror = function(){
+       error();
+       window.clearTimeout(timer);//清除定时器
+       window[callBackName] = null;//把回调函数解除引用
+       document.head.removeChild(scriptEle);
+    }
     //超时处理
     var timer = window.setTimeout(function(){
+        error();
         document.head.removeChild(scriptEle);//移除script标签
 		window[callBackName] = null;//把回调函数解除引用
     },time)
+    document.head.appendChild(scriptEle);
 }
 jsonp({name:'dd'},5000,url)
 </script>

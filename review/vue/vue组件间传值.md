@@ -100,7 +100,6 @@ Event.$on(事件名,data => {});
 <div id="itany">
 	<my-a></my-a>
 	<my-b></my-b>
-	<my-c></my-c>
 </div>
 <template id="a">
   <div>
@@ -112,11 +111,6 @@ Event.$on(事件名,data => {});
   <div>
     <h3>B组件：{{age}}</h3>
     <button @click="send">将数组发送给C组件</button>
-  </div>
-</template>
-<template id="c">
-  <div>
-    <h3>C组件：{{name}}，{{age}}</h3>
   </div>
 </template>
 <script>
@@ -147,29 +141,11 @@ var B = {
 	  }
 	}
 }
-var C = {
-	template: '#c',
-	data() {
-	  return {
-	    name: '',
-	    age: ""
-	  }
-	},
-	mounted() {//在模板编译完成后执行
-	 Event.$on('data-a',name => {
-	     this.name = name;//箭头函数内部不会产生新的this，这边如果不用=>,this指代Event
-	 })
-	 Event.$on('data-b',age => {
-	     this.age = age;
-	 })
-	}
-}
 var vm = new Vue({
 	el: '#itany',
 	components: {
 	  'my-a': A,
 	  'my-b': B,
-	  'my-c': C
 	}
 });	
 </script>
@@ -289,7 +265,7 @@ export default {
 ![image](https://user-gold-cdn.xitu.io/2019/5/17/16ac35bf77e44744?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
 简单来说：`$attrs`与`$listeners` 是两个对象，`$attrs` 里存放的是父组件中绑定的非`props` 属性，`$listeners`里存放的是父组件中绑定的**非原生事件**。
 
-## 方法五、provide/inject
+## 方法五、`provide`/`inject`
 
 #### 1.简介
 
@@ -318,16 +294,16 @@ export default {
 ```
 可以看到，在 `A.vue` 里，我们设置了一个 **provide: name**，值为 浪里行舟，它的作用就是将 **name** 这个变量提供给它的所有子组件。而在 `B.vue` 中，通过 `inject` 注入了从 A 组件中提供的 **name** 变量，那么在组件 B 中，就可以直接通过 **this.name** 访问这个变量了，它的值也是 浪里行舟。这就是 `provide / inject`最核心的用法。
 
-需要注意的是：**provide 和 inject 绑定并不是可响应的。这是刻意为之的。然而，如果你传入了一个可监听的对象，那么其对象的属性还是可响应的**----`vue`官方文档 所以，上面 `A.vue` 的 name 如果改变了，`B.vue `的 this.name 是不会改变的，仍然是 浪里行舟。
+需要注意的是：**provide 和 inject 绑定并不是可响应的。这是刻意为之的。然而，如果你传入了一个可监听的对象，那么其对象的属性还是可响应的**----`vue`官方文档 所以，上面 `A.vue` 的 `name` 如果改变了，`B.vue `的 `this.name` 是不会改变的，仍然是 浪里行舟。
 
-#### 3.provide与inject 怎么实现数据响应式
+#### 3.`provide`与`inject` 怎么实现数据响应式
 
 一般来说，有两种办法：
 
 - `provide`祖先组件的实例，然后在子孙组件中注入依赖，这样就可以在子孙组件中直接修改祖先组件的实例的属性，不过这种方法有个缺点就是这个实例上挂载很多没有必要的东西比如`props`，`methods`
-- 使用2.6最新API `Vue.observable `优化响应式 `provide`(推荐)
+- 使用2.6最新 `Vue.observable `优化响应式 `provide`(推荐)
 
-我们来看个例子：孙组件D、E和F获取A组件传递过来的color值，并能实现数据响应式变化，即A组件的color变化后，组件D、E、F会跟着变（核心代码如下：）
+我们来看个例子：孙组件`D`、`E`和`F`获取`A`组件传递过来的`color`值，并能实现数据响应式变化，即`A`组件的`color`变化后，组件D、E、F会跟着变（核心代码如下：）
 
 ![image](images/16ac35bf7131f3db)
 
