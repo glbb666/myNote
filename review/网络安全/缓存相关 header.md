@@ -2,9 +2,7 @@
 
 # Expries
 
-**`Expires`响应头**包含日期/时间， 即在此时候之后，响应过期。
-
-无效的日期，比如 0, 代表资源已经过期。
+**`Expires`响应头**包含具体的过期时间点
 
 如果在`Cache-Control`响应头设置了`max-age`或者`s-max-age`指令，那么 `Expires` 头会被忽略。
 
@@ -15,9 +13,9 @@
 <meta http-equiv="expires" content="Thu, 30 Nov 2017 11:17:26 GMT">
 ```
 
-缺点：Expires 过期控制不稳定，因为浏览器端可以随意修改时间，导致缓存使用不精准。
+缺点：`Expires` 不稳定，因为浏览器端可以随意修改时间，**服务器的时间和浏览器的时间可能并不一致**
 
-为了增加相对时间的控制，引入了Cache-Control
+为了增加相对时间的控制，引入了`Cache-Control`
 
 # Cache-control
 
@@ -46,16 +44,6 @@ Cache-control: private
 Cache-control: proxy-revalidate
 Cache-Control: max-age=<seconds>
 Cache-control: s-maxage=<seconds>
-```
-
-##### 拓展指令
-
-拓展缓存指令不是核心HTTP缓存标准文档的一部分，使用前请注意检查[兼容性](https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Headers/Cache-Control#Browser_compatibility)！
-
-```
-Cache-control: immutable 
-Cache-control: stale-while-revalidate=<seconds>
-Cache-control: stale-if-error=<seconds>
 ```
 
 ## 指令
@@ -92,7 +80,7 @@ no-store
 
   **设置缓存存储的最大周期**，超过这个时间缓存被认为过期(单位秒)。时间是<font color='red'>相对于请求的时间</font>
 
-  ✨特别：某些浏览器（比如Firefox）中如果设定为永不缓存，那么其发出的请求中，请求头会包含`max-age=0`。
+  ✨特别：某些浏览器（比如`Firefox`）中如果设定为永不缓存，那么其发出的请求中，请求头会包含`max-age=0`。
 
 - `s-maxage=<seconds>`
 

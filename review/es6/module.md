@@ -22,8 +22,6 @@ export default {
 };
 ```
 
-
-
 ```javascript
 let { stat, exists, readFile } = require('fs');
 // 等同于

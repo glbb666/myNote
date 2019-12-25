@@ -19,7 +19,7 @@
 
 `git diff --staged` 或 `git diff --cached` 可查看已暂存文件和上次提交的区别
 
-## 分支和 tag
+## 分支和 `tag`
 
 合理使用分支，分支的好处：
 
@@ -27,45 +27,35 @@
 - 可集中解决冲突
 - 区分功能或未来某一版本
 
-tag 的作用是对某个提交点打上标签，发布版本后打 tag，便于以后回滚特定版本，而不需要 revert。
-
-tag 是对某一版本的记录。
+`tag` 的作用是对某个提交点打上标签，发布版本后打 `tag`，便于以后回滚特定版本，而不需要 `revert`。
 
 ## 开发新功能步骤
 
 1. 从开发分支拉一个功能分支
 2. 功能分支开发和测试
-3. 功能分支 rebase 开发分支（为什么）
+3. 功能分支 `rebase` 开发分支（为什么）
 4. 功能分支合并到开发分支
 
 #### 注意：
 
-- 一次提交做一件事，写清楚 comment
-- 每次 pull 远程分支时使用 `git pull --rebase`
+- 一次提交做一件事，写清楚 `comment`
+- 每次 `pull` 远程分支时使用 `git pull --rebase`
 - 分支从哪拉出来，最后合到哪回去
-- 合并之前先 rebase
-
-## fix bug 步骤
-
-### 测试线bug的修复
-
-和开发步骤类似
+- 合并之前先 `rebase`
 
 ### 线上bug的修复
 
-1. 从master拉一个fix分支（为什么是master）
-2. 测试完后 rebase master
-3. 合并回master
+1. 从`master`拉一个fix分支（为什么是master）
+2. 测试完后 `rebase master`
+3. 合并回`master`
 
 ## Git 使用技巧
 
-### rebase 和 merge
+### `rebase`(变基、衍合) 和 `merge`
 
-`git rebase`一般解释为`变基`，也有解释为`衍合`。
+`git merge` 和 `git rebase` 都可以整合两个分支的内容，最终结果没有任何区别，但是`git rebase`使得提交历史更加整洁。
 
-`git merge` 和 `git rebase` 都可以整合两个分支的内容，最终结果没有任何区别，但是变基使得提交历史更加整洁。
-
-例如现在 dev 提交了一次，master 在此之后也提交了一次，两个分支的状态如下：
+例如现在 `dev `提交了一次，`master` 在此之后也提交了一次，两个分支的状态如下：
 
 
 
@@ -91,7 +81,7 @@ tag 是对某一版本的记录。
 
 #### 提交点顺序
 
-- `git merge`后，提交点的顺序都和提交的时间顺序相同，即 master 的提交在 dev 之后。
+- `git merge`后，提交点的顺序都和提交的时间顺序相同，即 `master` 的提交在 `dev `之后。
 - `git rebase`后，顺序变成被`rebase`的分支（master）所有提交都在前面，进行`rebase`的分支（dev）提交都在被`rebase`的分支之后，在同一分支上的提交点仍按时间顺序排列。
 
 #### 分支变化
@@ -121,11 +111,11 @@ and have 1 and 1 different commits each, respectively.
 
 ————————————————————
 
-### git merge --no-ff
+### `git merge --no-ff`
 
 `--no-ff` 是不快速合并的意思
 
-#### 与 git merge 的区别
+#### 与 `git merge` 的区别
 
 `git merge`的结果：
 
@@ -149,7 +139,7 @@ and have 1 and 1 different commits each, respectively.
 
 ————————————————————
 
-### git rebase -i 操作
+### `git rebase -i` 操作
 
 用于整理提交和提交信息，貌似不太好用，看演示:
 
@@ -229,28 +219,47 @@ Date:   Mon Jan 8 16:28:05 2018 +0800
 
 ————————————————————
 
-### reset 和 revert
+### 撤销git操作
 
-- `git reset` 修改 HEAD 指向的位置
-- `git revert`还原某一个提交，并产生新提交来记录本次还原
+#### 工作区(`revert` 和 `reset`)
+
+`git revert`**撤销提交**，在当前提交后，新增一次提交，抵消掉**上一次提交**导致的所有变化。它不会改变过去的历史，没有任何丢失代码的风险。
+
+```
+$ git revert HEAD
+```
+
+`git reset`**丢弃提交**，让最新提交的指针回到以前某个时点，该时点之后的提交都从历史中消失。执行`git reset`命令之后，如果想找回那些丢弃掉的提交，可以使用`git reflog`命令。
+
+```
+$ git reset --hard [last good SHA]
+```
+
+`git reset`默认不改变工作区(但会改变暂存区)，`--hard`参数可以让工作区里面的文件也回到以前的状态。
+
+1. 使用参数`--hard`，暂存区、工作区和 `HEAD` 指向的目录树内容相同。
+2. 使用参数`--soft`，只更改 HEAD 的指向，暂存区和工作区不变。
+3. 使用参数`--mixed`或者不带参数（默认为`--mixed`），更改引用的指向及重置暂存区，但是不改变工作区。
+
+#### 暂存区
+
+从暂存区撤销文件，恢复到已修改未暂存状态
+
+```
+$ git rm --cached [filename]//方法一
+$ git reset HEAD {filename}//方法二
+$ git reset HEAD~{n}//回退到n个提交之前
+$ git reset {version}//回退到指定版本
+```
 
 #### git reset 常用命令
 
-- `git reset HEAD {filename}`: 取消暂存文件，恢复到已修改未暂存状态。
-- `git reset HEAD~{n}`: 表示回退到`n`个提交之前。它也可以用来合并提交，下面的写法与 `git commit --amend` 结果是一样的。
+`git reset HEAD~{n}`: 表示回退到`n`个提交之前。它也可以用来合并提交，下面的写法与 `git commit --amend` 结果是一样的。
 
 ```
 git reset HEAD~1
 git commit
 ```
-
-- `git reset {version}`: 后面带版本号，直接回退到指定版本。
-- `git reset的三种参数`:
-  1. 使用参数`--hard`，暂存区、工作区和 HEAD 指向的目录树内容相同。
-  2. 使用参数`--soft`，只更改 HEAD 的指向，暂存区和工作区不变。
-  3. 使用参数`--mixed`或者不带参数（默认为`--mixed`），更改引用的指向及重置暂存区，但是不改变工作区。
-
-————————————————————
 
 ### git reflog
 
@@ -270,8 +279,6 @@ a5a6e64 HEAD@{10}: commit: 修改a内容
 a7f47b2 HEAD@{11}: checkout: moving from dev to feature-rebase-i
 复制代码
 ```
-
-————————————————————
 
 ### git stash
 

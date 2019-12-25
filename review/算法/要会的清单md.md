@@ -83,17 +83,17 @@ function laterOrder(root) {
 
 ```js
 function BFS(root) {
-  let res = []
   let queue = []
+  let result = []
   let p = root
   queue.push(p)
   while (queue.length) {
     p = queue.shift()
-    res.push(p.data)
+    result.push(p.data)
     if (p.left)queue.push(p.left)
     if (p.right) queue.push(p.right)
   }
-  return res
+  return result;
 }
 ```
 
@@ -280,7 +280,7 @@ function reserveList(head) {
   return newHead
 }
 ```
-### 删除链表给定val节点
+### 删除链表给定`val`节点
 
 思路：把头节点当作哑结点后继结点，这样就可以进行删除操作了。注意的是，如果后续结点被删除，则不需要后移，因为后续结点已经不是之前的那一个结点了。
 
@@ -725,22 +725,34 @@ function Ajax(options = {}) {
 ### 图片懒加载
 
 ```js
-if (IntersectionObserver) {
-  let lazyImageObserver = new IntersectionObserver((entries, observer) => {
-    entries.forEach((entry, index) => {
-      let lazyImage = entry.target;
-      // 如果元素可见            
-      if (entry.intersectionRatio > 0) {
-        if (lazyImage.getAttribute("src") == "loading.gif") {
-          lazyImage.src = lazyImage.getAttribute("data-src");
+~function(){
+    var img = document.getElementsByTagName('img');
+    var n = 0;
+    lazyImg()
+    window.addEventListener('scroll', throttle(lazyImg,1000));
+    function lazyImg(){
+        for(let i = n;i<img.length;i++){
+            var {offsetTop} = img[i];
+            var {scrollTop,clientHeight} = document.documentElement;
+            if(img[i].getAttribute("src")==="../image/default.jpg"&&offsetTop<scrollTop+clientHeight){
+                img[i].src = img[i].getAttribute('data-src');
+                n = i+1;
+            }
         }
-        lazyImageObserver.unobserve(lazyImage)
-      }
-    })
-  })
-  for (let i = 0; i < img.length; i++) {
-    lazyImageObserver.observe(img[i]);
-  }
+    }
+}()
+function throttle(fn,wait){
+    var flag = true;
+    return function(...args){
+        var context = this;
+        if(!flag)return;
+        flag = false;
+        timer = setTimeout(() => {
+            console.log(this===context)
+                fn.call(context,...args);
+                flag = true;
+        }, wait);
+    }
 }
 ```
 
@@ -789,6 +801,49 @@ function promiseAll(promises) {
     }
   })
 }
+```
+
+### sleep
+
+`promise`
+
+```javascript
+function sleep(timeout){
+	return new Promise(function(resolve){
+		setTimeout(resolve,timeout)
+	})
+}
+sleep(1000).then(()=>{
+	console.log(1);
+})
+```
+
+`async`
+
+```javascript
+function sleep(timeout){
+	return new Promise(function(resolve,reject){
+			setTimeout(function(){
+				resolve()
+			},timeout)
+	})
+}
+async function output(timeout){
+	await sleep(timeout);
+    console.log(1);
+}
+```
+
+`ES5`
+
+```javascript
+function sleep(callBack,time){
+	setTimeout(callBack,time);
+}
+function output(){
+  console.log(1);
+}
+sleep(output,1000);
 ```
 
 ## 数组操作
