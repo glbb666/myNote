@@ -1,5 +1,5 @@
 # this指向
-- 全局函数中的this指向window对象
+- 全局函数中的`this`指向`window`对象
 
 - 当函数作为实例方法调用时，函数中的this指向实例
 
@@ -84,8 +84,6 @@ fn.bind().bind(a)()//window
 
 不管我们给函数 bind 几次，函数中的 this 永远由第一次 bind 决定，所以结果永远是 window。
 
-### 多个this规则出现，this指向哪里？
-
-优先级如下
+### this的优先级规则
 
 **new > bind/call/apply > 隐式绑定（即对象调方法）> 默认绑定（即严格undefined，非严格window）**

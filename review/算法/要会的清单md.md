@@ -267,7 +267,7 @@ function printListFromTailToHead(h) {
 思想：一个旧头一个新头，利用cur把旧头之后的结点放在最前面（指向新头）作为头节点，新头始终指向头节点，当旧头后面没有东西了，即head.next = null，说明遍历结束。
 
 ```js
-function reserveList(head) {
+function reserveList(head) {                                                                                                             
   let newHead = head,
     cur = null
   while (head && head.next) {
@@ -535,8 +535,6 @@ function new2(Constructor,...args){
    return  typeof ret==='object'?ret:obj;
 }
 ```
-
-
 
 ### 节流&防抖
 
@@ -890,12 +888,91 @@ Array.prototype.filter1 = function(fn){
 
 ### 数组去重
 
+双重`for`循环
+
 ```javascript
-Array.prototype.unique2 = function(){
-	return this.reduce((p,c)=>{
-		!p.includes(c)?p.push(c):null;
-		return p;
-	},v)
+Array.prototype.unique = function(){
+    let result = [];
+    let repeat = false;
+    for(let i = 0;i<this.length;i++){
+        for(let j = 0;j<result.length;j++){
+         	if(this[i]===result[j]){
+				repeat = true;
+                break;
+            }   
+        }
+        if(repeat){
+        	repeat.push(this.[i]);
+        }
+    }
+    return result;
+}
+```
+
+`indexOf`
+
+```javascript
+Array.prototype.unique = function(){
+	let result = [];
+	for(let i = 0,len = this.length;i<len;i++){
+		if(result.indexOf(this[i])===-1){
+			result.push(this[i]);
+		}
+	}
+	return result;
+}
+```
+排序后去重
+```javascript
+Array.prototype.unique = function(){
+	arr.sort();
+	let result = [];
+	for(let i = 0,len = this.length;i<len;i++){
+		if(this[i]!=result[result.length-1]){
+			result.push(this[i]);
+		}
+	}
+}
+```
+
+`Array.prototype.includes()`
+
+```javascript
+Array.prototype.unique = function(){
+	let result = [];
+	this.forEach(item=>{
+    	!result.includes(item)?result.push(item):null;            
+    })
+}
+```
+
+`Array.prototype.reduce()`
+
+```javascript
+Array.prototype.unique = function(){
+    return this.sort().reduce((p,v)=>{
+        if(p.length===0||p[p.length-1]!==v){
+            p.push(v);
+        }
+        return p;
+    },[])
+}
+```
+
+`map`
+
+```javascript
+Array.prototype.unique = function(){
+	var map = new Map();
+	return this.filter(item=>!map.has(item)?map.set(item,1):null)
+}
+```
+
+`set`
+
+```javascript
+Array.prototype.unique = function(){
+	return Array.from(new Set(this));
 }
 ```
 
@@ -903,7 +980,7 @@ Array.prototype.unique2 = function(){
 
 ```js
 function shuffle(a) {
-    for (let i = a.length; i; i--) {
+    for (let i = a.length; i>0; i--) {
         let j = Math.floor(Math.random() * i);
         [a[i - 1], a[j]] = [a[j], a[i - 1]];
     }

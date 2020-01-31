@@ -62,7 +62,7 @@ div{
 
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20181125202151901.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2dhb3NoYW55YW5nemhpXzE5OTk=,size_16,color_FFFFFF,t_70)
 
-### rem 单位如何转换
+### `rem `单位如何转换
 
 - 取决于页根元素的字体大小，即 **`html `元素的字体大小**。 根元素字体大小乘以你 rem 值。
   例如，根元素的字体大小 `16px`，`10rem `将等同于` 160px`，即 10 x 16 = 160。

@@ -154,7 +154,7 @@ console.log(child1)
 
 所以，`Child.prototype` 和 `child1` 都有一个属性为`colors`，属性值为`['red', 'blue', 'green']`。
 
-为了避免这一次重复调用，我们不使用 Child.prototype = new Parent() ，而是间接的让 Child.prototype 访问到 Parent.prototype
+为了避免这一次重复调用，我们不使用 `Child.prototype = new Parent()` ，而是间接的让 Child.prototype 访问到 `Parent.prototype`
 
 看看如何实现：
 

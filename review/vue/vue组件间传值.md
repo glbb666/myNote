@@ -99,7 +99,7 @@ Event.$on(事件名,data => {});
 ```javascript
 <div id="itany">
 	<my-a></my-a>
-	<my-b></my-b>
+	<my-c></my-c>
 </div>
 <template id="a">
   <div>
@@ -107,10 +107,9 @@ Event.$on(事件名,data => {});
     <button @click="send">将数据发送给C组件</button>
   </div>
 </template>
-<template id="b">
+<template id="c">
   <div>
-    <h3>B组件：{{age}}</h3>
-    <button @click="send">将数组发送给C组件</button>
+    <h3>C组件：{{name}}，{{age}}</h3>
   </div>
 </template>
 <script>
@@ -128,17 +127,21 @@ var A = {
 	  }
 	}
 }
-var B = {
-	template: '#b',
+var C = {
+	template: '#c',
 	data() {
 	  return {
-	    age: 20
+	    name: '',
+	    age: ""
 	  }
 	},
-	methods: {
-	  send() {
-	    Event.$emit('data-b', this.age);
-	  }
+	mounted() {//在模板编译完成后执行
+	 Event.$on('data-a',name => {
+	     this.name = name;//箭头函数内部不会产生新的this，这边如果不用=>,this指代Event
+	 })
+	 Event.$on('data-b',age => {
+	     this.age = age;
+	 })
 	}
 }
 var vm = new Vue({
@@ -146,10 +149,10 @@ var vm = new Vue({
 	components: {
 	  'my-a': A,
 	  'my-b': B,
+	  'my-c': C
 	}
 });	
 </script>
-
 ```
 
 ## 方法三、`vuex`
@@ -384,13 +387,13 @@ export default {
 
 ## 方法六、`$parent` / `$children`与 `ref`
 
-- `ref`：如果在普通的 DOM 元素上使用，引用指向的就是 DOM 元素；如果用在子组件上，引用就指向组件实例
+- `ref`：如果在普通的` DOM `元素上使用，引用指向的就是 `DOM `元素；如果用在子组件上，引用就指向组件实例
 - `$parent` / `$children`：访问父 / 子实例
 
 需要注意的是：这两种都是**直接得到组件实例**，使用后可以直接调用组件的方法或访问数据。我们先来看个用 `ref`来访问组件的例子：
 
 ```javascript
-// component-a 子组件
+// component-a 子组件  
 export default {
   data () {
     return {
@@ -433,6 +436,6 @@ export default {
 
 常见使用场景可以分为三类：
 
-- 父子通信： 父向子传递数据是通过 props，子向父是通过 events（`$emit`）；通过父链 / 子链也可以通信（`$parent` / `$children`）；ref 也可以访问组件实例；provide / inject API；`$attrs/$listeners`
-- 兄弟通信： Bus；`Vuex`
-- 跨级通信： Bus；`Vuex`；`provide / inject`、`$attrs/$listeners`
+- 父子通信： 父向子传递数据是通过 `props`，子向父是通过 `events`（`$emit`）；通过父链 / 子链也可以通信（`$parent` / `$children`）；`ref `也可以访问组件实例；`provide / inject API`；`$attrs/$listeners`
+- 兄弟通信： `Bus`；`Vuex`
+- 跨级通信： `Bus`；`Vuex`；`provide / inject`、`$attrs/$listeners`

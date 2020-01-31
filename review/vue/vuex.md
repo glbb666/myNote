@@ -4,7 +4,7 @@
 
 ###  1.`Vuex`原理
 
-`vuex`是`vue`的状态管理器，它实现了一个单向数据流，在全局拥有一个`State`存放数据，当组件必须通过`Mutation`更改`State`中的数据，`Mutation`同时提供了订阅者模式供外部插件调用获取`State`数据的更新。而当**所有异步操作或批量的同步操作**需要走`Action`，但`Action`也是无法直接修改`State`的，还是需要通过`Mutation`来修改`State`的数据。最后，根据`State`的变化，渲染到视图上。
+`vuex`是`vue`的状态管理器，它实现了一个单向数据流，在全局拥有一个`State`存放数据，当**所有异步操作或批量的同步操作**可以`dispatch`到`Action`中，但`Action`是无法修改`State`的，在`actions`在需要把数据`commit`到`Mutation`中，在`Mutation`中修改`State`的数据。最后，根据`State`的变化，渲染到视图上。
 
 ### 2.各模块在流程中的功能：
 
@@ -14,7 +14,7 @@
 
 #### `mutations`：
 
-**状态改变操作方法，由actions中的<font color='red'>commit('mutation 名称',data1)</font>来触发**。是`Vuex`修改`state`的唯一推荐方法。该方法只能进行同步操作，且方法名只能全局唯一。操作之中会有一些`hook`暴露出来，以进行`state`的监控等。
+**状态改变操作方法，由actions中的<font color='red'>commit('mutation 名称',data1)</font>来触发**。是`Vuex`修改`state`的唯一推荐方法。该方法**只能进行同步操作**，且方法名只能全局唯一。操作之中会有一些`hook`暴露出来，以进行`state`的监控等。
 
 #### `state`：
 

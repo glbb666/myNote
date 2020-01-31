@@ -15,15 +15,6 @@
 - 网格元素（`display`为` grid` 或` inline-grid` 元素的直接子元素）
 - 多列容器（元素的 `column-count` 或 `column-width` 不为 `auto`，包括 `column-count`为1）
 
-#### `display:flow-root`的生效条件
-
-- `float` 的值`不是none`。
--  `overflow`的使用值`不是 visible`
-- `display`的值为`table-cell`，`table-caption`（见 [CSS3TBL]），`inline-- block`或`inline-table`。
-- `position`的值既`不是static`也`不relative`（参见[CSS3POS]）。
--  `block-progression`值为`lr`或 `rl`，其父框的`block-progression`的值为`tb`
--  `block-progression`的 `tb`的值为' '，其父框的`block-progression`的值为`lr`或`rl`。
-
 ### `BFC`范围
 
 `BFC`包含创建该上下文元素的所有子元素，但不包括创建了新`BFC`的子元素的内部元素。
@@ -32,16 +23,14 @@
 <div id='div_1' class='BFC'>
     <div id='div_2'>
         <div id='div_3'></div>
-        <div id='div_4'></div>
     </div>
-    <div id='div_5' class='BFC'>
-        <div id='div_6'></div>
-        <div id='div_7'></div>
+    <div id='div_4' class='BFC'>
+        <div id='div_5'></div>
     </div>
 </div>
 ```
 
-根据定义，`#div_1`创建了一个块格式上下文，这个上下文包括了`#div_2、#div_3、#div_4、#div_5`。由于`#div_5`创建了新的`BFC`，所以`#div_6`和`#div_7`就被排除在外层的`BFC`之外。
+根据定义，`#div_1`创建了一个块格式上下文，这个上下文包括了`#div_2、#div_3、#div_4`。由于`#div_4`创建了新的`BFC`，所以`#div_5`就被排除在外层的`BFC`之外。
 
 也就是说，**一个元素不能同时存在于两个`BFC`中。**
 
@@ -84,7 +73,7 @@
 
 - `BFC`在浮动，绝对定位，`overflow`不为`visible`的情况下都会产生，`IFC`只在一个块级元素仅包含内联元素时产生。
 
-- `BFC`在垂直方向依次放置，在同一个`BFC`内的垂直块级盒子会发生`margin`重叠，`IFC`在水平方向依次放置
+- `BFC`在垂直方向依次放置，在同一个`BFC`内的垂直块级盒子可能会发生`margin`重叠，`IFC`在水平方向依次放置
 - `BFC`的每个元素`margin`左边和包含块`border`左边相接触，`IFC`的对齐起点是包含块的顶部，垂直对齐方式由`vertical-align`决定
 - `BFC`的高度会计算浮动元素，`IFC`的行框宽度需要减去浮动元素
 - `BFC`是一个隔离的独立容器，容器里面的子元素不会影响到外面的元素
