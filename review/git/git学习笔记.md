@@ -28,7 +28,16 @@ git init  #在当前目录创建git库
 
 ## 3.git库中版本管理
 
-### 1.git的结构
+### 1.git的配置
+
+需要配置全局的用户信息
+
+```nginx
+git config --global user.name "xiaoming"
+git config --global user.email "xm@sina.com"
+```
+
+### 2.git的结构
 
 本地git由3部分构成：
 
@@ -38,7 +47,7 @@ git init  #在当前目录创建git库
 
 文件目录就是工作区，但是有一个隐藏目录`.git`，这个不算工作区，而是Git的版本库（包括分支和缓存区）。
 
-### 2.git操作
+### 3.git操作
 
 #### a.查看状态
 
@@ -64,7 +73,7 @@ git diff --cached <file> #比较分支与暂存区
 #### c.添加至暂存区
 
 ```nginx
-git add <name>
+git add <name>#name部分是文件路径
 ```
 
 - 提交时，提交的是修改，而不是文件。如果添加到暂存区后，又进行了修改，必须再次添加。
@@ -75,7 +84,17 @@ git add <name>
 git commit -m ["String"] [<filename>/-a]
 ```
 
-- 可以用字符串描述提交的内容。
+- `-m`表示`message`，字符串是对提交的内容的说明（必须）。
+
+如果不加`-m`，会进入`vim`编辑器的模式
+
+```nginx
+git commit
+```
+
+可以进行编辑，然后`esc`，接着`:q`退出
+
+如果不想继续进行提交，可以`esc`，接着`:q!`退出，此时会终止提交
 
 #### e.撤销与版本回退
 
@@ -151,7 +170,7 @@ git commit
      ```nginx
      git clone git@github.com:michaelliao/gitskills.git
      #克隆下来的库默认叫origin
-     #同时会建立一个和远程库同名的路径
+     #同时会建git立一个和远程库同名的路径
      ```
 
 ## 5.分支管理
@@ -385,4 +404,5 @@ git config --global alias.lg "log --color --graph --pretty=format:'%Cred%h%Crese
 当你在 master 下，git pull等于 fetch origin，然后 merge origin/master；
 当你在 develop 下，git pull等于 fetch origin，然后 merge origin/deve
 ```
+
 
