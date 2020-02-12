@@ -55,9 +55,11 @@ git config --global user.email "xm@sina.com"
 git status
 ```
 
-- “*Changes to be committed*”中所列的内容是修改内容已经保存至缓冲区，等待进入git目录。
-- “*Changed but not updated*”中所列的内容是发现修改但没有保存在缓冲区中。
-- “*Untracked files*”中所列的内容是尚未被Git跟踪的内容。
+- 🍁红色文件名：
+  - “*Changed but not updated*”中所列的内容是发现修改但没有保存在暂存区中。
+  - “*Untracked files*”中所列的内容是尚未被Git跟踪的内容。
+- 🌳绿色文件名：“*Changes to be committed*”中所列的内容是修改内容已经保存至暂存区，等待进入git目录。
+- 🈚️文件名：“Nothing to commit,working directory clean”说明工作树已经清空。所有修改的内容都被提交到分支中。当工作区和
 
 #### b.查询修改部分
 
@@ -74,6 +76,8 @@ git diff --cached <file> #比较分支与暂存区
 
 ```nginx
 git add <name>#name部分是文件路径
+git add ./ #把当前目录的所有修改都提交到暂存区
+git add . #把项目中的所有修改都提交到暂存区
 ```
 
 - 提交时，提交的是修改，而不是文件。如果添加到暂存区后，又进行了修改，必须再次添加。
@@ -82,6 +86,7 @@ git add <name>#name部分是文件路径
 
 ```nginx
 git commit -m ["String"] [<filename>/-a]
+git commit --all -m ["String"]#这是一个一次性的操作，修改的内容可以不经过暂存区，直接提交到分支上
 ```
 
 - `-m`表示`message`，字符串是对提交的内容的说明（必须）。
@@ -185,6 +190,8 @@ git commit
       git log --graph --pretty=oneline --abbrev-commit
      #简化分支合并图
      ```
+
+     💥如果没有分支被`tracking`，`git branch`没有内容，需要`git add`成功，让分支被`tracking`之后，`git branch`才会显示被`tracking`的分支
 
 - 切换分支
 
