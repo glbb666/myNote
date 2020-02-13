@@ -86,7 +86,7 @@ git add . #把项目中的所有修改都提交到暂存区
 
 ```nginx
 git commit -m ["String"] [<filename>/-a]
-git commit --all -m ["String"]#这是一个一次性的操作，修改的内容可以不经过暂存区，直接提交到分支上
+git commit --all -m ["String"]#这是一个一次性的操作，修改的内容不经过暂存区，直接提交到分支上
 ```
 
 - `-m`表示`message`，字符串是对提交的内容的说明（必须）。
@@ -108,7 +108,6 @@ git commit
 ```nginx
 git checkout -- <name>
 #这时撤销操作会，将工作区撤销到与暂存区相同的状态。
-#如果之前提交过暂存区后，又修改了文件，会撤销到提交暂存区的状态。
 #如果暂存区为空，会撤销到版本库的状态。
 ```
 
@@ -121,10 +120,13 @@ git reset HEAD <file>
 
 - 本地分支版本回退
 
+  `Head`永远指向最新的一个版本
+
 ```nginx
-git log #查看本地分支的版本日志
+git log #查看分支的历史提交日志，每提交一次都会生成一个记录
+git log --oneline #可以看到简洁版的日志
 git reflog #查看本地分支的版本切换日志
-git reset --hard HEAD^ #回退到上一版本
+git reset --hard HEAD^ #回退到上一版本，相当于HEAD~0
 git reset --hard HEAD~n #回退到上n个版本
 git reset --hard 1094a #跳转到指定版本
 #Git的版本回退速度非常快，因为Git在内部有个指向当前版本的HEAD指针，当你回退版本的时候，Git仅仅是把HEAD修改了
@@ -187,7 +189,7 @@ git commit
      ```nginx
      git branch #命令会列出所有分支，当前分支前面会标一个*号。
      git log --graph #可以看到分支合并图。
-      git log --graph --pretty=oneline --abbrev-commit
+     git log --graph --pretty=oneline --abbrev-commit
      #简化分支合并图
      ```
 
@@ -203,7 +205,7 @@ git commit
 
      ```nginx
      git branch xxx #新建分支
-     git checkout -b dev #新建并传到分支
+     git checkout -b dev #新建并切换到分支
      ```
 
 - 分支重命名
@@ -221,6 +223,10 @@ git commit
 
 - 合并分支
 
+     把当前分支与指定分支（`dev`）进行合并
+
+     当前分支指的是`git branch`命令输出的有*的分支
+
      ```nginx
      git merge dev #快速模式，不保留合并历史
      git merge --no-ff dev #保留合并历史记录
@@ -229,7 +235,7 @@ git commit
 - 分支合并原理
 
      - `HEAD`指向的就是当前分支。
-     - Git创建一个分支，就是增加一个`dev`指针，并修改改`HEAD`的指向，工作区的文件都没有任何变化！所以生成的分支的速度非常快。
+     - Git创建一个分支，就是增加一个`dev`指针，并修改`HEAD`的指向，工作区的文件都没有任何变化！所以生成的分支的速度非常快。
      - 从现在开始，对工作区的修改和提交就是针对`dev`分支了，比如新提交一次后，`dev`指针往前移动一步，而`master`指针不变。
      - 合并就是直接把`master`指向`dev`的当前提交，就完成了合并。
      - 合并结束后，就可以将原来的分支删除了。
