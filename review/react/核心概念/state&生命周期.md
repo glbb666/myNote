@@ -1,4 +1,4 @@
-### state
+### 一、state
 
 `state`是在`constructor`中被初始化的。
 
@@ -15,7 +15,7 @@ constructor(props) {
 
 直接修改`this.state.date`是不会触发render的，要想更新`state`中的数据，需要调用`this.setState`进行更新
 
-### setState
+### 二、setState
 
 当你调用 `setState()` 的时候，React 会把你提供的对象**浅合并**到当前的 state。
 
@@ -38,88 +38,103 @@ this.setState({counter: 1},()=>{
 要解决这个问题，可以让 `setState()` 接收一个函数而不是一个对象。这个函数用上一个 state 作为第一个参数，将此次更新被应用时的 props 做为第二个参数，返回值就是要更新的state对象：
 
 ```jsx
-// Correct
 this.setState((state, props) => ({
   counter: state.counter + props.increment
 }));
 ```
 
-### 生命周期
+⚠️注意：不能在`constructor`中使用`this.setState`，因为此时`state` 还没有进行初始化完毕。
 
-函数组件没有状态变化，没有生命周期，这里的生命周期指的是类组件的生命周期。
+### 三、生命周期
 
 ![image-20200221144832966](images/image-20200221144832966.png)
 
-### 挂载时
+- 挂载过程
 
-![image-20200221145734932](images/image-20200221145734932.png)
+`constructor`=>`getDerivedStateFromProps`=>`render`=>`React更新DOM和refs`=>`componentDidMount`
 
-⚠️注意：当组件的`render`的返回值为null，可以不进行任何渲染，但是依然会触发`componentDidMount`哦。
+- 更新过程
 
-#### constructor
-
-应用场景：
-
-- `state`进行初始化
-- 进行方法绑定
-
-⚠️注意：不能在`constructor`中使用`this.setState`，因为此时`state` 还没有进行初始化完毕。
-
-#### getDerivedStateFromProps（谨慎使用 )
-
-在<font color='red'>每次渲染前</font>都会调用
-
-<font color='red'>static</font> getDerivedStateFromProps(props,state)=>obj||null
-
-参数：在挂载阶段组件的`props`和`state`值，就是组件初始化的时候定义的`props`和`state`。
-
-返回值：如果返回obj就对组件当前的`state`进行更新，如果返回null就不对组件当前的`state`进行更新。
-
-目的：让用户在`props`变化时更新`state`
-
-⚠️注意：
-
-- 该方法是一个静态方法，获取不到组件的实例对象，因此在这个方法中不能使用`this`。
-- 该方法是将返回的obj和之前的state做一个浅合并，进行相应属性的覆盖
-
-#### render
-
-检测`state` 和`props`值的变化，根据最新的`state`和`props`值生成相应的`UI`描述。
-
-`render`方法是一个 <font color='red'>纯函数</font>。即在`state`和`props`没有任何变化的时候调用`render`方法都应该返回相同的结果值。因此不要在`render`方法中使用任何有副作用的方法，比如调用`this.setState`方法等等。
-
-是`class`中<font color='red'>唯一必须</font>要实现的方法。
-
-| 返回的类型       | 🌰                      |
-| ---------------- | ---------------------- |
-| React元素        | <div/>、<MyComponent/> |
-| 数组或fragments  |                        |
-| Portals          |                        |
-| 字符串或数值类型 | 会被渲染成文本节点     |
-| 布尔类型或null   | 终端界面无渲染         |
-
-⚠️注意：`render`方法返回的只是一个`UI`描述，并不负责实际的渲染工作。
-
-#### componentDidMount
-
-在组件挂载后（插入`DOM`树中）立即调用。
-
-| 使用场景              | 🌰                       |
-| --------------------- | ----------------------- |
-| 依赖于DOM节点的初始化 | ReactDOM.findDOMNode    |
-| 通过网络请求获取数据  | ajax请求=>this.setState |
-
-### 更新时
-
-![image-20200223122745213](images/image-20200223122745213.png)
+`getDerivedStateFromProps`=>`shouldComponentUpdate`=>`render`=>`getSnapshotBeforeUpdate`=>`React更新DOM和refs`=>`componentDidUpdate`
 
  更新是被动行为，当传入新的`props`，调用`setState`或`forceUpdate`方法时才会触发更新。
 
-#### getDerivedStateFromProps（谨慎使用 )
+- 卸载过程
 
-参数：在更新阶段组件的`props`和`state`值，就是更新以后组件的`props`和`state`。其余的使用方式和注意事项和挂载阶段一样。
+`componentDidUnmount`
 
-#### shouldComponentUpdate（谨慎使用）
+### 四、 React新增加的生命周期
+
+##### `getDerivedStateFromProps`
+
+**含义**
+
+`getDerivedStateFromProps`生命周期的意思就是从`props`中获取`state`，其功能实际上就是将传入的`props`映射到`state`上面。这个函数会**在每次`re-rendering`之前被调用**，意味着**即使你的`props`没有任何变化，而是父`state`发生了变化，导致子组件发生了`re-render`，这个生命周期函数依然会被调用**。
+
+**基本使用**
+
+`getDerivedStateFromProps`是一个静态函数，不能通过`this`访问到`class`的属性，而是应该通过参数提供的nextProps以及prevState来进行判断，根据新传入的props来映射到state。
+
+**需要注意的是：**
+
+- 如果使用了这个方法并且返回值不是null，此时的state的值就有两个来源(props的更新,this.setState)
+- 如果返回了一个对象，它是以追加的方式，追加到当前的state对象上面的，如果有重名的就覆盖掉。
+
+![image-20200614154420020](images/image-20200614154420020.png)
+
+```javascript
+// 在getDerivedStateFromProps中进行state的改变
+static getDerivedStateFromProps(nextProps, prevState) {
+    if (nextProps.type !== prevState.type) {
+        return {
+            type: nextProps.type,
+        };
+    }
+    return null;
+}
+
+```
+
+##### getSnapshotBeforeUpdate（谨慎使用）
+
+`getSnapshotBeforeUpdate`在最近一次渲染输出（提交到`DOM`节点）之前调用，执行该方法的时候`DOM`节点还未更新，接收两个参数（`prevProps，prevState`)，它返回的值是某个时刻的快照值`snapshot`(在更新DOM前所需要保存的结果值，比如说在更`新DOM`前保存上一个`DOM`状态的高度或者尺寸)/null，实际开发中不常用，可能使用在一些UI的处理当中，比如需要用特殊方式处理滚动位置的一个聊天限制的时候，可能需要记录聊天上一次的一个滚动位置。**该方法的结果会作为一个参数传给`componentDidUpdate`。**
+
+```javascript
+class ScrollingList extends React.Component {
+  constructor(props) {
+    super(props)
+    this.listRef = React.createRef()
+  }
+
+  getSnapshotBeforeUpdate(prevProps, prevState) {
+    // 我们是否在list中添加新的items
+    // 捕获滚动位置以便我们稍后调整滚动位置
+    if (prevProps.list.length < this.props.list.length) {
+      const list = this.listRef.current;
+      return list.scrollHeight - list.scrollTop
+    }
+    return null
+  }
+
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    // 如果我们snapshot有值，说明我们刚刚添加了新的items
+    // 调整滚动位置使得这些新items不会将旧的items推出视图
+    // (这里的snapshot是getSnapshotBeforeUpdate的返回值)
+    if (snapshot !== null) {
+      const list = this.listRef.current
+      list.scrollTop = list.scrollHeight - snapshot
+    }
+  }
+
+  render() {
+    return (
+      <div ref={this.listRef}>{/* ...contents... */}</div>
+    )
+  }
+}
+```
+
+##### shouldComponentUpdate（谨慎使用）
 
 决定组件是否继续执行更新过程，如果返回值为`false` ，组件更新阶段的后续方法将会停止执行。
 
@@ -132,46 +147,87 @@ shouldComponentUpdate(nextProps,nextState)=>bool
 ⚠️注意：
 
 - 不建议深层比较或用`JSON.stringify`方法去操作，否则会影响性能。
-- 在之后的版本中，react会把返回值当作一种提示，而不是一种严格的指令。也就是说即使返回了false，也有可能会继续执行之后的方法，所以建议谨慎使用。
+- <font color='red'>在之后的版本中</font>，react会把返回值当作一种提示，而不是一种严格的指令。也就是说<font color='red'>即使返回了false，也有可能会继续执行之后的方法，所以建议谨慎使用。</font>
 
-#### render
+举个🌰：如果你的组件只有当 `props.color` 或者 `state.count` 的值改变才需要更新时，你可以使用 `shouldComponentUpdate` 来进行检查：
 
-读取最新的`props`和`state`值，生成新的`UI`描述。
+```javascript
+class CounterButton extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {count: 1};
+  }
 
-#### getSnapshotBeforeUpdate
+  shouldComponentUpdate(nextProps, nextState) {
+    if (this.props.color !== nextProps.color) {
+      return true;
+    }
+    if (this.state.count !== nextState.count) {
+      return true;
+    }
+    return false;
+  }
 
-在最近一次渲染输出（提交到`DOM`节点之前调用）。在这个方法执行的时候`DOM`节点还未做更新，因此从中读取到的`DOM`节点，是上一个阶段的`DOM`节点
+  render() {
+    return (
+      <button
+        color={this.props.color}
+        onClick={() => this.setState(state => ({count: state.count + 1}))}>
+        Count: {this.state.count}
+      </button>
+    );
+  }
+}
+```
 
-getSnapshotBeforeUpdate(prevProps,prevState)=>snapshot||null
+当数据类型为基本数据类型的时候，你可以使用 `React.PureComponent` 来代替手写 `shouldComponentUpdate`。
 
-参数：prevProps，prevState是更新前的`props` ，`state`值
+```javascript
+class CounterButton extends React.PureComponent {
+  constructor(props) {
+    super(props);
+    this.state = {count: 1};
+  }
 
-返回值：某个时刻的快照，在更新`DOM`前需要保存的结果值。
+  render() {
+    return (
+      <button
+        color={this.props.color}
+        onClick={() => this.setState(state => ({count: state.count + 1}))}>
+        Count: {this.state.count}
+      </button>
+    );
+  }
+}
+```
 
-应用：一般在处理页面滚动的时候会用到
+由于`React.PureComponent`只能进行浅比较，当` props `或者 `state` 某种程度是可变的情况下，浅比较会有遗漏避免该问题最简单的方式是避免更改你正用于` props `或` state` 的值。
 
-#### componentDidUpdate
+例如，把数组利用 `concat` 重写：
 
-在`DOM`更新以后会被立刻调用，对更新后的`DOM`进行操作
+```javascript
+handleClick() {
+  this.setState(state => ({
+    words: state.words.concat(['marklar'])
+  }));
+}
+```
 
-componentDidUpdate(prevProps,prevState,snapshot)=>void
+再比如，利用扩展运算符进行更新
 
-参数：prevProps，prevState是更新前的`props` ，`state`值，`snapshot`是上一个方法传来的`snapshot`值
+```javascript
+handleClick() {
+  this.setState(state => ({
+    words: [...state.words, 'marklar'],
+  }));
+};
+```
 
-应用：比较`this.state`，`this.props`的值和prevProps，prevState的变化来决定要不要发起ajax请求。
+在比如，在更新对象时使用 [Object.assign](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign) 方法：
 
-#### componentWillUnmount
+```javascript
+function updateColorMap(colormap) {
+  return Object.assign({}, colormap, {right: 'blue'});
+}
+```
 
-在组件卸载及销毁之前直接调用
-
-应用：执行一些必要的清理操作，比如清理timer，取消网络请求，或者消除在`componentDidMount`中创造的一些订阅方法等。
-
-⚠️注意：不应调用`setState` ，因为在这个方法中，组件永远不会被重新渲染，组件实例渲染以后将永远不会再挂载它。
-
-### 其他
-
-#### forceUpdate（谨慎使用）
-
-强制组件更新，跳过shouldComponentUpdate，直接出发render方法的执行。
-
-使用场景：依赖于其他数据，但不是组件的`props`，`state`。

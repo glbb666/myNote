@@ -6,7 +6,7 @@
 
 ## TCP报文格式
 
-![img](https://user-gold-cdn.xitu.io/2017/11/9/156658d59583ec0274d5e1f9a23ac2e9?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
+![156658d59583ec0274d5e1f9a23ac2e9](images/5C293AF2AE6E0734F59F0EA1EA30A0D8.jpg)
 
 上图中有几个字段需要重点介绍下：
 
@@ -39,7 +39,7 @@
 
 ## TCP 三次握手
 
-![img](https://user-gold-cdn.xitu.io/2017/11/9/d8bf92c7906718271fdb8b0d2d5fe5b4?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)****
+![tcp_ip三次握手](images/tcp_ip三次握手.png)
 
 - 第一次握手
   - SYN = 1， 序列号(seq)= m
@@ -51,9 +51,9 @@
   - ACK = 1，确认号 = n+1, seq(client) = z
   - 客户端收到连接同意的应答后，还要向服务端发送一个确认报文。客户端发完这个报文段后便进入ESTABLISHED 状态，服务端收到这个应答后也进入 ESTABLISHED 状态，此时连接建立成功。
 
-## TCP 四次挥手
+## TCP 四次挥手![tcp_ip四次挥手](images/tcp_ip四次挥手.png)
 
-![img](images/8c7874fafe233c9278509e40e906055c)
+
 
 - 第一次挥手
   - 若客户端认为数据发送完成，则它需要向服务端发送`FIN`包，请求释放连接，客户端进入`fin_wait_1`状态
