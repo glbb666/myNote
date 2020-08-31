@@ -1,41 +1,12 @@
-[前端面试之webpack篇](https://link.juejin.im/?target=https%3A%2F%2Fgithub.com%2Fskychenbo)
+[前端面试之webpack篇](https://segmentfault.com/a/1190000011383224)
 
 # Webpack是什么
 
-`webpack`是一个**模块打包机**，它把项目当作一个整体，从一个给定的的主文件开始找到项目的所有依赖文件，使用`loader`进行处理，最后打包成浏览器可识别的`js`文件。
+`webpack`是一个**模块打包机**，它从一个给定的的主文件开始找到项目的所有依赖文件，使用`loader`进行处理，最后打包成浏览器可识别的`js`文件。
 
-![img](https://user-gold-cdn.xitu.io/2017/9/27/2395e1d01728fbb0d740d53c4530ed5b?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
+在使用`webpack`命令的时候，他将接受`webpack`的配置文件，除非我们使用其他的操作。
 
-# install
-
-首先添加我们即将使用的包：
-
-```bash
-npm install webpack webpack-dev-server --save-dev
-```
-
-`webpack`是我们需要的模块打包机，`webpack-dev-server`用来创建本地服务器，监听你的代码修改，并自动刷新修改后的结果。这些是有关`devServer`的配置
-
-```javascript
-contentBase,  // 为文件提供本地服务器
-port, // 监听端口，默认8080
-inline, // 设置为true,源文件发生改变自动刷新页面
-historyApiFallback  // 依赖HTML5 history API,如果设置为true,所有的页面跳转指向index.html
-devServer:{
-    contentBase: './src' // 本地服务器所加载的页面所在的目录
-    historyApiFallback: true, // 不跳转
-    inline: true // 实时刷新
-}
-然后我们在根目录下创建一个'webpack.config.js'，在'package.json'添加两个命令用于本地开发和生产发布
-"scripts": {
-            "start": "webpack-dev-server",
-            "build": "webpack"
-}
-```
-
-在使用`webpack`命令的时候，他将接受`webpack`的配置文件，除非我们使用其他的操作
-
-# entry(多个入口文件)
+# entry
 
 **entry:** 用来写入口文件，它将是整个依赖关系的根
 
@@ -45,7 +16,7 @@ var baseConfig = {
 }
 ```
 
-当我们需要多个入口文件的时候，可以把entry写成一个对象
+- 当我们需要多个入口文件的时候，可以把entry写成一个对象
 
 ```javascript
 var baseConfig = {
@@ -56,11 +27,32 @@ var baseConfig = {
 }
 ```
 
-我建议使用后面一种方法，因为他的规模会随你的项目增大而变得繁琐
+- 我们还可以向`entry`中传入一个数组，这样将创建多个主入口。
+- 我们还可以分离应用`app`和第三方库入口
 
-# output（一个输出配置）
+ webpack 从 `app.js` 和 `vendors.js` 开始创建依赖图。这些依赖图是彼此完全分离、互相独立的
+
+第三方库入口的代码打包一次之后就不会变了，除非你手动更新`package.json`的依赖
+
+```javascript
+const config = {
+  entry: {
+    app: './src/app.js',
+    vendors: ["react", "react-redux", "react-router", "redux", "rc-form", "lodash"]
+  }
+};
+```
+
+`vendor`允许你使用`CommonsChunkPlugin`从「应用程序 bundle」中提取 vendor 引用到 vendor bundle，并把引用 vendor 的部分替换为 `__webpack_require__()` 调用。如果应用程序 bundle 中没有 vendor 代码，那么你可以在 webpack 中实现被称为[长效缓存](https://www.webpackjs.com/guides/caching)的通用模式。
+
+缓存我们在后面讲。
+
+# output
 
 **output:** 即使入口文件有多个，但是**只有一个输出配置**
+
+- `filename` 用于输出文件的文件名。
+- `path`目标输出目录的绝对路径。
 
 单个入口文件
 
@@ -85,7 +77,7 @@ var path = require('path')
     var baseConfig = {
         entry: {
             main:path.join(__dirname,'./src/main.js'),
-        	app:path.join(__dirname,'./src/main.js')
+        		app:path.join(__dirname,'./src/main.js')
         },
         output: {
             filename: 'main.js',
@@ -102,68 +94,58 @@ var path = require('path')
 # Loader
 
 ### loader的作用
-实现对不同格式的文件的处理，比如说将`scss`转换为`css`，或者`typescript`转化为`js`，从而使其能够被添加到依赖图中
 
-`loader`是`webpack`最重要的部分之一，通过使用不同的`Loader`，我们能够调用外部的脚本或者工具，实现对不同格式文件的处理，`loader`需要在`webpack.config.js`边单独用`module`进行配置，配置如下：
+`loader`可以将文件从不同的语言转化成`js`，从而使其能够被添加到依赖图中。
 
-```javascript
-test: 匹配所处理文件的扩展名的正则表达式（必须）
-    loader: loader的名称（必须）
-    include/exclude: 手动添加处理的文件，屏蔽不需要处理的文件（可选）
-    query: 为loaders提供额外的设置选项
-    ex: 
-        var baseConfig = {
-            // ...
-            module: {
-                rules: [
-                    {
-                        test: /*匹配文件后缀名的正则*/,
-                        use: [
-                            loader: /*loader名字*/,
-                            query: /*额外配置*/
-                        ]
-                    }
-                ]
-            }
-        }
-```
+`loader`可以在`import`或者加载模块时预处理文件。
 
-要是`loader`工作，我们需要一个正则表达式来标识我们要修改的文件，然后有一个数组表示
-我们表示我们即将使用的`Loader`，当然我们需要的`loader`需要通过`npm` 进行安装。例如我们需要解析`less`的文件，那么`webpack.config.js`的配置如下：
+在你的应用程序中，有三种使用 loader 的方式：
+
+- [配置](https://www.webpackjs.com/concepts/loaders/#configuration)（推荐）：在 **webpack.config.js** 文件中指定 loader。
 
 ```javascript
-var baseConfig = {
-                entry: {
-                    main: './src/index.js'
-                },
-                output: {
-                    filename: '[name].js',
-                    path: path.resolve('./build')
-                },
-                devServer: {
-                    contentBase: './src',
-                    historyApiFallBack: true,
-                    inline: true
-                },
-                module: {
-                    rules: [
-                        {
-                            test: /\.less$/,
-                            use: [
-                                {loader: 'style-loader'},
-                                {loader: 'css-loader'},
-                                {loader: 'less-loader'}
-                            ],
-                            exclude: /node_modules/
-                        }
-                    ]
-                }
+module.exports = {
+  module: {
+    rules: [
+      { test: /\.ts$/, use: 'ts-loader' },
+      { 
+        test: /\.css$/,
+        use: [
+          { loader: 'style-loader' },
+          {
+            loader: 'css-loader',
+            options: {
+              modules: true
             }
+          }
+        ]
+      }
+    ]
+  }
+};
 ```
+
+- [内联](https://www.webpackjs.com/concepts/loaders/#inline)：在每个 `import` 语句中显式指定 loader。使用 `!` 将资源中的 loader 分开。分开的每个部分都相对于当前目录解析。
+
+```javascript
+import Styles from 'style-loader!css-loader?modules!./styles.css';
+```
+
+- [CLI](https://www.webpackjs.com/concepts/loaders/#cli)：在 shell 命令中指定它们。
+
+```javascript
+webpack --module-bind jade-loader --module-bind 'css=style-loader!css-loader'
+```
+
+### loader的链式调用
+
+当链式调用多个` loader `的时候，请记住它们会以相反的顺序执行。取决于数组写法格式，从右向左或者从下向上执行。
+
+- 最后的 `loader` 最早调用，将会传入原始资源内容。
+- 第一个 `loader` 最后调用，期望值是传出` JavaScript `和 `source map`（可选）。
+- 中间的 `loader` 执行时，会传入前一个 `loader` 传出的结果。
 
 ### 常用的loader
-
-从下往上从右往左执行
 
 - `style-loader`：在 `DOM` 里插入一个 `<style>` 标签，并且将 `CSS` 写入这个标签内。
 
@@ -189,6 +171,10 @@ var baseConfig = {
 `file-loader`: 生成的文件名就是**文件内容的`md5`哈希值**并会保留所引用资源的原始扩展名
 `url-loader`: 功能类似 `file-loader`,但是文件大小低于指定的限制时，可以返回一个`DataURL`
 
+### loader的解析
+
+loader 遵循标准的[模块解析](https://www.webpackjs.com/concepts/module-resolution/)。多数情况下，loader 将从[模块路径](https://www.webpackjs.com/concepts/module-resolution/#module-paths) `node_modules`解析。
+
 # Plugins
 
 `plugins`和`loader`都是外部引用
@@ -203,26 +189,16 @@ var baseConfig = {
 作用:将`js`文件中引用的样式单独抽离成`css`文件
 
 ```javascript
-var ExtractTextPlugin = require('extract-text-webpack-plugin')
-        var lessRules = {
-            use: [
-                {loader: 'css-loader'},
-                {loader: 'less-loader'}
-            ]
-        }
+const HtmlWebpackPlugin = require('html-webpack-plugin'); //通过 npm 安装
+const webpack = require('webpack'); //访问内置的插件
+const config = {
+	...
+  plugins: [
+    new webpack.optimize.UglifyJsPlugin(),
+    new HtmlWebpackPlugin({template: './src/index.html'})
+  ]
+};
 
-        var baseConfig = {
-            // ... 
-            module: {
-                rules: [
-                    // ...
-                    {test: /\.less$/, use: ExtractTextPlugin.extract(lessRules)}
-                ]
-            },
-            plugins: [
-                new ExtractTextPlugin('main.css')
-            ]
-        }
 ```
 
 #### `HtmlWebpackPlugin`:
@@ -315,23 +291,10 @@ if (process.env.NODE_ENV === 'development') {
 }
 ```
 
-# 优化插件
+### 缓存
 
-下面介绍几个插件用来优化代码
-`OccurenceOrderPlugin`： 为组件分配ID,通过这个插件`webpack`可以分析和优先考虑使用最多 的模块，然后为他们分配最小的`ID`
-`UglifyJsPlugin`： 压缩代码
-下面是他们的使用方法
+使用 webpack 来打包应用程序，webpack 会生成一个可部署的 `/dist` 目录，然后把打包后的内容放置在此目录中。只要 `/dist` 目录中的内容部署到服务器上，客户端（通常是浏览器）就能够访问网站此服务器的网站及其资源。
 
-```javascript
-var baseConfig = {
-	new webpack.optimize.OccurenceOrderPlugin()
-	new webpack.optimize.UglifyJsPlugin()
-}
-```
+而最后一步获取资源是比较耗费时间的，浏览器可以通过命中缓存，使网站加载速度更快。然而，如果我们在部署新版本时不更改资源的文件名，浏览器可能会认为它没有被更新，就会使用它的缓存版本。由于缓存的存在，当你需要获取新的代码时，就会显得很棘手。
 
-
-然后在我们使用`npm run build`会发现代码是压缩的
-
-# 总结
-
-`webpack`的配置文件的复杂度，依赖于你项目的需要。小心的运用他们。因为随着项目的增长，它们会变得很难驯服。
+通过使用 `output.filename` 进行[文件名替换](https://www.webpackjs.com/configuration/output#output-filename)，可以确保浏览器获取到修改后的文件。
