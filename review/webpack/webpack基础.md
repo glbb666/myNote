@@ -16,7 +16,7 @@ var baseConfig = {
 }
 ```
 
-- 当我们需要多个入口文件的时候，可以把entry写成一个对象
+- 当我们需要多个入口文件的时候，可以把entry写成一个对象。**`entry`中不同的`key`都会成为`output`出口文件的`[name]`**
 
 ```javascript
 var baseConfig = {
@@ -28,6 +28,7 @@ var baseConfig = {
 ```
 
 - 我们还可以向`entry`中传入一个数组，这样将创建多个主入口。
+
 - 我们还可以分离应用`app`和第三方库入口
 
  webpack 从 `app.js` 和 `vendors.js` 开始创建依赖图。这些依赖图是彼此完全分离、互相独立的
@@ -168,6 +169,8 @@ webpack --module-bind jade-loader --module-bind 'css=style-loader!css-loader'
 //配置处理.scss文件的第三方loader规则
 ```
 
+如果要把`css`输出成单独的文件，而不是往`DOM`里插入`<style>`标签，那么就不能用`style-loader`，而需要用`MiniCssExtractPlugin`。
+
 `file-loader`: 生成的文件名就是**文件内容的`md5`哈希值**并会保留所引用资源的原始扩展名
 `url-loader`: 功能类似 `file-loader`,但是文件大小低于指定的限制时，可以返回一个`DataURL`
 
@@ -184,9 +187,18 @@ loader 遵循标准的[模块解析](https://www.webpackjs.com/concepts/module-r
 `loader`负责处理**源文件**，如`css`、`jsx`，一次处理一个文件。而`plugins`并不是直接操作单个文件，它直接对**整个构建过程**起作用，在特定的生命周期用特定的钩子处理回调。
 
 ### 常用的`plugins`的用法
-#### `ExtractTextWebpackPlugin`（`webpack 4.x`版本不可用)
+#### `MiniCssExtractPlugin`
 
-作用:将`js`文件中引用的样式单独抽离成`css`文件
+作用:将`css`提取到单独的文件中。它为每个包含`CSS`的`JS`文件创建一个`CSS`文件，它支持`CSS`和`SourceMap`的按需加载。
+
+一般在生产环境下使用。
+
+在开发环境中，一般使用`style-loader`，把`css`变成`style`标签插入到`html`中，更新时，只要从内存中读取新的`html`文件。
+
+在生产环境中，由于以下情况，我们必须要使用`MiniCssExtractPlugin`
+
+- 把文件全部放在`html`中，`html`文件可能过大，影响用户体验。而加载多个文件，由于`html2.0`有多路传输的特性，所以会比加载一个文件更快。（在开发环境中，则要用io读取文件，所以更慢）
+- 把`CSS`都变成`style`标签插入到`html`中有点乱，不美观。
 
 ```javascript
 const HtmlWebpackPlugin = require('html-webpack-plugin'); //通过 npm 安装
@@ -201,7 +213,7 @@ const config = {
 
 ```
 
-#### `HtmlWebpackPlugin`:
+#### `HtmlWebpackPlugin`
 作用：根据模版生成`html`文件，并自动引用打包后的`js`，`css`文件
 
 ```javascript
@@ -287,7 +299,7 @@ var ENV = process.env.NODE_ENV
 
 ```javascript
 if (process.env.NODE_ENV === 'development') {
-            console.warn('这个警告会在生产阶段消失')
+   console.warn('这个警告会在生产阶段消失')
 }
 ```
 
