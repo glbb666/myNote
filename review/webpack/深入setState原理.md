@@ -19,7 +19,7 @@ export default class App extends React.Component {
  }
  render(){
   const {count} = this.state;
-  *return* (
+  return (
    {count}
   )
  }
@@ -96,7 +96,7 @@ RootFiber.stateNode = FiberRoot
 
 - fiber对象与ReactElement一一对应，如下图，App组件
 
-*|*![img](https://bytedance.feishu.cn/space/api/box/stream/download/asynccode/?code=997dd37a5b5e6a12effd5ce0f1c8042e_8f118824ce50c961_boxcnaMfKpTmaQ8IJv6TOX9BH2b_YzfLAh8nX3avDFpcQ9JgRtw6Q7FAjD6r)
+![img](images/(null)-20200902104932340.(null))
 
 - fiber是一种新型的数据结构，记录类组件的各种状态（state和props）。**this**上的**state**和**props**是根据**Fiber**对象的**state**、**props**更新的
 
@@ -194,7 +194,7 @@ export type Fiber = {
  //doubleBuffer Fiber在更新后，不用再重新创建对象，
  // 而是复制自身，并且两者相互复用，用来提高性能
  alternate: Fiber | null,
-|};
+};
 ```
 
 #### expirationTime
@@ -214,7 +214,7 @@ export type Fiber = {
 ```javascript
 Component.prototype.setState = function(partialState, callback) {
  ...
- //*将setState事务放入队列中*
+ //将setState事务放入队列中
  this.updater.enqueueSetState(this, partialState, callback, 'setState');
 };
 ```
@@ -275,41 +275,41 @@ enqueueSetState(inst, payload, callback) {
 - queue2将来要保存的是fiber的镜像的update队列
 
 ```javascript
-*export* function enqueueUpdate(fiber: Fiber, update: Update) {
- *// 获取 fiber 的镜像*
+export function enqueueUpdate(fiber: Fiber, update: Update) {
+ // 获取 fiber 的镜像
  const alternate = fiber.alternate;
  let queue1;
  let queue2;
  // updateQueue是一个单向链表，用next来串联update
- *// 第一次 render 的时候肯定是没有这个镜像的，所以进第一个条件*
- *if* (alternate === null) {
-  *// 一开始也没这个 queue，所以需要创建一次*
+ // 第一次 render 的时候肯定是没有这个镜像的，所以进第一个条件
+ if (alternate === null) {
+ // 一开始也没这个 queue，所以需要创建一次
   queue1 = fiber.updateQueue;
   queue2 = null;
-  *if* (queue1 === null) {
-   *// UpdateQueue 是一个链表组成的队列*
+  if (queue1 === null) {
+  // UpdateQueue 是一个链表组成的队列
    queue1 = fiber.updateQueue = createUpdateQueue(fiber.memoizedState);
   }
- } *else* {
-  *// There are two owners.*
+ } else {
+  // There are two owners.
   queue1 = fiber.updateQueue;
   queue2 = alternate.updateQueue;
-  *// 以下就是在判断 q1、q2 存不存在了，不存在的话就赋值一遍*
-  *// clone 的意义也是为了节省开销*
-  *if* (queue1 === null) {
-   *if* (queue2 === null) {
+  // 以下就是在判断 q1、q2 存不存在了，不存在的话就赋值一遍
+  // clone 的意义也是为了节省开销
+  if (queue1 === null) {
+   if (queue2 === null) {
     queue1 = fiber.updateQueue = createUpdateQueue(fiber.memoizedState);
     queue2 = alternate.updateQueue = createUpdateQueue(
      alternate.memoizedState,
     );
-   } *else* {
+   } else {
     queue1 = fiber.updateQueue = cloneUpdateQueue(queue2);
    }
-  } *else* {
-   *if* (queue2 === null) {
-    *// Only one fiber has an update queue. Clone to create a new one.*
+  } else {
+   if (queue2 === null) {
+    // Only one fiber has an update queue. Clone to create a new one.*
     queue2 = alternate.updateQueue = cloneUpdateQueue(queue1);
-   } *else* {
+   } else {
     // 都不为空，不操作
    }
   }
@@ -329,13 +329,13 @@ enqueueSetState(inst, payload, callback) {
 根据createUpdateQueue的代码，可以看出，用createUpdateQueue创建的是空队列
 
 ```javascript
-*export* function createUpdateQueue(baseState: State): UpdateQueue {
+export function createUpdateQueue(baseState: State): UpdateQueue {
  const queue: UpdateQueue = {
-  *//应用更新后的state*
+  //应用更新后的state
   baseState,
-  *// 链表头*
+  // 链表头
   firstUpdate: null,
-  *// 链表尾*
+  // 链表尾
   lastUpdate: null,
   firstCapturedUpdate: null,
   lastCapturedUpdate: null,
@@ -344,7 +344,7 @@ enqueueSetState(inst, payload, callback) {
   firstCapturedEffect: null,
   lastCapturedEffect: null,
  };
- *return* queue;
+ return queue;
 }
 ```
 
@@ -358,8 +358,8 @@ function cloneUpdateQueue(
   baseState: currentQueue.baseState,
   firstUpdate: currentQueue.firstUpdate,
   lastUpdate: currentQueue.lastUpdate,
-  *//* *TODO:* *With resuming, if we bail out and resuse the child tree, we should*
-  *// keep these effects.*
+  // TODO: With resuming, if we bail out and resuse the child tree, we should
+  // keep these effects.
   firstCapturedUpdate: null,
   lastCapturedUpdate: null,
   firstEffect: null,
@@ -367,7 +367,7 @@ function cloneUpdateQueue(
   firstCapturedEffect: null,
   lastCapturedEffect: null,
  };
- *return* queue;
+ return queue;
 }
 ```
 
@@ -382,18 +382,18 @@ function cloneUpdateQueue(
 ##### 2. 入队操作
 
 ```javascript
- *// 入队操作*
- *// 以下的代码很简单，熟悉链表的应该清楚链表添加一个节点的逻辑*
- *if* (queue2 === null || queue1 === queue2) {
+ // 入队操作
+ // 以下的代码很简单，熟悉链表的应该清楚链表添加一个节点的逻辑
+ if (queue2 === null || queue1 === queue2) {
   // 只有一个队列，alternate为null的情况。
   appendUpdateToQueue(queue1, update);
- } *else* {
+ } else {
   // 存在两个队列
-  *if* (queue1.lastUpdate === null || queue2.lastUpdate === null) {
-   *// 两个队列中存在空队列。*
+  if (queue1.lastUpdate === null || queue2.lastUpdate === null) {
+   // 两个队列中存在空队列。
    appendUpdateToQueue(queue1, update);
    appendUpdateToQueue(queue2, update);
-  } *else* {
+  } else {
    // 不存在空队列
    appendUpdateToQueue(queue1, update);
    queue2.lastUpdate = update;
@@ -411,11 +411,11 @@ function appendUpdateToQueue(
  queue: UpdateQueue,
  update: Update,
 ) {
- *// Append the update to the end of the list.*
- *if* (queue.lastUpdate === null) {
-  *// Queue is empty*
+ // Append the update to the end of the list.
+ if (queue.lastUpdate === null) {
+  // Queue is empty
   queue.firstUpdate = queue.lastUpdate = update;
- } *else* {
+ } else {
   queue.lastUpdate.next = update;
   queue.lastUpdate = update;
  }
@@ -435,7 +435,7 @@ function appendUpdateToQueue(
 scheduleWork的作用是任务调度
 
 ```javascript
-*export* const scheduleWork = scheduleUpdateOnFiber;
+export const scheduleWork = scheduleUpdateOnFiber;
 //scheduleWork
 export function scheduleUpdateOnFiber(
  fiber: Fiber,
@@ -443,9 +443,9 @@ export function scheduleUpdateOnFiber(
 ) {
  //判断是否是无限循环update
  checkForNestedUpdates();
- *// 获取FiberRoot对象*  
+ // 获取FiberRoot对象  
  const root = markUpdateTimeFromFiberToRoot(fiber, expirationTime);
- *// 如果root为空就说明没找到FiberRoot直接中断任务*  
+ // 如果root为空就说明没找到FiberRoot直接中断任务  
  if (root === null) {
   warnAboutUpdateOnUnmountedFiberInDEV(fiber);
   return;
@@ -652,8 +652,8 @@ function scheduleCallbackForRoot(
 cancelCallback的作用为中断正在执行的任务。
 
 ```javascript
-*export* function cancelCallback(callbackNode: mixed) {
- *if* (callbackNode !== fakeCallbackNode) {
+export function cancelCallback(callbackNode: mixed) {
+ if (callbackNode !== fakeCallbackNode) {
   Scheduler_cancelCallback(callbackNode);
  }
 }
@@ -841,18 +841,18 @@ function runRootCallback(root, callback, isSync) {
  const prevCallbackNode = root.callbackNode;
  let continuation = null;
  try {
-  *// 其实执行的就是 renderRoot 方法*
+  // 其实执行的就是 renderRoot 方法
    continuation = callback(isSync);
-  *// 如果 renderRoot 有返回值，就把这个函数当作节点的回调组成一个新的节点任务，然后插入链表* 
+  // 如果 renderRoot 有返回值，就把这个函数当作节点的回调组成一个新的节点任务，然后插入链表
    if (continuation !== null) {
     return runRootCallback.bind(null, root, continuation);
    } else {
      return null;
    }
   } finally {
-  *// 这里其实是判断方法执行的过程中，root.callbackNode 是否发生了变化*
-  *// 如果没有发生变化，说明没有更高优先级的任务进来*
-  *// 任务执行完毕后，root 的调度任务也就结束了，将 callbackNode 和 callbackExpirationTime 重置。*   
+  // 这里其实是判断方法执行的过程中，root.callbackNode 是否发生了变化
+  // 如果没有发生变化，说明没有更高优先级的任务进来
+  // 任务执行完毕后，root 的调度任务也就结束了，将 callbackNode 和 callbackExpirationTime 重置。   
   if (continuation === null && prevCallbackNode === root.callbackNode) {
    root.callbackNode = null;
    root.callbackExpirationTime = NoWork;
