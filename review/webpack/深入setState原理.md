@@ -128,7 +128,7 @@ Fiber 重新实现了 React 的核心算法，带来了杀手锏增量更新功�
 
 #### FiberRoot的结构
 
-```
+```javascript
 function FiberRootNode(containerInfo, tag, hydrate) {
  this.tag = tag;
  this.current = null;
@@ -163,7 +163,7 @@ function FiberRootNode(containerInfo, tag, hydrate) {
 
 以下是fiber对象中一些我认为比较重要的属性
 
-```
+```javascript
 export type Fiber = {
  //当前Fiber的状态（比如浏览器环境就是DOM节点）
  //不同类型的实例都会记录在stateNode上
@@ -211,7 +211,7 @@ export type Fiber = {
 
 介绍完上述概念，我们正式开始源码的解析，这是入口。
 
-```
+```javascript
 Component.prototype.setState = function(partialState, callback) {
  ...
  //*将setState事务放入队列中*
@@ -229,7 +229,7 @@ Component.prototype.setState = function(partialState, callback) {
 
 - callback是合并state后的回调
 
-```
+```javascript
 enqueueSetState(inst, payload, callback) {
   //此处的this指向类组件
   //this本身有存储 fiber对象 的属性，叫 _reactInternalFiber
@@ -274,7 +274,7 @@ enqueueSetState(inst, payload, callback) {
 
 - queue2将来要保存的是fiber的镜像的update队列
 
-```
+```javascript
 *export* function enqueueUpdate(fiber: Fiber, update: Update) {
  *// 获取 fiber 的镜像*
  const alternate = fiber.alternate;
@@ -328,7 +328,7 @@ enqueueSetState(inst, payload, callback) {
 
 根据createUpdateQueue的代码，可以看出，用createUpdateQueue创建的是空队列
 
-```
+```javascript
 *export* function createUpdateQueue(baseState: State): UpdateQueue {
  const queue: UpdateQueue = {
   *//应用更新后的state*
@@ -350,7 +350,7 @@ enqueueSetState(inst, payload, callback) {
 
 而cloneUpdateQueue则是把新队列的队头和队尾指向老队列的队头队尾，两个队列是共享结构。
 
-```
+```javascript
 function cloneUpdateQueue(
  currentQueue: UpdateQueue,
 ): UpdateQueue {
@@ -381,7 +381,7 @@ function cloneUpdateQueue(
 
 ##### 2. 入队操作
 
-```
+```javascript
  *// 入队操作*
  *// 以下的代码很简单，熟悉链表的应该清楚链表添加一个节点的逻辑*
  *if* (queue2 === null || queue1 === queue2) {
@@ -406,7 +406,7 @@ function cloneUpdateQueue(
 
 这其实是因为共享结构，让我们看看appendUpdateToQueue的代码
 
-```
+```javascript
 function appendUpdateToQueue(
  queue: UpdateQueue,
  update: Update,
@@ -434,7 +434,7 @@ function appendUpdateToQueue(
 
 scheduleWork的作用是任务调度
 
-```
+```javascript
 *export* const scheduleWork = scheduleUpdateOnFiber;
 //scheduleWork
 export function scheduleUpdateOnFiber(
@@ -508,7 +508,7 @@ export function scheduleUpdateOnFiber(
 
 我们先来看看markUpdateTimeFromFiberToRoot，它的作用是找到rootFiber并遍历更新子节点的expirationTime。
 
-```
+```javascript
 //目标fiber会向上寻找rootFiber对象，在寻找的过程中会进行一些操作
 function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
  //如果fiber对象的过期时间小于 expirationTime，则更新fiber对象的过期时间
@@ -585,7 +585,7 @@ function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
 
 scheduleCallbackForRoot
 
-```
+```javascript
 function scheduleCallbackForRoot(
  root: FiberRoot,
  priorityLevel: ReactPriorityLevel,
@@ -651,7 +651,7 @@ function scheduleCallbackForRoot(
 
 cancelCallback的作用为中断正在执行的任务。
 
-```
+```javascript
 *export* function cancelCallback(callbackNode: mixed) {
  *if* (callbackNode !== fakeCallbackNode) {
   Scheduler_cancelCallback(callbackNode);
@@ -701,7 +701,7 @@ scheduleSyncCallback是进行同步调度的函数。
 
 它的作用是：将调度任务入队，并返回入队后的临时队列。
 
-```
+```javascript
 //入队callback，并返回临时的队列
 export function scheduleSyncCallback(callback: SchedulerCallback) {
  //在下次调度或调用 刷新同步回调队列 的时候刷新callback队列
@@ -734,7 +734,7 @@ export function scheduleSyncCallback(callback: SchedulerCallback) {
 
 scheduleCallback是进行异步调度的函数
 
-```
+```javascript
 export function scheduleCallback(
  reactPriorityLevel: ReactPriorityLevel,
  callback: SchedulerCallback,
@@ -766,7 +766,7 @@ Scheduler_scheduleCallback的作用是，返回包装处理后的task
 
 我们先不区分，把它们一律视作callback来进行看待
 
-```
+```javascript
 const {
  unstable_scheduleCallback: Scheduler_scheduleCallback,
 } = Scheduler;
@@ -824,7 +824,7 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
 
 runRootCallback是这样进行使用的：
 
-```
+```javascript
 runRootCallback.bind(
    null,
    root,
@@ -836,7 +836,7 @@ runRootCallback.bind(
 
 可以看出，runRootCallback的作用就是调用renderRoot进行循环更新。并且在root调度结束后将root的callbackNode和callbackExpirationTime进行初始化。
 
-```
+```javascript
 function runRootCallback(root, callback, isSync) {
  const prevCallbackNode = root.callbackNode;
  let continuation = null;
@@ -864,7 +864,7 @@ function runRootCallback(root, callback, isSync) {
 
 flushSyncCallbackQueue的作用是更新同步队列的状态
 
-```
+```javascript
 //刷新同步任务队列
 export function flushSyncCallbackQueue() {
  //如果即时节点存在则中断当前节点任务，从链表中移除task节点
@@ -879,7 +879,7 @@ export function flushSyncCallbackQueue() {
 
 接着看flushSyncCallbackQueueImpl
 
-```
+```javascript
 //更新同步队列
 function flushSyncCallbackQueueImpl() {
  //如果同步队列未更新过并且同步队列不为空
