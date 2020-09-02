@@ -8,9 +8,9 @@
 ##### 切换
 
 false => true
-依次执行 beforeCreate,created,beforeMount,mounted 钩子。
+依次执行 `beforeCreate,created,beforeMount,mounted `钩子。
 true => false
-依次执行 beforeDestroy,destroyed 钩子。
+依次执行 `beforeDestroy,destroyed `钩子。
 
 # v-show
 
