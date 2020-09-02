@@ -8,8 +8,8 @@ setState(updater, callback)这个方法是用来告诉react组件数据有更新
 
 场景一：点击按钮，把count的值增加2次。
 
-```
-*export* *default* class App extends React.Component {
+```javascript
+export default class App extends React.Component {
  state = {
   count:1
  }
@@ -28,11 +28,11 @@ setState(updater, callback)这个方法是用来告诉react组件数据有更新
 
 点击前：
 
-![img](https://bytedance.feishu.cn/space/api/box/stream/download/asynccode/?code=127e0d210361bd9bd66eb1cb259b2171_8f118824ce50c961_boxcneZs71ST8DKdz3ObInpBfGe_RlUYZR4UikFevX0L6M3ko8otxEYD65ON)
+![img](images/(null)-20200902103238262.(null))
 
 点击后：
 
-![img](https://bytedance.feishu.cn/space/api/box/stream/download/asynccode/?code=6fdd101323289fe18c81f73f681773a0_8f118824ce50c961_boxcnduoW77zOuOqXQH0P9l9xFg_nr34ilWMaRh20cuqc5B4pqtKxlmEvrp6)
+![img](images/(null)-20200902103234011.(null))
 
 这个稍微熟悉setState的人应该都知道，因为setState是批量更新的，所以会把多个update合成为一个。
 
@@ -49,11 +49,11 @@ add = ()=>{
 
 点击前：
 
-![img](https://bytedance.feishu.cn/space/api/box/stream/download/asynccode/?code=127e0d210361bd9bd66eb1cb259b2171_8f118824ce50c961_boxcneZs71ST8DKdz3ObInpBfGe_RlUYZR4UikFevX0L6M3ko8otxEYD65ON)
+![img](images/(null)-20200902103227307.(null))
 
 点击后：
 
-![img](https://bytedance.feishu.cn/space/api/box/stream/download/asynccode/?code=e687668c408bd6080c125aa9d619b5bd_8f118824ce50c961_boxcnqPeVYWan7D48oagmTjtMfh_Dw6vDNivupOIKiEVhWJVoRqXqKbvyFFn)
+![img](images/(null))
 
 那这又怎么解释呢？我们可以看一看源码一探究竟。
 
@@ -104,7 +104,7 @@ RootFiber.stateNode = FiberRoot
 
 下图阐述了它们之间的关系
 
-*|*![img](https://bytedance.feishu.cn/space/api/box/stream/download/asynccode/?code=be7be4bdb9a609913da49798f33ec600_8f118824ce50c961_boxcnzdtFM9kPyjvn9Yi25xpaac_JlXYYHPhIgJCAXT7K4XyqfEUGOF14mLE)
+![img](images/(null)-20200902103251487.(null))
 
 - ReactElement只会把子节点（props.children）的第一个子节点当做child节点，其余的子节点（也就是第一个子节点的兄弟节点）都是从第一个子节点开始，依次**单向连接**至后一个兄弟节点
 
@@ -371,7 +371,7 @@ function cloneUpdateQueue(
 }
 ```
 
-*|*![img](https://bytedance.feishu.cn/space/api/box/stream/download/asynccode/?code=3c2301fd4b15f54d73515bce02e56342_8f118824ce50c961_boxcn86a2AxHh09UM5J9hXZinIc_h0HTQnvJvedgyEC3VgpafaDJ2Er4Kmbx)
+![img](images/(null)-20200902103310676.(null))
 
 经过上面的获取队列操作后，现在只有两种情况
 
@@ -422,7 +422,7 @@ function appendUpdateToQueue(
 }
 ```
 
-*|*![img](https://bytedance.feishu.cn/space/api/box/stream/download/asynccode/?code=0c9cec194271f05fdb49867eae582be6_8f118824ce50c961_boxcniEBXrkyBMGSZRvON2suOcb_IJyg18atZnOb7UiSIBLtZgXzS87P8Zm9)
+![img](images/(null)-20200902103320270.(null))
 
 - 大家可以看到，当两个队列不为空时，queue1和queue2是共享结构。
 
@@ -921,7 +921,7 @@ function flushSyncCallbackQueueImpl() {
 }
 ```
 
-![img](https://bytedance.feishu.cn/space/api/box/stream/download/asynccode/?code=4554c5f1d1aa90b8f137964c2b418b8f_8f118824ce50c961_boxcnjWnwVVJEwW06tMVkkebHHh_SkjjActcLIKYWte7H1dUOKO2EqRapnas)
+![img](images/(null)-20200902103335465.(null))
 
 看到这里，我们在看看[场景一和场景二](https://bytedance.feishu.cn/docs/doccna6AmUR2bUCTxQGMH3AOhQd#Fgkyz4)，应该可以看出进行add时有无setTimeout包裹的区别了。
 
@@ -929,7 +929,7 @@ function flushSyncCallbackQueueImpl() {
 
 而在场景二中，每个setState被当成一个task。每一次task都会执行runRootCallback进行渲染。
 
-参考文章
+### 参考文章
 
 [组件更新流程一（调度任务）](https://yuchengkai.cn/react/2019-07-29.html#文章相关资料)
 
