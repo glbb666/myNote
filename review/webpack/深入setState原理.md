@@ -496,17 +496,17 @@ export function scheduleUpdateOnFiber(
 
 - 同步
 
-- - 初次挂载，调用renderRoot进行循环渲染更新。
+  - 初次挂载，调用renderRoot进行循环渲染更新。
 
-- - 非初次挂载，调用scheduleCallbackForRoot进行调度
+  - 非初次挂载，调用scheduleCallbackForRoot进行调度
 
 - 异步
 
-- - 获取优先级，调用scheduleCallbackForRoot进行调度
+  - 获取优先级，调用scheduleCallbackForRoot进行调度
 
 ##### 1. 遍历更新过期时间
 
-我们先来看看markUpdateTimeFromFiberToRoot，它的作用是找到rootFiber并遍历更新子节点的expirationTime。
+我们先来看看`markUpdateTimeFromFiberToRoot`，它的作用是找到`rootFiber`并遍历更新子节点的`expirationTime`。
 
 ```javascript
 //目标fiber会向上寻找rootFiber对象，在寻找的过程中会进行一些操作
