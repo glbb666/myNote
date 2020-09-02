@@ -127,6 +127,28 @@ yarn add --save-dev babel-loader @babel/preset-react @babel/preset-env @babel/co
   }
 ```
 
+### 给文件名加上hash
+
+[Hash&chunkhash&contenthash的使用以及他们之间的区别](./hash&chunkhash&contenthash的差别.md)
+
+```javascript
+entry:{
+  index:'./src/index.js',// index chunk包含 index.js和index.css
+  vendor:['react','react-dom'] //每个entry都会打一个
+}
+output:{
+  filename:'[name].[contenthash].js', 
+},
+plugins:[
+    new MiniCssExtractPlugin({
+      filename:'[name].[contenthash].css', //main entry名
+    })
+  ]
+]
+```
+
+### 代码分割
+
 
 
 ### 参考文章

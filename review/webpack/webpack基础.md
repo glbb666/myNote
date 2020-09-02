@@ -214,14 +214,14 @@ const config = {
 ```
 
 #### `HtmlWebpackPlugin`
-作用：根据模版生成`html`文件，并自动引用打包后的`js`，`css`文件
+作用：根据模版生成`html`文件，并自动引用打包后的`js`，`css`文件。这对于在文件名中包含每次会随着编译而发生变化哈希的 `webpack bundle `尤其有用。 
 
 ```javascript
 var HTMLWebpackPlugin = require('html-webpack-plugin')
 var baseConfig = {
     plugins: [
-        new htmlWebpackPlugin({//创建一个在内存中生成html页面的插件
-            template:path.join(__dirname,'./src/index.html'),//指定模板页面，将来会根据指定的页面路径，去生成内存中的页面
+        new HTMLWebpackPlugin({//创建一个在内存中生成html页面的插件
+            template:path.join(__dirname,'../src/index.html'),//指定模板页面，将来会根据指定的页面路径，去生成内存中的页面
             filename:'index.html'//指定生成的页面的名称
         })
     ]
