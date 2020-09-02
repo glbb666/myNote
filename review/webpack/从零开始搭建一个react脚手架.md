@@ -149,9 +149,14 @@ plugins:[
 
 ### 代码分割
 
+splitchunk
 
+### 代码规范
+
+Eslint,stylelint,prettier
 
 ### 参考文章
 
 [Webpack从零配置React的运行环境上篇——搭建基本环境](https://segmentfault.com/a/1190000021464216)
 
+[前端面试之道之webpack篇](https://segmentfault.com/a/1190000011383224)
