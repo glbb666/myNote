@@ -1,6 +1,6 @@
 ## 二叉树
 
-### 二叉树深度遍历
+### 二叉树深度遍历（递归）
 
 ```js
 var deepth = function(root) {
@@ -8,7 +8,7 @@ var deepth = function(root) {
     return 0
   } else {
     let lH = deepth(root.left),
-      rH = deepth(root.right)
+    let rH = deepth(root.right)
     return Math.max(lH, rH) + 1
   }
 }
@@ -16,7 +16,7 @@ var deepth = function(root) {
 
 ### 二叉树先序遍历：根左右
 
-先序中序后序表示的是根的顺序，先序中序后续都是深度优先，用的是栈
+先中后序表示的是根的位置，先序中序后序都是**非递归深度遍历**，用的是栈
 
 ```js
 function preOrder(root) {
@@ -524,15 +524,17 @@ Function.prototype.bind2 = function(context,...args){
 }
 ```
 
-### new
+### new（9.8 19:23)
 
 ```javascript
 function new2(Constructor,...args){
-   var obj = new Object();
+   const obj = new Object();
    obj.__proto__ = Constructor.prototype;
-   var ret = Constructor.apply(obj,args);
-   //如果构造函数的返回了对象，new出来的实例只能访问该对象中的属性
-   return  typeof ret==='object'?ret:obj;
+   // 利用apply把构造函数内部的this指向更改为实例
+   const ret = Constructor.apply(obj,args);
+   // 如果构造函数返回引用类型，则不会new一个新的实例，而是返回该引用类型
+   // 如果构造函数返回一个基本类型，则返回new的新实例
+   return typeof ret==='object' || typeof ret=== 'function'?ret:obj;
 }
 ```
 
@@ -1043,29 +1045,5 @@ class EventEmit {
 }
 ```
 
-### 单例模式
 
-一个类就只有一个实例对象
 
-- 对于频繁使用的对象，可以省略创建对象所花费的时间，这对于重量级的对象来说很重要
-- 因为不需要频繁创建对象，减轻了`GC`的压力
-
-缺点：复杂的单例模式需要考虑线程安全等并发问题
-
-```js
-var Singleton = function(name) {
-    this.name = name;
-};
-Singleton.prototype.getName = function() {
-    alert(this.name);
-};
-Singleton.getInstance = (function(name) {
-    var instance;
-    return function(name){
-        if (!instance) {
-            instance = new Singleton(name);
-        }
-        return instance;
-    }
-})();
-```

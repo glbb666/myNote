@@ -92,3 +92,6 @@
  })()
 ```
 
+#### 无痕模式下
+
+`safari`无痕模式下`cookie`是可用的，`localStorage`存在但是`setItem`时会报错(`chrome`的无痕模式`localStorage`和`cookie`都可用，只不过关闭浏览器之后会清除)

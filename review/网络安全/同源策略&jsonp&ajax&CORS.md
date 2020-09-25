@@ -10,7 +10,7 @@
 
 ###  同源策略和跨域？
 
-> 如果两个页面的协议，端口和主机都相同，则两个页面具有相同的**源**。不满足同源策列，谷歌浏览器跨域请求不会发起，其他浏览器可发送跨域请求，但是相应会被浏览器拦截。
+> 如果两个页面的协议，端口和主机都相同，则两个页面具有相同的**源**。不满足同源策列，就会产生跨域问题。谷歌浏览器跨域请求不会发起，其他浏览器可发送跨域请求，但是相应会被浏览器拦截。
 >
 
 🌟但是有三种标签允许跨域加载资源
@@ -25,7 +25,13 @@
 
 `AJAX`的核心是`XMLHttpRequest`对象，它不必刷新页面就可以从服务器获取到新数据。
 
-我们先创建一个`XMLHttpRequest`对象，并且监听它的`onreadyStatuschange`事件，当`readyStatus`的值为4，说明已经收到完整响应了，我们在判断`status`，当它的值为`200~300`或`304`的时候，就从`responseText`中读取服务器相应内容的文本。接着我们用`open`启动一个请求，为请求指定`url`地址，方法，同步性，非`get`请求，要`setRequestHeader`，设置`Content-type`的值，`get`请求的`Content-type`为`text/plain`。我们还可以用`timeout`设置超时，并且在`ontimeout`中调用`abort`取消请求。用`onerror`处理请求错误的情况。接着我们调用`send`方法，在`send`方法执行之前，`AJAX`都是同步的。`send`方法执行过后，浏览器就会为`http`请求创建一个`http`请求线程，这个请求独立于`js`引擎线程，是异步的，`js`引擎并不会等待这个异步请求的结果，而是会继续执行下去。当浏览器收到服务器的响应，浏览器事件触发线程就会捕获到`ajax`的回调事件`onreadyStatechange`或者是`onerror`事件，浏览器事件触发线程会把回调事件添加到任务队列末尾，直到`js`引擎线程空闲，任务队列的任务才会被添加到执行栈中依次执行。
+- 我们先创建一个`XMLHttpRequest`对象，并且监听它的`onreadyStatuschange`事件，当`readyStatus`的值为4，说明已经收到完整响应了。
+- 我们再判断`status`（状态码），当它的值为`200~300`或`304`的时候，就从`responseText`中读取服务器相应内容的文本。
+- 接着我们用`open`启动一个请求，为请求指定`url`地址，方法，同步性。
+  - `get`请求的`Content-type`默认为`text/plain`。
+  - 非`get`请求，要`setRequestHeader`，设置`Content-type`的值。
+- 我们还可以用`timeout`设置超时，并且在`ontimeout`中调用`abort`取消请求。用`onerror`处理请求错误的情况。
+- 接着我们调用`send`方法，在`send`方法执行之前，`AJAX`都是同步的。`send`方法执行过后，浏览器就会为`http`请求创建一个`http`请求线程，这个请求独立于`js`引擎线程，是异步的，`js`引擎并不会等待这个异步请求的结果，而是会继续执行下去。当浏览器收到服务器的响应，浏览器事件触发线程就会捕获到`ajax`的回调事件`onreadyStatechange`或者是`onerror`事件，浏览器事件触发线程会把回调事件添加到任务队列末尾，直到`js`引擎线程空闲，任务队列的任务才会被添加到执行栈中依次执行。
 
 #### 创建步骤
 
@@ -65,7 +71,7 @@ function Ajax(options = {}) {
       'Content-Type',
       'application/x-www-form-urlencoded'
     )
-    xhr.send(options.data)
+    xhr.send(data)
   }else{
       return;
   }
@@ -116,7 +122,13 @@ function Ajax(options = {}) {
 
 优点:基于`promise`，支持`node`,比较轻量
 
-缺点：除了**网络故障或者请求被阻止**时会将`promise`状态标记为`reject`，其他情况下`fecth`返回的`promise`状态都为`resolve`(但是会将 resolve 的返回值的 `ok` 属性设置为 `false` )，默认情况下，`fecth`不会从服务器接受或发送`cookie`，必须设置`credenitials`选项，所以需要我们再次封装
+缺点：
+
+- `promise`的状态，除了**网络故障或者请求被阻止**，其他情况下`fecth`返回的`promise`状态都为`resolve`(但是会将 resolve 的返回值的 `ok` 属性设置为 `false` )。
+
+- `cookie`，默认情况下，`fecth`不会从服务器接受或发送`cookie`，需要设置`credenitials`选项。
+
+  所以需要我们再次封装
 
 > fetch发送post请求的时候，总是发送两次，第一次状态码是204，第二次才成功？
 >
@@ -143,15 +155,24 @@ axios.all([getUserAccount(), getUserPermissions()])
 
 #### 1.`JSONP`
 ##### 原理
-`ajax`受同源策略的影响，不允许进行跨域请求，而`script`标签的`src`中的链接却可以访问跨域的静态资源，利用这个特性，服务端不再返回`JSON`格式的数据，而是返回一段调用某个函数的`js`代码，这样实现了跨域。
+`ajax`受同源策略的影响，不允许进行跨域请求，而`script`标签的`src`中的链接却可以访问跨域的静态资源，利用这个特性，服务端返回一段调用某个函数的`js`代码，这样实现了跨域。
 
 ##### 过程
 
 - 客户端利用`script`标签可以跨域请求资源的性质，向网页中动态插入`script`标签，来向服务器请求数据
-- 服务器会解析请求的`url`，从里面取出`callback`，然后把数据放入callback中返回给客户端
+- 服务器会解析请求的`url`，从里面取出`callback`，然后把数据放入`callback`中返回给客户端
 ##### `JSONP`的优缺点
-  - 优点：它不像Ajax请求那样受到同源策略的限制；它的兼容性更好，在更加古老的浏览器中都可以运行，不需要`XMLHttpRequest`或`ActiveX`的支持；并且在请求完毕后可以通过调用`callback`的方式回传结果。
-  - 缺点：它只支持GET请求，因为`script`标签只能使用`get`；没有超时处理；需要和后端协商
+优点：
+
+- 不受到同源策略的限制
+- 兼容性更好，在更加古老的浏览器中都可以运行，不需要`XMLHttpRequest`或`ActiveX`的支持
+- 在请求完毕后可以通过调用`callback`的方式回传结果。
+
+缺点：
+
+  - 只支持`GET`请求，因为`script`标签只能使用`get`
+  - 没有超时处理
+  - 需要和后端协商
 ##### 实现一个`JSONP`
 
 - 把传入对象转换为`url`
@@ -165,12 +186,17 @@ axios.all([getUserAccount(), getUserPermissions()])
 ```javascript
 <script type="text/javascript">
 var url = 'http://localhost:8080/';
-function jsonp(obj,time,url,success,error){
+function getParams(data) {
+  let arr = []
+  for (let i in data) {
+    arr.push(encodeURIComponent(i) + '=' + encodeURIComponent(data[i]))
+  }
+  return arr.join('&')
+}
+function jsonp(options){
+    let {data,time,url,success,error} = options
     //基本类型
-    url+=url.includes('?')?'?':'&';
-    for(let item in obj){
-        url+=encodeURIComponent(item)+'='+encodeURIComponent(obj[item])+'&';
-    }
+    url=url+'?'+getParams(data)+'&'
     var callBackName =('_jsonp'+Math.random()).replace('.','')
     url+='callback='+callBackName;
     var scriptEle = document.createElement('script');
@@ -192,8 +218,8 @@ function jsonp(obj,time,url,success,error){
     //超时处理
     var timer = window.setTimeout(function(){
         error();
-        document.head.removeChild(scriptEle);//移除script标签
 		window[callBackName] = null;//把回调函数解除引用
+        document.head.removeChild(scriptEle);
     },time)
     document.head.appendChild(scriptEle);
 }
@@ -204,6 +230,8 @@ jsonp({name:'dd'},5000,url)
 #### 2. `CORS(Cross-Origin Resource Sharing)跨域资源共享`
 
 `CORS`允许服务器声明哪些源站通过浏览器有权限访问哪些资源。
+
+字段记忆（`ACA`->`Access-Control-Allow`)
 
 ##### 基本使用
 
@@ -245,9 +273,8 @@ xhr.withCredentials = true;
 **简单请求就是不会触发CORS预检的请求**，满足以下**所有条件**的才会被视为简单请求，基本上我们日常开发只会关注前面两点
 
 1. 使用`GET、POST、HEAD`其中一种方法
-
-2. 只使用了如下的安全首部字段，不得人为设置其他首部字段
-
+2. 只使用了
+3. +的安全首部字段，不得人为设置其他首部字段
    - `Accept`
 
    - `Accept-Language`
@@ -256,16 +283,14 @@ xhr.withCredentials = true;
 
    - `Content-Type`仅限以下三种
      - `text/plain`
-	   - `multipart/form-data`
+      - `multipart/form-data`
        - `application/x-www-form-urlencoded`
-   
+
    - HTML头部header field字段：`DPR、Download、Save-Data、Viewport-Width、WIdth`
+4. 请求中的任意`XMLHttpRequestUpload` 对象均没有注册任何事件监听器；XMLHttpRequestUpload 对象可以使用 XMLHttpRequest.upload 属性访问
+5. 请求中没有使用 ReadableStream 对象
 
-3. 请求中的任意`XMLHttpRequestUpload` 对象均没有注册任何事件监听器；XMLHttpRequestUpload 对象可以使用 XMLHttpRequest.upload 属性访问
-
-4. 请求中没有使用 ReadableStream 对象
-
-预检请求要求必须**首先使用 `OPTIONS` 方法发起一个预检请求到服务器，以获知服务器是否允许该实际请求**。"预检请求“的使用，可以避免跨域请求对服务器的用户数据产生未预期的影响
+预检请求要求必须**首先使用 `OPTIONS` 方法发起一个预检请求到服务器，以获知服务器是否允许该实际请求**。"预检请求“的使用，可以避免跨域请求对服务器的用户数据产生未预期的影响 
 
 非简单请求就是会触发的预检请求
 
@@ -274,7 +299,7 @@ xhr.withCredentials = true;
 3. `XMLHttpRequestUpload` 对象注册了任何事件监听器
 4. 请求中使用了`ReadableStream`对象
 
-##### 完整请求流程
+##### 完整++请求流程
 
 ![img](images/50205881-c409b080-03a4-11e9-8a57-a2a6d0e1d879.png)
 
@@ -282,15 +307,15 @@ xhr.withCredentials = true;
 
   - 请求类型：`JSONP`只能实现`GET`请求，而`CORS`支持所有类型的`HTTP`请求。
     
-  - 使用`CORS`，开发者可以使用普通的`XMLHttpRequest`发起请求和获得数据，比起`JSONP`有更好的错误处理。
+  - 错误处理：使用`CORS`，开发者可以使用普通的`XMLHttpRequest`发起请求和获得数据，比起`JSONP`有更好的错误处理。
     
-  - `JSONP`主要被老的浏览器支持，它们往往不支持`CORS`，而绝大多数现代浏览器都已经支持了`CORS`）。
+  - `JSONP`主要被老的浏览器支持，它们往往不支持`CORS`，而绝大多数现代浏览器都已经支持了`CORS`。
 
 `CORS`与`JSONP`相比，无疑更为先进、方便和可靠。
 
 #### 3. 通过window.name跨域
 
-> window对象有个name属性，该属性有个特征：即在一个窗口(window)的生命周期内,窗口载入的所有的页面都是共享一个window.name的，每个页面对window.name都有读写的权限，window.name是持久存在一个窗口载入过的所有页面中的，并不会因新页面的载入而进行重置。
+> window对象有个name属性，该属性有个特征：即在一个窗口(window 的生命周期内,窗口载入的所有的页面都是共享一个window.name的，每个页面对window.name都有读写的权限，window.name是持久存在一个窗口载入过的所有页面中的，并不会因新页面的载入而进行重置。
 
 比如：我们在任意一个页面输入
 
@@ -353,9 +378,11 @@ iframe.onload = function() {
 
 #### 4. 通过document.domain跨域
 
-> `www.damona.cn/a.html`页面中`iframe`的`src`是`damona.cn/b.html`。这个时候，我们只要把`www.damona.cn/a.html` 和 `damona.cn/b.html`这两个页面的document.domain都设成相同的域名就可以了。但要注意的是，<font color='red'>我们只能把document.domain设置成自身或更高一级的父域，且主域必须相同。</font>
+> 例子：`www.damona.cn/a.html`页面中`iframe`的`src`是`damona.cn/b.html`。这个时候，我们只要把`www.damona.cn/a.html` 和 `damona.cn/b.html`这两个页面的`document.domain`都设成相同的域名就可以了。
+>
+> 把两个页面的`document.domain`设置成相同的域名就可以进行跨域。但是由于<font color='red'>我们只能把document.domain设置成自身或更高一级的父域，且主域必须相同。</font>所以修改`document.domain`的方法只适用于不同子域的框架间的交互。
 
-- 在页面www.damona.cn/a.html 中设置document.domain:
+- 在页面www.damona.cn/a.html 中设置`document.domain`:
 
 ```javascript
 <iframe id = "iframe" src="http://damona.cn/b.html" onload = "test()"></iframe>

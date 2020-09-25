@@ -6,6 +6,10 @@
 
 在使用`webpack`命令的时候，他将接受`webpack`的配置文件，除非我们使用其他的操作。
 
+# webpack执行流程
+
+webpack启动后会在entry里配置的module开始递归解析entry所依赖的所有module，每找到一个module, 就会根据配置的loader去找相应的转换规则，对module进行转换后在解析当前module所依赖的module，这些模块会以entry为分组，一个entry和所有相依赖的module也就是一个chunk，最后webpack会把所有chunk转换成文件输出，在整个流程中webpack会在恰当的时机执行plugin的逻辑
+
 # entry
 
 **entry:** 用来写入口文件，它将是整个依赖关系的根
@@ -68,8 +72,11 @@ output: {
 
 ```javascript
 output: {
-        filename: '[name].js',
-        path: path.resolve('./build')
+    	filename:'js/[name][contenthash].js',
+    	//此处的__dirname为/Users/bytedance/Desktop/webpack-test/config
+    	path: path.resolve(__dirname, '../dist')
+    	//path必须是绝对路径
+    	
 }
 ```
 
@@ -78,7 +85,7 @@ var path = require('path')
     var baseConfig = {
         entry: {
             main:path.join(__dirname,'./src/main.js'),
-        		app:path.join(__dirname,'./src/main.js')
+        	app:path.join(__dirname,'./src/main.js')
         },
         output: {
             filename: 'main.js',
@@ -148,13 +155,13 @@ webpack --module-bind jade-loader --module-bind 'css=style-loader!css-loader'
 
 ### 常用的loader
 
+- `file-loader`: 生成的默认文件名就是**文件内容的`md5`哈希值**([hash.[ext])，并会保留所引用资源的原始扩展名。
+
+
+- `url-loader`：和`file-loader`类似，但可以在`options`属性中进行一个`limit`的配置。这是因为当页面图片较多时，需要发起很多`http`请求，会降低页面的性能，所以`url-loader`可以把图片进行编码，打包进`js`文件中，当然，如果图片过大，进行编码会消耗性能。所以在配置中有一个`limit`值，如果文件的大小比`limit`小，就会将文件转为`dataURI`存在`js`文件中，并返回`DATAURI`。如果文件的大小比`limit`大，就会用`file-loader`进行处理。详情可以了解[详解webpack url-loader和file-loader](https://segmentfault.com/a/1190000018987483)
+- `babel-loader`： 让下一代的`js`文件转换成现代浏览器能够支持的`js`文件。`babel`有些复杂，所以大多数都会新建一个`.babelrc`进行配置。
 - `style-loader`：在 `DOM` 里插入一个 `<style>` 标签，并且将 `CSS` 写入这个标签内。
-
-- `css-loader`解析`CSS`文件后，使用 `import `加载，并且返回 CSS 代码
-
-- `babel-loader`： 让下一代的`js`文件转换成现代浏览器能够支持的`js`文件。
-
-`babel`有些复杂，所以大多数都会新建一个`.babelrc`进行配置
+- `css-loader`：解析`CSS`文件后，使用 `import `加载，并且返回` CSS` 代码。
 
 ```javascript
 {test:/\.css$/,use:['style-loader','css-loader']}
@@ -171,8 +178,6 @@ webpack --module-bind jade-loader --module-bind 'css=style-loader!css-loader'
 
 如果要把`css`输出成单独的文件，而不是往`DOM`里插入`<style>`标签，那么就不能用`style-loader`，而需要用`MiniCssExtractPlugin`。
 
-`file-loader`: 生成的文件名就是**文件内容的`md5`哈希值**并会保留所引用资源的原始扩展名
-`url-loader`: 功能类似 `file-loader`,但是文件大小低于指定的限制时，可以返回一个`DataURL`
 
 ### loader的解析
 
@@ -248,22 +253,22 @@ const webpack = require("webpack")
             entry: {
                     main: './src/index.js'
                 },
-                output: {
-                    filename: '[name].js',
-                    path: path.resolve('./build')
-                },
-                devServer: {
-                    contentBase: '/src',
-                    historyApiFallback: true,
-                    inline: true,
-                    hot: true
-                },
-                module: {
-                    rules: [
-                        {test: /\.less$/, use: ExtractTextPlugin.extract(lessRules)}
-                    ]
-                },
-                plugins: [
+            output: {
+                filename: '[name].js',
+                path: path.resolve('./build')
+            },
+            devServer: {
+                contentBase: '/src',
+                historyApiFallback: true,
+                inline: true,
+                hot: true
+            },
+            module: {
+                rules: [
+                    {test: /\.less$/, use: ExtractTextPlugin.extract(lessRules)}
+                ]
+            },
+            plugins: [
                 new ExtractTextPlugin('main.css')
             ]
         }
@@ -289,8 +294,8 @@ var ENV = process.env.NODE_ENV
 
 ```javascript
 "scripts": {
-            "start": "NODE_ENV=development webpack-dev-server",
-            "build": "NODE_ENV=production webpack"
+    "start": "NODE_ENV=development webpack-dev-server",
+    "build": "NODE_ENV=production webpack"
 }
 ```
 

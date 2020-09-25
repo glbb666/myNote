@@ -6,7 +6,7 @@
 
 #### `CMD`
 
-用于服务器，它把模块作为一个对象，整体引入，输入时必须查找对象属性，因为只有运行时才能得到这个对象，导致完全没办法在编译时做“静态优化”。
+**用于服务器，把模块作为对象，整体引入**，输入时必须查找对象属性，因为只有运行时才能得到这个对象，导致完全没办法在编译时做“静态优化”。
 
 `CommonJS` 模块的输出都定义在`module.exports`这个属性上面。`Node` 的`import`命令加载 CommonJS 模块，Node 会自动将`module.exports`属性，当作模块的默认输出，即等同于`export default xxx`。
 
@@ -22,15 +22,15 @@ export default {
 };
 ```
 
+- 输入：用`require`把模块作为对象整体引入(即加载模块内的所有方法)。
+
 ```javascript
 let { stat, exists, readFile } = require('fs');
-// 等同于
-let _fs = require('fs');
-let stat = _fs.stat;
-let exists = _fs.exists;
-let readfile = _fs.readfile;
 ```
+- 输出：
+
 #### `esModule`
+
 `esModule`是浏览器和服务器通用的模块方案。它的设计思想是尽量的静态化，**使得编译时就能确定模块的依赖关系，以及输入和输出的变量，完成模块的加载。**
 
 `export`命令用于规定模块的对外接口，在接口名与模块内部变量之间，必须建立一一对应的关系。
@@ -101,4 +101,4 @@ Node 要求 `ES6` 模块采用`.mjs`后缀文件名。`import`或者`export`命�
 ## `commonJS `与` ESmodule`差异
 
 - `commonJs`是被加载的时候运行，`esModule`是编译的时候运行，效率要比` CommonJS` 高，但是没法引用` ES6` 模块本身，因为它不是对象。
-- `esModule`输出接口与模块内的值动态绑定，所以可以取到模块内部实时的值。`commentJs`在第一次被加载时，会完整运行整个文件并输出一个对象的浅拷贝，缓存在内存中。下次加载文件时，直接从内存中取值。
+- `esModule`输出接口与模块内的值动态绑定，所以可以取到模块内部实时的值。`commentJS `在第一次被加载时，会完整运行整个文件并输出一个对象的浅拷贝，缓存在内存中。下次加载文件时，直接从内存中取值。

@@ -112,7 +112,7 @@ class myClass {
 }
 ```
 ### 防止属性污染
-模拟call
+模拟`call`
 ````js
 Function.prototype.myCall = function (context) {
   if (typeof this !== 'function') {

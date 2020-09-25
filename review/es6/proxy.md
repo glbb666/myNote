@@ -1,4 +1,4 @@
-### 什么是`Proxy`
+### 什么是`Proxy`(可以把`Proxy`和`Reflect`配合回答)
 
 `Proxy`用于修改某些操作的默认行为，也可以理解为在目标对象之前架设一层“拦截”，外界对该对象的访问，都必须先通过这层拦截，因此提供了一种**代理**机制，可以对外界的访问进行过滤和改写。
 
@@ -6,7 +6,7 @@
 var proxy = new Proxy(target, handler);
 ```
 
-`target`参数表示所要拦截的目标对象，`handler`参数也是一个对象，用来定制拦截行为，如果`handler`没有设置任何拦截，那就直通原对象。
+`Proxy`接受两个参数，第一个参数`target`代表拦截的目标，第二个参数`handler`代表拦截的行为，如果**`handler`没有设置任何拦截，那就直通原对象。**
 
 ```javascript
 var proxy = new Proxy({}, {
@@ -37,6 +37,9 @@ proxy.title // 35
 - **getPrototypeOf(target)**：拦截`Object.getPrototypeOf(proxy)`，返回一个对象。
 - **isExtensible(target)**：拦截`Object.isExtensible(proxy)`，返回一个布尔值。
 - **setPrototypeOf(target, proto)**：拦截`Object.setPrototypeOf(proxy, proto)`，返回一个布尔值。如果目标对象是函数，那么还有两种额外操作可以拦截。
+
+当 `Proxy` 实例作为函数时，还有以下两种拦截：
+
 - **apply(target, object, args)**：拦截 Proxy 实例作为函数调用的操作，比如`proxy(...args)`、`proxy.call(object, ...args)`、`proxy.apply(...)`。
 - **construct(target, args)**：拦截 Proxy 实例作为构造函数调用的操作，比如`new proxy(...args)`，返回值必须是一个对象。
 
@@ -57,18 +60,56 @@ revoke();
 proxy.foo // TypeError: Revoked
 ```
 
-`Proxy.revocable`方法返回一个对象，该对象的`proxy`属性是`Proxy`实例，`revoke`属性是一个函数，可以取消`Proxy`实例。
+`Proxy.revocable`方法**返回一个对象**，该对象的`proxy`属性是`Proxy`实例，`revoke`属性是一个函数，可以取消`Proxy`实例。
 
-`Proxy.revocable`的一个使用场景是，目标对象必须通过代理访问，访问结束就收回代理权，不允许再次访问。
+`Proxy.revocable`的一个使用场景是，**目标对象必须通过代理访问，访问结束就收回代理权，不允许再次访问。**
 
 ### `this` 问题 
+
+```javascript
+const target = {
+  m: function () {
+    console.log(this === proxy);
+  }
+};
+const handler = {};
+
+const proxy = new Proxy(target, handler);
+
+target.m() // false
+proxy.m()  // true
+```
 
 目标对象内部的`this`关键字会指向 `Proxy` 代理，`this`绑定原始对象，就可以解决这个问题。
 
 ### `proxy`和`Object.definedProperty`区别
 
 - 使用 `defineProperty` 只能拦截属性的读取（get）和设置（set）行为， `Proxy`，可以拦截13种行为，比如 in、delete、函数调用等更多行为
-
 - `Object.defineProperty()`只能对某个`key`进行监测，如果想对每个属性都监测的话就需要遍历，而`Proxy`是直接监测整个对象，不需要遍历
+- `Object.defineProperty`无法监控到数组下标的变化，导致直接通过数组的下标给数组设置值，不能实时响应。
 - 当使用 `defineProperty`，我们修改原来的 obj 对象就可以触发拦截，而使用 proxy，就必须修改代理对象，即 `Proxy` 的实例才可以触发拦截。
 - `proxy`的兼容性目前还没有提上来，并且对应的`polyfill`也不完善
+
+### 用proxy实现观察者机制
+
+```javascript
+observe(data) {
+        const that = this;
+        let handler = {
+         get(target, property) {
+            return target[property];
+          },
+          set(target, key, value) {
+            let res = Reflect.set(target, key, value);
+            that.subscribe[key].map(item => {
+              item.update();
+            });
+            return res;
+          }
+        }
+        this.$data = new Proxy(data, handler);
+      }
+```
+
+
+
