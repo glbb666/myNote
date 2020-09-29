@@ -24,7 +24,7 @@
 
 ```
 Cache-Control: max-age=<seconds>
-Cache-Control: max-stale[=<seconds>]
+Cache-Control: max-stale=<seconds>
 Cache-Control: min-fresh=<seconds>
 Cache-control: no-cache 
 Cache-control: no-store
@@ -66,13 +66,13 @@ private
 no-cache
 ```
 
-在发布缓存副本之前，强制要求缓存把请求提交给原始服务器进行验证。
+不使用本地缓存。需要使用协商缓存。
 
 ```
 no-store
 ```
 
-缓存不应存储有关客户端请求或服务器响应的任何内容。
+不缓存，缓存不应存储有关客户端请求或服务器响应的任何内容。
 
 ##### 到期
 
@@ -82,7 +82,7 @@ no-store
 
   ✨特别：某些浏览器（比如`Firefox`）中如果设定为永不缓存，那么其发出的请求中，请求头会包含`max-age=0`。
 
-- `s-maxage=<seconds>`
+- `s-max-age=<seconds>`
 
   覆盖`max-age`或者`Expires`头，但是仅适用于共享缓存(比如各个代理)，私有缓存会忽略它。
 
@@ -129,7 +129,7 @@ no-store
 
 ### Last-Modified(HTTP/1.0)
 
-响应头，包含源服务器认定的资源修改的日期及时间。 通常被用作一个验证器来判断接收到的和存储的资源是否彼此一致。由于精确度比`ETag`要低，经常作为一个备用机制。包含有`If-Modified-Since`或`If-Unmodified-Since`首部的条件请求会使用这个字段。
+响应头，包含源**服务器认定的资源修改的日期及时间**。 通常被用作一个验证器来判断接收到的和存储的资源是否彼此一致。由于精确度比`ETag`要低，经常作为一个备用机制。包含有`If-Modified-Since`或`If-Unmodified-Since`首部的条件请求会使用这个字段。
 ### If-Modified-Since(HTTP/1.0)
 
 条件式请求头，等于上一次请求的Last-Modified。服务器比较请求头里的 Last-Modified 时间和服务器上 a.js的上次修改时间：

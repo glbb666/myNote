@@ -55,7 +55,7 @@ function Ajax(options = {}) {
   }
   xhr.timeout = timeout
   xhr.ontimeout = function(e) {
-    xhr.abort()
+    xhr.abort()//终止请求
     console.log(xhr.readyStatus)//0
   }
   if (type === 'GET') {
@@ -155,7 +155,7 @@ axios.all([getUserAccount(), getUserPermissions()])
 
 #### 1.`JSONP`
 ##### 原理
-`ajax`受同源策略的影响，不允许进行跨域请求，而`script`标签的`src`中的链接却可以访问跨域的静态资源，利用这个特性，服务端返回一段调用某个函数的`js`代码，这样实现了跨域。
+`ajax`受同源策略的影响，不允许进行跨域请求。`JSONP`利用`script`标签中的`src`属性可以访问跨域的静态资源的特性，动态插入`script`标签，客户端通过`get`请求，向服务器发送回调函数的名称，同时在`window`对象中设置回调函数。服务端返回一段调用回调函数的`js`代码，把参数放到回调函数中。通过`script`标签加载执行，从而实现跨域。
 
 ##### 过程
 
@@ -266,15 +266,14 @@ xhr.withCredentials = true;
 
 对于非简单请求，**浏览器必须首先使用` OPTIONS `方法发起一个预检请求，从而获知服务端是否允许该跨域请求(同源不会发送`OPTIONS`)。**
 
-**服务器确认允许之后，才发起实际的 HTTP 请求**。在预检请求的返回中，服务器端也可以通知客户端，是否需要携带身份凭证（包括 Cookies 和 HTTP 认证相关数据）。
+**服务器确认允许之后，浏览器会记住，然后再发起实际的 HTTP 请求，且之后每次就都直接请求而不用再询问服务器是否可以跨域**。在预检请求的返回中，服务器端也可以通知客户端，是否需要携带身份凭证（包括 Cookies 和 HTTP 认证相关数据）。
 
 ![2ec957a3-b220-49c5-8fa1-59a82a030e89](images/50205846-accac300-03a4-11e9-8654-2d646d237820.png)
 
 **简单请求就是不会触发CORS预检的请求**，满足以下**所有条件**的才会被视为简单请求，基本上我们日常开发只会关注前面两点
 
 1. 使用`GET、POST、HEAD`其中一种方法
-2. 只使用了
-3. +的安全首部字段，不得人为设置其他首部字段
+2. 只使用了如下的安全首部字段，不得人为设置其他首部字段
    - `Accept`
 
    - `Accept-Language`
@@ -299,7 +298,7 @@ xhr.withCredentials = true;
 3. `XMLHttpRequestUpload` 对象注册了任何事件监听器
 4. 请求中使用了`ReadableStream`对象
 
-##### 完整++请求流程
+##### 完整请求流程
 
 ![img](images/50205881-c409b080-03a4-11e9-8a57-a2a6d0e1d879.png)
 
@@ -315,7 +314,7 @@ xhr.withCredentials = true;
 
 #### 3. 通过window.name跨域
 
-> window对象有个name属性，该属性有个特征：即在一个窗口(window 的生命周期内,窗口载入的所有的页面都是共享一个window.name的，每个页面对window.name都有读写的权限，window.name是持久存在一个窗口载入过的所有页面中的，并不会因新页面的载入而进行重置。
+> 在一个窗口（window） 的生命周期内,窗口载入的所有的页面都是共享一个window.name的，每个页面对window.name都有读写的权限，window.name是持久存在一个窗口载入过的所有页面中的，并不会因新页面的载入而进行重置。
 
 比如：我们在任意一个页面输入
 
@@ -453,7 +452,7 @@ window.onload = function() {
 };
 ```
 
-`postMessage`的使用方法：
+`postMessage`的使用方法：调用目标窗口的`postMessage`方法，第一个参数是消息，第二个参数是域名
 
 - otherWindow.postMessage(message, targetOrigin);
   - otherWindow:指目标窗口，也就是给哪个window发消息，是 window.frames 属性的成员或者由 window.open 方法创建的窗口

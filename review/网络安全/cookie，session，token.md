@@ -112,7 +112,7 @@ document.cookie = "name=xiaoming; age=12 "
 
 #### Token有效期
 
-- 把token存在cookie里，就可以和cookie一样设置有效期
+- 把`token`存在`cookie`里，就可以和`cookie`一样设置有效期
 
 - 登陆成功后服务端给客户端发送一个 `Refresh Token`和`token`。服务端收到客户端请求时发现` token `过期，就反馈给前端，前端使用 `Refresh Token` 申请一个全新` token `继续使用。当然 `Refresh Token `也是有有效期的，但是这个有效期就可以长一点了，比如，以天为单位的时间。
 
