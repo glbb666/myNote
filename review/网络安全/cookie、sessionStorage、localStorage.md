@@ -1,6 +1,6 @@
-# Cookie、sessionStorage、localStorage的异同
 
-[cookies、sessionStorage和localStorage解释及区别](https://www.cnblogs.com/pengc/p/8714475.html)
+## 异同
+
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190909222836947.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2dhbmx1YmFiYTY2Ng==,size_16,color_FFFFFF,t_70)
 
 ### 共同点
@@ -29,6 +29,8 @@
 
 #### 范围
 
+三者都不能跨域
+
 **cookie**：`cookie`也是在所有**同源窗口中都是共享**的，但`cookie`数据有路径（path）的概念，可以限制`cookie`只属于某个路径下
 
 **localStorage**：在所有**同源窗口中都是共享的**。
@@ -54,7 +56,23 @@
 
 有的数据存储在`WebStorage`上，再加上浏览器本身的缓存。获取数据时可以从本地获取会比从服务器端获取快得多，所以速度更快
 
-#### 检测`localStorage`的最大容量
+
+
+#### 无痕模式下
+
+`safari`无痕模式下`cookie`是可用的，`localStorage`存在但是`setItem`时会报错(`chrome`的无痕模式`localStorage`和`cookie`都可用，只不过关闭浏览器之后会清除)
+
+## 应用场景
+
+`cookie`一般用来检测用户登录态
+
+`localStorage`一般用来保存持久信息，也可以用来跨页面传递参数
+
+`sessionStorage`因为同源页面关闭后就失效，所以一般用来保存一些临时数据，防止用户刷新页面丢失数据。
+
+## 一些问题
+
+### 检测`localStorage`的最大容量
 
 检测`localStorage`的剩余容量只要把`localStorage`的最大容量减去`localStorage`的已用容量即可。
 
@@ -92,6 +110,6 @@
  })()
 ```
 
-#### 无痕模式下
+## 参考文章
 
-`safari`无痕模式下`cookie`是可用的，`localStorage`存在但是`setItem`时会报错(`chrome`的无痕模式`localStorage`和`cookie`都可用，只不过关闭浏览器之后会清除)
+[cookies、sessionStorage和localStorage解释及区别](https://www.cnblogs.com/pengc/p/8714475.html)

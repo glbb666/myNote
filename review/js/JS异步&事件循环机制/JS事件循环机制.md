@@ -14,9 +14,9 @@
 - 事件触发线程：用来控制事件循环，当事件的符合触发条件被触发时，该线程会把该事件添加到宏任务队列的队尾，等待`JS`引擎的处理。
 - 定时器触发线程：`setInterval`和`setTimeout`所在线程，对定时器计时并触发定时，计时完毕，会被事件触发线程添加到任务队列的队尾。
 
-🌟注意：`W3C`在`HTML`标准中规定，`setTimeout`中低于`4ms`的时间间隔算为`4ms`。
-
 - 异步`http`请求线程：在`XMLHttpRequest`连接后，通过浏览器新开一个线程请求，在检测到状态变更时，触发状态变更事件，事件触发线程会将事件的回调放入任务队列的队尾。
+
+![1602229056182](images/1602229056182.png)
 
 ## 任务队列
 
@@ -29,6 +29,8 @@
 因为每次`setTimeout`计时到后就会去执行，然后执行一段时间后才会继续`setTimeout`，中间就多了误差(误差多少与代码执行时间有关）
 
 `setInterval`则是每次都精确的隔一段时间推入一个事件，如果当前事件队列中有`setInterval`的回调，不会重复添加。
+
+🌟注意：`W3C`在`HTML`标准中规定，`setTimeout`中低于`4ms`的时间间隔算为`4ms`。
 
 ## 宏任务`macrotask`
 
@@ -67,13 +69,13 @@
 
 ## `Promise`和`async`中的立即执行
 
-我们知道`Promise`中的异步体现在`then`和`catch`中，所以写在`Promise`中的代码是被当做同步任务立即执行的。而在`async/await`中，在出现`await`出现之前，其中的代码也是立即执行的。那么出现了`await`时候发生了什么呢？
+我们知道`Promise`中的异步体现在`then`和`catch`中，所以**`Promise`中的代码是立即执行的**。而在`async/await`中，在出现**`await`出现之前，其中的代码也是立即执行的**。那么出现了`await`时候发生了什么呢？
 
 ## `await`做了什么
 
 从字面意思上看`await`就是等待，`await` 等待的是一个表达式，这个表达式的返回值可以是一个`promise`对象也可以是其他值。
 
-很多人以为`await`会一直等待之后的表达式执行完之后才会继续执行后面的代码，**实际上`await`是一个让出线程的标志。`await`后面的表达式会先执行一遍，将`await`后面的代码加入到`microtask`中，然后就会跳出整个`async`函数来执行后面的代码。**
+很多人以为`await`会一直等待之后的表达式执行完之后才会继续执行后面的代码，实际上`await`是一个让出线程的标志。**`await`后面的表达式会先执行一遍，将`await`后面的代码加入到`microtask`中，然后就会跳出整个`async`函数来执行后面的代码。**
 
 由于因为`async await` 是`generator`的语法糖。所以`await`后面的代码是微任务。所以对于本题中的
 
@@ -92,7 +94,7 @@ async function async1() {
 	console.log('async1 start');
 	Promise.resolve(async2()).then(() =>{
                 console.log('async1 end');
-        })
+    })
 }
 ```
 
@@ -101,29 +103,28 @@ async function async1() {
 ```javascript
 //请写出输出内容
 async function async1() {
-    console.log('async1 start');//2
-    await async2();//3 await后面的表达式会先执行一遍，将await后面的代码加入到microtask中
-    console.log('async1 end');//6
+    console.log('async1 start');
+    await async2();// await后面的表达式会先执行一遍，将await后面的代码加入到microtask中
+    console.log('async1 end');
 }
 async function async2() {
 	console.log('async2');
 }
 
-console.log('script start');  // 1
+console.log('script start'); 
 
 setTimeout(function() {
-    console.log('setTimeout');//8
+    console.log('setTimeout');
 }, 0)
 
 async1();
 
 new Promise(function(resolve) {
-    console.log('promise1');//4
-    resolve();
+    console.log('promise1');
 }).then(function() {
-    console.log('promise2');//7
+    console.log('promise2');
 });
-console.log('script end');//5
+console.log('script end');
 
 /*
 script start
@@ -148,14 +149,15 @@ setTimeout
 2. 然后我们看到首先定义了两个`async`函数，接着往下看，然后遇到了 `console` 语句，直接输出 `script start`。输出之后，script 任务继续往下执行，遇到 `setTimeout`，其作为一个宏任务源，则会先将其任务分发到对应的队列中：
    [![img](images/68747470733a2f2f692e6c6f6c692e6e65742f323031392f30322f30382f356335643639623432353530612e706e67.png)](https://camo.githubusercontent.com/0a6e6cd2cc52d18a0f97ec01659058e830305a45/68747470733a2f2f692e6c6f6c692e6e65742f323031392f30322f30382f356335643639623432353530612e706e67)
 
-3. script 任务继续往下执行，执行了async1()函数，前面讲过async函数中在await之前的代码是立即执行的，所以会立即输出`async1 start`。
-   遇到了await时，会将await后面的表达式执行一遍，所以就紧接着输出`async2`，然后将await后面的代码也就是`console.log('async1 end')`加入到microtask中的Promise队列中，接着跳出async1函数来执行后面的代码。
-   [![img](images/68747470733a2f2f692e6c6f6c692e6e65742f323031392f30322f31382f356336616435383333376165642e706e67.png)](https://camo.githubusercontent.com/93ec5469b0846f0f161641fc718005dbe994d190/68747470733a2f2f692e6c6f6c692e6e65742f323031392f30322f31382f356336616435383333376165642e706e67)
-
-4. script任务继续往下执行，遇到Promise实例。由于Promise中的函数是立即执行的，而后续的 `.then` 则会被分发到 `microtask` 的 `Promise` 队列中去。所以会先输出 `promise1`，然后执行 `resolve`，将 `promise2` 分配到对应队列。
+3. `script` 任务继续往下执行，执行了`async1()`函数，前面讲过`async`函数中在`await`之前的代码是立即执行的，所以会立即输出`async1 start`。
+   遇到了`await`时，会将`await`后面的表达式执行一遍，所以就紧接着输出`async2`，然后将await后面的代码也就是`console.log('async1 end')`加入到`microtask`中的`Promise`队列中，接着跳出`async1`函数来执行后面的代码。
+   
+[![img](images/68747470733a2f2f692e6c6f6c692e6e65742f323031392f30322f31382f356336616435383333376165642e706e67.png)](https://camo.githubusercontent.com/93ec5469b0846f0f161641fc718005dbe994d190/68747470733a2f2f692e6c6f6c692e6e65742f323031392f30322f31382f356336616435383333376165642e706e67)
+   
+4. `script`任务继续往下执行，遇到`Promise`实例。由于`Promise`中的函数是立即执行的，而后续的 `.then` 则会被分发到 `microtask` 的 `Promise` 队列中去。所以会先输出 `promise1`，然后执行 `resolve`，将 `promise2` 分配到对应队列。
    [![img](images/68747470733a2f2f692e6c6f6c692e6e65742f323031392f30322f31382f356336616435383334376135652e706e67.png)](https://camo.githubusercontent.com/6f617a237607ce7a71fabcab61d2952a8b412205/68747470733a2f2f692e6c6f6c692e6e65742f323031392f30322f31382f356336616435383334376135652e706e67)
 
-5. script任务继续往下执行，最后只有一句输出了 `script end`，至此，全局任务就执行完毕了。
+5. `script`任务继续往下执行，最后只有一句输出了 `script end`，至此，全局任务就执行完毕了。
    根据上述，每次执行完一个宏任务之后，会去检查是否存在微任务；如果有，则执行微任务直至清空微任务队列。
    因而在`script`任务执行完毕之后，开始查找清空微任务队列。此时，微任务中， `Promise` 队列有的两个任务`async1 end`和`promise2`，因此按先后顺序输出 `async1 end，promise2`。当所有的微任务执行完毕之后，表示第一轮的循环就结束了。
 
@@ -177,10 +179,10 @@ async function async1() {
 }
 async function async2() {
     new Promise(function(resolve) {
-    console.log('promise1');
-    resolve();
-}).then(function() {
-    console.log('promise2');
+        console.log('promise1');
+        resolve();
+    }).then(function() {
+        console.log('promise2');
     });
 }
 console.log('script start');
@@ -219,33 +221,33 @@ setTimeout
 
 ```javascript
 async function async1() {
-    console.log('async1 start');//2
+    console.log('async1 start');
     await async2();
-    //更改如下：
+    //更改如下： 
     setTimeout(function() {
-        console.log('setTimeout1')//宏3
+        console.log('setTimeout1')
     },0)
 }
 async function async2() {
     //更改如下：
 	setTimeout(function() {
-		console.log('setTimeout2')//宏2
+		console.log('setTimeout2')
 	},0)
 }
-console.log('script start');//1
+console.log('script start');
 
 setTimeout(function() {
-    console.log('setTimeout3');//宏1
+    console.log('setTimeout3');
 }, 0)
 async1();
 
 new Promise(function(resolve) {
-    console.log('promise1');//3
+    console.log('promise1');
     resolve();
 }).then(function() {
-    console.log('promise2');//微1
+    console.log('promise2');
 });
-console.log('script end');//4
+console.log('script end');
 ```
 
 可以先自己看看输出顺序会是什么，下面来公布结果：
@@ -267,38 +269,38 @@ setTimeout1
 
 ```javascript
 async function a1 () {
-    console.log('a1 start')//2
+    console.log('a1 start')
     await a2()
-    console.log('a1 end')//微2
+    console.log('a1 end')
 }
 async function a2 () {
-    console.log('a2')//3
+    console.log('a2')
 }
 
-console.log('script start')//1
+console.log('script start')
 
 setTimeout(() =>{
-    console.log('setTimeout')//宏1
+    console.log('setTimeout')
 }, 0)
 
 Promise.resolve().then(() =>{
-    console.log('promise1')//微1
+    console.log('promise1')
 })
 
 a1()
 
 let promise2 = new Promise((resolve) =>{
     resolve('promise2.then')
-    console.log('promise2')//4
+    console.log('promise2')
 })
 
 promise2.then((res) =>{
-    console.log(res)//微3
+    console.log(res)
     Promise.resolve().then(() =>{
-        console.log('promise3')//微4
+        console.log('promise3')
     })
 })
-console.log('script end')//5
+console.log('script end')
 ```
 
 无非是在微任务那块儿做点文章，前面的内容如果你都看懂了的话这道题一定没问题的，结果如下：
@@ -323,5 +325,5 @@ setTimeout
 - 宏任务：`script`、`setTimeout`、`setTimeInterval`、`I/O`、`postMessage`、`setImmediate(node)`
 - 微任务：`promise.then`、`process.nextTick`、`await`后面的代码
 - `promise`和`async`后的表达式立即执行
-- `await`机制：让出线程，执行关键字后面的表达式，而await后面的代码加入微任务队列。
+- `await`机制：让出线程，执行关键字后面的表达式，而`await`后面的代码加入微任务队列。
 

@@ -81,6 +81,8 @@ function laterOrder(root) {
 
 广度优先用的是队列
 
+- 不分行从上到下打印二叉树
+
 ```js
 function BFS(root) {
   let queue = []
@@ -97,7 +99,90 @@ function BFS(root) {
 }
 ```
 
+- 分行从上到下打印二叉树
+
+思想：用两个值记录本行未打印结点，和下一行将打印结点。当本行未打印结点等于0时。需要进行换行，做法是：把本行未打印结点的值设置为下一行将打印结点的值，把下一行将打印结点的值设为0。
+
+```javascript
+var levelOrder = function(root) {
+    if(root===null){
+        return [];
+    }
+    let queue = [root];
+    let result = [];
+    let count = 1;
+    let nextCount = 0;
+    let row = []
+    while(queue.length){
+        let p = queue.shift();
+        count--;
+        row.push(p.val);
+        if(p.left){
+            queue.push(p.left);
+            nextCount++;
+        }
+        if(p.right){
+            queue.push(p.right);
+            nextCount++;
+        }
+        if(count===0){
+            result.push(row);
+            row = [];
+            count = nextCount;
+            nextCount = 0;
+        }
+    }
+    return result
+};
+```
+
+- 之字形打印二叉树
+
+思路：用一个odd值标志奇数行和偶数行，如果是奇数行就用`push`推入值，如果是偶数行，就用`unshift`推入值，奇数行和偶数行在换行的时候进行切换。
+
+```javascript
+var levelOrder = function(root) {
+    if(root===null){
+        return [];
+    }
+    let queue = [root];
+    let result = [];
+    let row = [];
+    let count = 1;
+    let nextCount = 0;
+    let odd = true;
+    while(queue.length){
+        let p = queue.shift();
+        count--;
+        if(odd){
+            row.push(p.val)
+        }else{
+            row.unshift(p.val)
+        }
+        if(p.left){
+            queue.push(p.left);
+            nextCount++;
+        }
+        if(p.right){
+            queue.push(p.right);
+            nextCount++;
+        }
+        if(count===0){
+            result.push(row)
+            row = []
+            count = nextCount
+            nextCount = 0
+            odd = !odd;
+        }
+    }
+    return result;
+};
+```
+
+
+
 ## 排序
+
 ### 三种简单排序（冒泡，插入，选择）
 
 - 时间复杂度：`O(n^2)`
@@ -168,6 +253,8 @@ function select(arr){
 - 时间复杂度，`O(n^2)`,平均`O(nlogn)`，大多数情况下小于平均值
 - 空间复杂度：`O(logn)`
 - 稳定性：不稳定
+
+思路：选定一个目标值，比目标值小的放在目标值的左边，比目标值大的放在目标值的右边。
 
 ```javascript
 function quickSort(arr,start,end){
@@ -430,28 +517,6 @@ var insertionSortList = function(head) {
 ### 两数之和
 
 遍历数组，把数组的值当作`hash`的键，把数组的下标当作`hash`的值，边存之前的值，边计算当前数的补，只要`hash`表中存在当前数的补，就返回数组的下标即可。
-
-### 两个栈实现队列
-
-一个栈（`stack1`）负责入队，一个栈(`stack2`)负责出队
-
-```js
-const stack1 = []
-const stack2 = []
-function push(node) {
-  stack1.push(node)
-}
-function pop() {
-  while (stack2.length === 0) {
-    //第二个里面没有东西时才能保证顺序
-    while (stack1.lenght > 0) {
-      //第一个栈中有东西可出栈
-      stack2.push(stack1.pop())
-    }
-  }
-  return stack2.pop() || null
-}
-```
 
 ### 搜索二维矩阵
 

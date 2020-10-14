@@ -67,7 +67,7 @@ Fiber是新的调和器，每次有新的更新任务发生的时候，调度器
 
 通过这个优先级我们可以获取一个该更新任务必须执行的截止时间，优先级越高那么截止时间就越近，反之亦然。这个截止时间是用来判断该任务是否已经过期，如果过期的话就会马上执行该任务。
 
-当开始执行更新任务时，如果有新的更新任务进来，那么调度器就会按照两者的优先级大小来进行决策会判断两个任务的优先级高低。假如新任务优先级高，那么打断旧的任务，重新开始，否则继续执行任务。
+当开始执行更新任务时，如果有新的更新任务进 来，那么调度器就会按照两者的优先级大小来进行决策会判断两个任务的优先级高低。假如新任务优先级高，那么打断旧的任务，重新开始，否则继续执行任务。
 
 #### fiber&&FiberRoot&RootFiber
 
@@ -79,26 +79,26 @@ Fiber是新的调和器，每次有新的更新任务发生的时候，调度器
 
 - FiberRoot记录整个React应用 更新过程中的各种信息
 
-1. **RootFiber**
+2. **RootFiber**
 
-RootFiber的本质是一个fiber，但是它是一个特殊的fiber，我们可以把它看成根fiber
+`RootFiber`的本质是一个`fiber`，但是它是一个特殊的`fiber`，我们可以把它看成根`fiber`
 
-- 它和FiberRoot的关系为
+- 它和`FiberRoot`的关系为
 
 ```
 FiberRoot.current = RootFiber
 RootFiber.stateNode = FiberRoot
 ```
 
-- 它的return值为null（没有父节点）
+- 它的`return`值为`null`（没有父节点）
 
-1. **fiber**
+3. **fiber**
 
-- fiber对象与ReactElement一一对应，如下图，App组件
+- `fiber`对象与`ReactElement`一一对应，如下图，`App`组件
 
 ![img](images/(null)-20200902104932340.(null))
 
-- fiber是一种新型的数据结构，记录类组件的各种状态（state和props）。**this**上的**state**和**props**是根据**Fiber**对象的**state**、**props**更新的
+- `fiber`是一种新型的数据结构，记录类组件的各种状态（`state`和`props`）。**this**上的**state**和**props**是根据**Fiber**对象的**state**、**props**更新的
 
 - fiber是改进版本的虚拟DOM(树形->链表）。每个ReactElement通过**props.children**与其他ReactElement连结起来
 
@@ -106,9 +106,9 @@ RootFiber.stateNode = FiberRoot
 
 ![img](images/(null)-20200902103251487.(null))
 
-- ReactElement只会把子节点（props.children）的第一个子节点当做child节点，其余的子节点（也就是第一个子节点的兄弟节点）都是从第一个子节点开始，依次**单向连接**至后一个兄弟节点
+- `ReactElement`只会把子节点（`props.children`）的第一个子节点当做child节点，其余的子节点（也就是第一个子节点的兄弟节点）都是从第一个子节点开始，依次**单向连接**至后一个兄弟节点
 
-- 每个子节点都会指向父节点（红箭头），也就是fiber对象的return属性
+- 每个子节点都会指向父节点（红箭头），也就是`fiber`对象的`return`属性
 
 **遍历过程**
 
@@ -161,7 +161,7 @@ function FiberRootNode(containerInfo, tag, hydrate) {
 
 #### fiber对象的结构
 
-以下是fiber对象中一些我认为比较重要的属性
+以下是`fiber`对象中一些我认为比较重要的属性
 
 ```javascript
 export type Fiber = {
@@ -199,13 +199,12 @@ export type Fiber = {
 
 #### expirationTime
 
-作用：当时间到了ExpirationTime的时候，如果某个update还未执行的话，React将会强制执行该update
+作用：当时间到了`expirationTime`的时候，如果某个`update`还未执行的话，`React`将会强制执行该`update`
 
-- expirationTime越大优先级越高
+- `expirationTime`越大优先级越高
 
-- 高优先级update的expirationTime**间隔**是10ms，低优先级update的expirationTime间隔是25ms
-
-- React让两个相近的update得到相同的expirationTime，目的就是让这两个update自动合并成一个Update，从而达到批量更新的目的
+- 高优先级`update`的`expirationTime`**间隔**是10ms，低优先级`update`的`expirationTime`间隔是25ms。间隔的意思是：在间隔事件内提交的两个`update`计算出的`expirationTime`的值是一样的
+- `React`让两个相近的`update`得到相同的`expirationTime`，目的就是让这两个`update`自动合并成一个`update`，从而达到批量更新的目的
 
 ### 源码解析
 
@@ -514,13 +513,13 @@ function markUpdateTimeFromFiberToRoot(fiber, expirationTime) {
  //如果fiber对象的过期时间小于 expirationTime，则更新fiber对象的过期时间
  //也就是说，当前fiber的优先级是小于expirationTime的优先级的，现在要调高fiber的优先级
  if (fiber.expirationTime < expirationTime) {
-  fiber.expirationTime = expirationTime;
+ 	fiber.expirationTime = expirationTime;
  }
  //在enqueueUpdate()中有讲到，与fiber.current是映射关系
  let alternate = fiber.alternate;
  //同上
  if (alternate !== null && alternate.expirationTime < expirationTime) {
-  alternate.expirationTime = expirationTime;
+ 	alternate.expirationTime = expirationTime;
  }
  // Walk the parent path to the root and update the child expiration time.
  //向上遍历父节点，直到root节点，在遍历的过程中更新子节点的expirationTime
@@ -643,13 +642,13 @@ function scheduleCallbackForRoot(
 
 作用：比较新的回调的过期时间，和root的callback的过期时间。如果新的回调的过期时间更大，说明优先级更高，需要把root的callback取消掉。接着进行任务的调度
 
-- 同步任务：调用scheduleSyncCallback，在临时队列中进行调度
+- 同步任务：调用`scheduleSyncCallback`，在临时队列中进行调度
 
-- 异步任务：调用scheduleCallback，更新调度队列的状态。
+- 异步任务：调用`scheduleCallback`，更新调度队列的状态。
 
 ###### 2.1 中断正在执行的任务
 
-cancelCallback的作用为中断正在执行的任务。
+`cancelCallback`的作用为中断正在执行的任务。
 
 ```javascript
 export function cancelCallback(callbackNode: mixed) {
