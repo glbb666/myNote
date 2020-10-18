@@ -453,8 +453,43 @@ var removeNthFromEnd = function(head, k) {
 
 ### 判断是不是环形链表
 
-- hash表，不存在就把结点保存，存在说明对同一个结点存在两次引用，存在环形链表
+- `hash`表，不存在就把结点保存，存在说明对同一个结点存在两次引用，存在环形链表
+
+```javascript
+var hasCycle = function(head) {
+    var set = new Set();
+    var p = head;
+    while(p){
+        if(set.has(p)){
+            return true
+        }else{
+            set.add(p)
+            p = p.next;
+        }
+    }
+    return false;
+};
+```
+
 - 快慢指针，如果是环形，总是会相遇的
+
+```javascript
+var hasCycle = function(head) {
+    if(!head||!head.next){
+        return false;
+    }
+    let slow = head;
+    let quick = head.next;
+    while(quick&&quick.next){
+        if(quick===slow){
+            return true;
+        }
+        slow = slow.next;
+        quick = quick.next.next;
+    }
+    return false;
+};
+```
 
 ### 链表的中间结点
 

@@ -73,7 +73,7 @@ this.setState((state, props) => ({
 
 **基本使用**
 
-`getDerivedStateFromProps`是一个静态函数，不能通过`this`访问到`class`的属性，而是应该通过参数提供的nextProps以及prevState来进行判断，根据新传入的props来映射到state。
+`getDerivedStateFromProps`是一个静态函数，不能通过`this`访问到`class`的属性，而是应该通过参数提供的`nextProps`以及`prevState`来进行判断，根据新传入的`props`来映射到`state`。
 
 **需要注意的是：**
 

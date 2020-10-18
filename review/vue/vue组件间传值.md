@@ -61,11 +61,12 @@ export default {
   </header>
 </template>
 ```
-```javascript
+```vue
 // 父组件
 <template>
   <div id="app">
-    <app-header v-on:titleChanged="title = $event" ></app-header>//与子组件titleChanged自定义事件保持一致
+    <app-header v-on:titleChanged="title = $event" ></app-header>
+	//与子组件titleChanged自定义事件保持一致
     <h2>{{title}}</h2>
   </div>
 </template>
