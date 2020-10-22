@@ -110,7 +110,7 @@ p1.then(function(value) {
 const p = Promise.all(p1,p2,p3)
 ```
 
-- 接受一个数组，当数组所有promise实例都完成后，才会解决返回的promise
+- 接受一个可迭代对象，当对象所有promise实例都完成后，才会解决返回的promise
   - 当数组所有`promise`实例都变为`resolve`，p才会变为`resolve`
   - 当数组中有一个为`reject`，p会变为`reject`
 - 返回一个`promise`

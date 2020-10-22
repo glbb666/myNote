@@ -110,6 +110,3 @@ observe(data) {
         this.$data = new Proxy(data, handler);
       }
 ```
-
-
-

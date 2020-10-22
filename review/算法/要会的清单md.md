@@ -59,6 +59,8 @@ function midOrder(root) {
 
 ### 二叉树后序遍历：左右根
 
+可以用`unshift`把结果推进`result`，从左右根变成，根右左。
+
 ```js
 function laterOrder(root) {
   let stack = []
@@ -179,7 +181,35 @@ var levelOrder = function(root) {
 };
 ```
 
+### 二叉树的创建
 
+#### 递归
+
+根据前序遍历和中序遍历的结果创建二叉树
+
+思想：前序遍历的顺序是，根左右。中序遍历的顺序是：左根右。
+
+因此前序遍历的第一个结点是根节点，中序遍历中根节点两边是左子树和右子树。
+
+而我们又可以根据根节点的序列号，找到前序遍历中的左子树（根节点之后的index个结点）和右子树（左子树后的结点）。
+
+```javascript
+var buildTree = function(preorder, inorder) {
+    if(preorder.length===0){
+        return null;
+    }
+    let root = preorder.shift();
+    let node = new TreeNode(root);
+    let rootIndex = inorder.indexOf(root);
+    let preLeft = preorder.slice(0,rootIndex);
+    let preRight = preorder.slice(rootIndex);
+    let inLeft = inorder.slice(0,rootIndex);
+    let inRight = inorder.slice(rootIndex+1);
+    node.left = buildTree(preLeft,inLeft);
+    node.right = buildTree(preRight,inRight);
+    return node;
+};
+```
 
 ## 排序
 

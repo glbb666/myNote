@@ -33,7 +33,7 @@
 - 我们还可以用`timeout`设置超时，并且在`ontimeout`中调用`abort`取消请求。用`onerror`处理请求错误的情况。
 - 接着我们调用`send`方法，在`send`方法执行之前，`AJAX`都是同步的。`send`方法执行过后，浏览器就会为`http`请求创建一个`http`请求线程，这个请求独立于`js`引擎线程，是异步的，`js`引擎并不会等待这个异步请求的结果，而是会继续执行下去。当浏览器收到服务器的响应，浏览器事件触发线程就会捕获到`ajax`的回调事件`onreadyStatechange`或者是`onerror`事件，浏览器事件触发线程会把回调事件添加到任务队列末尾，直到`js`引擎线程空闲，任务队列的任务才会被添加到执行栈中依次执行。
 
-#### 创建步骤
+#### 原生ajax发起请求
 
 ```javascript
 function getParams(data) {
@@ -75,6 +75,54 @@ function Ajax(options = {}) {
   }else{
       return;
   }
+}
+```
+
+#### 用`promise`封装`ajax`
+
+```javascript
+function getParams(data) {
+  let arr = []
+  for (let i in data) {
+    arr.push(encodeURIComponent(i) + '=' + encodeURIComponent(data[i]))
+  }
+  return arr.join('&')
+}
+function Ajax(options = {}) {
+  let {type='GET',async=true,timeout=8000,data,url} = options;
+  return new Promise((resolve,reject)=>{
+      const xhr = new XMLHttpRequest();
+	  xhr.onreadystatechange = function(e) {
+        if (xhr.readyState === 4) {
+          if ((xhr.status >= 200 && xhr.status < 300) || xhr.status == 304) {
+            resolve(xhr.responseText)
+          }
+        }
+      }
+      // 超时处理
+      xhr.timeout = timeout
+      xhr.ontimeout = function(e) {
+        xhr.abort()//终止请求
+        reject('timeout')
+      }
+      if (type === 'GET') {
+        xhr.open(
+          'GET',
+          url + '?' + getParams(data),
+          async
+        )
+        xhr.send(null)
+      } else if (type === 'POST') {
+        xhr.open('POST', url, async)
+        xhr.setRequestHeader(
+          'Content-Type',
+          'application/x-www-form-urlencoded'
+        )
+        xhr.send(data)
+      }else{
+          reject('invalid method')
+      }
+  })
 }
 ```
 
@@ -173,7 +221,7 @@ axios.all([getUserAccount(), getUserPermissions()])
   - 只支持`GET`请求，因为`script`标签只能使用`get`
   - 没有超时处理
   - 需要和后端协商
-##### 实现一个`JSONP`
+##### 实现一个`JSONP`(`promise`)
 
 - 把传入对象转换为`url`
 - 给回调函数名设置随机标识，并且拼接到`url`中
@@ -194,34 +242,37 @@ function getParams(data) {
   return arr.join('&')
 }
 function jsonp(options){
-    let {data,time,url,success,error} = options
+    let {data,time,url,timeout} = options
+    let timer = null;
     //基本类型
     url=url+'?'+getParams(data)+'&'
     var callBackName =('_jsonp'+Math.random()).replace('.','')
     url+='callback='+callBackName;
     var scriptEle = document.createElement('script');
     scriptEle.src = url;
-    window[callBackName] = function(data){
-       	//这里是对数据进行处理
-        success()
-        window.clearTimeout(timer);//清除定时器
-        window[callBackName] = null;//把回调函数解除引用
-        document.head.removeChild(scriptEle);
-    }
-    //出错处理
-    scriptEle.onerror = function(){
-       error();
-       window.clearTimeout(timer);//清除定时器
-       window[callBackName] = null;//把回调函数解除引用
-       document.head.removeChild(scriptEle);
-    }
-    //超时处理
-    var timer = window.setTimeout(function(){
-        error();
-		window[callBackName] = null;//把回调函数解除引用
-        document.head.removeChild(scriptEle);
-    },time)
-    document.head.appendChild(scriptEle);
+    return new Promise((resolve,reject)=>{
+            //这里是对数据进行处理
+            window[callBackName] = function(data){
+                resolve(data)
+                window.clearTimeout(timer);//清除定时器
+                window[callBackName] = null;//把回调函数解除引用
+                document.head.removeChild(scriptEle);
+            }
+            //超时处理
+        	timer = setTimeout(()=>{
+                reject('timeout');
+                window[callBackName] = null;//把回调函数解除引用
+                document.head.removeChild(scriptEle);
+            },timeout);
+            //出错处理
+            scriptEle.onerror = function(){
+               reject('scriptEle error');
+               window.clearTimeout(timer);//清除定时器
+               window[callBackName] = null;//把回调函数解除引用
+               document.head.removeChild(scriptEle);
+            }
+            document.head.appendChild(scriptEle);
+    })
 }
 jsonp({name:'dd'},5000,url)
 </script>

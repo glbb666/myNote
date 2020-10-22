@@ -55,7 +55,8 @@ Function.prototype.call2 = function(context){
 Function.prototype.apply2 = function(context,...args){
 	context = context||window;
 	context.fn = this;
-	var result = context.fn(...args);
+    //下面这一步是为了避免context的属性被引用导致context无法释放。
+	let result = context.fn(...args);
 	delete context.fn;
 	return result;
 }

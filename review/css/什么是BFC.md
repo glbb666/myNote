@@ -11,7 +11,7 @@
 - **弹性元素**（`display`为 `flex` 或 `inline-flex`元素的直接子元素）
 - 非块盒的块容器`display:inline-block / table-cells / table-caption.`
 - 匿名表格单元格元素（元素的 `display`为 `table`、`table-row`、` table-row-group`、`table-header-group`、`table-footer-group`（分别是`table`、`row`、`tbody`、`thead`、`tfoot`的默认属性）或 `inline-table`）
-- `display 的值为 flow-root的元素(`该元素会生成一个块级容器框，并且使用的是流布局。为里面内容创建新的块级格式化上下文。`)
+- `display` 的值为 `flow-root`的元素(`该元素会生成一个块级容器框，并且使用的是流布局。为里面内容创建新的块级格式化上下文。`)
 - 网格元素（`display`为` grid` 或` inline-grid` 元素的直接子元素）
 - 多列容器（元素的 `column-count` 或 `column-width` 不为 `auto`，包括 `column-count`为1）
 
@@ -46,13 +46,11 @@
 
 ### 应用
 
-- 解决父元素高度塌陷
-
-- 清除浮动
+- 清除浮动（解决浮动元素父级高度塌陷)
 
 - 分属于不同的`BFC`时可以解决`margin`塌陷
 
-- 自适应两栏布局（1.元素的左外边距与包含块的左边缘相接触2.`BFC`的区域不会与浮动元素重叠3.块级元素的`width`和`height`默认的值是`auto`，他们具有流体的特性，可以自适应撑满父级的宽度。）
+- 自适应两栏布局（1.元素的左外边距与包含块的左边缘相接触2.`BFC`的区域不会与浮动元素重叠3.块级元素的`width`具有流体的特性，可以自适应撑满父级的宽度。）
 
   ```html
   <style>

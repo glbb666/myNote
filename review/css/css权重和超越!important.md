@@ -32,3 +32,39 @@
 5. `CSS`否定伪类，`:not(x)`可以选择除某个元素之外的所有元素。
    `：not`否定伪类在优先级计算中不参加计算，但是，计算选择器数量时会把`：not `当做普通选择器进行计数.
 
+## 题目
+
+1. 说出<p>的颜色
+
+   ```html
+   <style>
+           .b{
+               color: blue;
+           }
+           .a{
+               color: red;
+           }
+   </style>
+   <body>
+       <p class="a b">1232</p>
+   </body>
+   ```
+
+   p为红色
+
+   ```html
+   <style>
+           .a{
+               color: blue;
+           }
+           .b{
+               color: red;
+           }       
+       </style>
+   </head>
+   <body>
+       <p class="b a">1232</p>
+   </body>
+   ```
+
+   p依然为红色，因为在style中，.a和.b的权重相同，所以后面的会覆盖掉前面的。和在`html`中使用`a`和`b`的顺序无关。
