@@ -2,51 +2,15 @@
 
 `call()方法在指定一个this和若干个参数的情况下调用某个函数或方法，传递给call的参数必须依次列举出来`
 
-1.首先，让要执行的函数变成属于对象的方法（改变this指向）
-
-2.然后把后续的参数传入对象的方法中
-
-3.让方法执行
-
-4.如果context是null或者undefined返回window对象
-
-5.接受方法执行的返回值
-
-6.删除对象的方法
-
-7.返回方法执行的返回值
-
-我的es6实现
-
 ```js
 Function.prototype.call2 = function(context,...args){
 	context =context||window;
 	context.fn = this;
-	var result =context.fn(...args）;
+	let result =context.fn(...args）;
 	delete context.fn;
 	return result;
 }
 ```
-讶羽的es5实现
-```js
-Function.prototype.call2 = function(context){
-    context = context||window;
-    context.fn = this;
-    var args = [];
-    for(let i = 1;len=arguments.length,i<len;i++){
-        args.push('arguments['+i+']');
-    }
-    //这步执行完之后args = ['arguments[1]','arguments[2]'...]这样的一个元素为字符串的数组
-    var result = eval('context.fn('+args+')');
-    //因为eval内部传入实参应该传'"kevin"'，不然会被当作变量
-    //这里的args会自动调用toString()方法
-    delete context.fn;
-    return result;
-}
-```
-
-> 这个代码有一点没覆盖，就是当值为原始值（数字，字符串，布尔值）的 this 会指向该原始值的自动包装对象。
-
 # apply的模拟实现
 
 `apply和call唯一的区别就是apply接受的第二个参数为数组或者是类数组对象`

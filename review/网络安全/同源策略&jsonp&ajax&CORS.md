@@ -289,7 +289,7 @@ jsonp({name:'dd'},5000,url)
 ```js
 server.all('*',function(req,res,next){
     
-    //其中`*` 表示通配, 所有的域都能访问此资源,为了跨站发送cookie等验证信息， `Access-Control-Allow-Origin` 字段将不允许设置为`*`, 它需要明确指定与请求网页一致的域名
+    //其中`*` 表示通配, 所有的域都能访问此资源,
     res.header("Access-Control-Allow-Origin",'*');
     //只允许B站访问
     res.header("Access-Control-Allow-Origin",<B-DOMAIN>)
@@ -307,11 +307,20 @@ server.all('*',function(req,res,next){
 })
 ```
 
+##### 前端携带`cookie`
+
+后端需要如此设置
+
+-  `Access-Control-Allow-Origin` 字段将不允许设置为`*`, 需要明确指定与请求网页一致的域名
+- `res.header('Access-Control-Allow-Credentials', true);`
+
 同时，前端需要做如下显式设置才能真正发送`cookie`
 
-```javascript
+```
 xhr.withCredentials = true;
 ```
+
+
 
 ##### `简单请求`和`预检请求（preflighted requests）`
 
@@ -456,7 +465,7 @@ iframe.onload = function() {
 
 #### 5. 通过location.hash跨域
 
-> 因为父窗口和iframe可以对对方进行URL读写，URL有一部分被称为hash，就是#号及其后面的字符，它一般用于浏览器锚点定位，应该说HTTP请求过程中不会携带hash，所以这部分的修改不会产生HTTP请求，但是会产生浏览器历史记录。此方法的**原理就是改变URL的hash部分来进行双向通信**。每个window通过改变其他 window的location来发送消息（由于两个页面不在同一个域下IE、Chrome不允许修改parent.location.hash的值，所以要借助于父窗口域名下的一个代理iframe），并通过监听自己的URL的变化来接收消息。这个方式的通信会造成一些不必要的浏览器历史记录，而且有些浏览器不支持`onhashchange`事件，需要轮询来获知URL的改变，最后，这样做也存在缺点，诸如数据直接暴露在了`url`中，数据容量和类型都有限等。下面举例说明：
+> 因为父窗口和iframe可以**对对方进行URL读写**，URL有一部分被称为hash，就是#号及其后面的字符，它一般用于浏览器锚点定位，应该说HTTP请求过程中不会携带hash，所以这部分的修改不会产生HTTP请求，但是会产生浏览器历史记录。此方法的**原理就是改变URL的hash部分来进行双向通信**。每个window通过改变其他 window的location来发送消息（由于两个页面不在同一个域下IE、Chrome不允许修改parent.location.hash的值，所以要借助于父窗口域名下的一个代理iframe），并通过监听自己的URL的变化来接收消息。这个方式的通信会造成一些不必要的浏览器历史记录，而且有些浏览器不支持`onhashchange`事件，需要轮询来获知URL的改变，最后，这样做也存在缺点，诸如数据直接暴露在了`url`中，数据容量和类型都有限等。下面举例说明：
 
 假如父页面是baidu.com/a.html,iframe嵌入的页面为google.com/b.html（此处省略了域名等url属性），要实现此两个页面间的通信可以通过以下方法。
 

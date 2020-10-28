@@ -76,7 +76,7 @@ Hook 是什么？ Hook 是一个特殊的函数，它可以让你**“钩入” 
 
   useEffect(() => {
       document.title = `You clicked ${count} times`;
- 	});
+  });
 
 ```
 
@@ -151,7 +151,7 @@ Hook 是什么？ Hook 是一个特殊的函数，它可以让你**“钩入” 
   }); 
 ```
 
-##### 场景五： 每次渲染后，更新document.title,同时更新订阅
+##### 场景五： 每次渲染后，更新`document.title`，同时更新订阅
 
 ```javascript
  componentDidMount() {
@@ -183,7 +183,8 @@ Hook 是什么？ Hook 是一个特殊的函数，它可以让你**“钩入” 
     );
   }
 	||
-	useEffect(() => {
+        
+  useEffect(() => {
     document.title = `You clicked ${count} times`;
   });
 
