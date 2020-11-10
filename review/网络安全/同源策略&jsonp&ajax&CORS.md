@@ -158,7 +158,7 @@ function Ajax(options = {}) {
 
 #### 如何发出一个有序的`AJAX`
 
-回调函数，`Promise.then`,`async`
+回调函数，`Promise.then`，`async`
 
 #### `ajax`和`jquery`, `Fecth`,`Axios`比有什么区别
 
@@ -223,14 +223,6 @@ axios.all([getUserAccount(), getUserPermissions()])
   - 需要和后端协商
 ##### 实现一个`JSONP`(`promise`)
 
-- 把传入对象转换为`url`
-- 给回调函数名设置随机标识，并且拼接到`url`中
-- 动态创建`script`标签并把`url`赋值给`src`
-- 挂载回调函数
-- 出错处理
-- 超时处理
-- 把`script`标签插入到页面
-
 ```javascript
 <script type="text/javascript">
 var url = 'http://localhost:8080/';
@@ -289,7 +281,7 @@ jsonp({name:'dd'},5000,url)
 ```js
 server.all('*',function(req,res,next){
     
-    //其中`*` 表示通配, 所有的域都能访问此资源,
+    //其中`*` 表示通配, 所有的域都能访问此资源
     res.header("Access-Control-Allow-Origin",'*');
     //只允许B站访问
     res.header("Access-Control-Allow-Origin",<B-DOMAIN>)
@@ -311,7 +303,7 @@ server.all('*',function(req,res,next){
 
 后端需要如此设置
 
--  `Access-Control-Allow-Origin` 字段将不允许设置为`*`, 需要明确指定与请求网页一致的域名
+-  `Access-Control-Allow-Origin` 字段将不允许设置为`*`，需要明确指定与请求网页一致的域名
 - `res.header('Access-Control-Allow-Credentials', true);`
 
 同时，前端需要做如下显式设置才能真正发送`cookie`
@@ -319,8 +311,6 @@ server.all('*',function(req,res,next){
 ```
 xhr.withCredentials = true;
 ```
-
-
 
 ##### `简单请求`和`预检请求（preflighted requests）`
 

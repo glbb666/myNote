@@ -138,7 +138,18 @@ HTTP状态码共分为5种类型：
 - 二进制传输
   HTTP/2在 应用层(HTTP/2)和传输层(TCP or UDP)之间增加一个二进制分帧层。改进传输性能，实现低延迟和高吞吐量。之前数据只能通过文本形式传输，现在可以把数据进行分割，用二进制进行编码。
    ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190910222230867.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2dhbmx1YmFiYTY2Ng==,size_16,color_FFFFFF,t_70)
-#### HTTP 协议的特点
+##  总结：HTTP从1.0->1.1->2.0
+
+- 连接上：短连接->长连接->多路复用
+- 请求发送：发送整个请求->只发首部->首部压缩
+- host：无->有
+
+以下是2.0新增
+
+- 服务器推送
+- 二进制传输
+
+## HTTP 协议的特点
 
 - 无连接
   - 限制每次连接只处理一个请求

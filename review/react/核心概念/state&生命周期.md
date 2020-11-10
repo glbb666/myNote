@@ -53,7 +53,7 @@ this.setState((state, props) => ({
 
 `constructor`=>`getDerivedStateFromProps`=>`render`=>`React更新DOM和refs`=>`componentDidMount`
 
-- 更新过程
+- 更新过程(当组件的`props`或`state`改变时会触发更新)
 
 `getDerivedStateFromProps`=>`shouldComponentUpdate`=>`render`=>`getSnapshotBeforeUpdate`=>`React更新DOM和refs`=>`componentDidUpdate`
 
@@ -61,15 +61,65 @@ this.setState((state, props) => ({
 
 - 卸载过程
 
-`componentDidUnmount`
+`componentWillUnmount`
 
-### 四、 React新增加的生命周期
+- 错误处理
+
+当渲染过程，声明周期，或子组件的构造函数中抛出错误时，会调用如下方法
+
+- `getDerivedStateFromError`
+- `componentDidCatch`
+
+### 四、常用的生命周期方法
+
+##### `render`
+
+`render()` 方法是 class 组件中唯一必须实现的方法。
+
+当 `render` 被调用时，它会检查 `this.props` 和 `this.state` 的变化并返回以下类型之一：
+
+- **React 元素**。通常通过 `JSX` 创建。例如，`<div />` 会被 React 渲染为 DOM 节点，`<MyComponent />` 会被 React 渲染为自定义组件，无论是 `<div />` 还是 `<MyComponent />` 均为 React 元素。
+- **数组或 fragments**。 使得 render 方法可以返回多个元素。欲了解更多详细信息，请参阅 [fragments](https://zh-hans.reactjs.org/docs/fragments.html) 文档。
+- **Portals**。可以渲染子节点到不同的 DOM 子树中。欲了解更多详细信息，请参阅有关 [portals](https://zh-hans.reactjs.org/docs/portals.html) 的文档
+- **字符串或数值类型**。它们在 DOM 中会被渲染为文本节点
+- **布尔类型或 null**。什么都不渲染。（主要用于支持返回 `test && <Child />` 的模式，其中 test 为布尔类型。)
+
+##### `constructor()`
+
+**如果不初始化 state 或不进行方法绑定，则不需要为 React 组件实现构造函数。**
+
+在 React 组件挂载之前，会调用它的构造函数。在为 `React.Component` 子类实现构造函数时，应在其他语句之前前调用 `super(props)`。否则，`this.props` 在构造函数中可能会出现未定义的 `bug`。
+
+在 `constructor()` 函数中**不要调用 `setState()` 方法**。如果你的组件需要使用内部 state，请直接在构造函数中为 **this.state 赋值初始 state**
+
+##### `componentDidMount()`
+
+`componentDidMount()` 会在组件挂载后（插入 DOM 树中）立即调用。依赖于 DOM 节点的初始化应该放在这里。如需通过网络请求获取数据，此处是实例化请求的好地方。
+
+你可以在 `componentDidMount()` 里**直接调用 setState()**。它将触发额外渲染，但此渲染会发生在浏览器更新屏幕之前。如此保证了即使在 `render()` 两次调用的情况下，用户也不会看到中间状态。请谨慎使用该模式，因为它会导致性能问题。通常，你应该在 `constructor()` 中初始化 state。如果你的渲染依赖于 DOM 节点的大小或位置，比如实现 modals 和 tooltips 等情况下，你可以使用此方式处理
+
+##### `componentDidUpdate(prevProps, prevState, snapshot)`
+
+`componentDidUpdate()` 会在更新后会被立即调用。首次渲染不会执行此方法。
+如果组件实现了 `getSnapshotBeforeUpdate()` 生命周期（不常用），则它的返回值将作为 `componentDidUpdate()` 的第三个参数 “snapshot” 参数传递。否则此参数将为 undefined。
+
+##### `componentWillUnmount()`
+
+`componentWillUnmount()` 会在组件卸载及销毁之前直接调用。在此方法中执行必要的清理操作，例如，清除 timer，取消网络请求或清除在 `componentDidMount()` 中创建的订阅等。
+
+`componentWillUnmount()` 中**不应调用 setState()**，因为该组件将永远不会重新渲染。组件实例卸载后，将永远不会再挂载它。  
+
+### 五、不常用的生命周期方法
+
+
+
+### 六、 React新增加的生命周期
 
 ##### `getDerivedStateFromProps`
 
 **含义**
 
-`getDerivedStateFromProps`生命周期的意思就是从`props`中获取`state`，其功能实际上就是将传入的`props`映射到`state`上面。这个函数会**在每次`re-rendering`之前被调用**，意味着**即使你的`props`没有任何变化，而是父`state`发生了变化，导致子组件发生了`re-render`，这个生命周期函数依然会被调用**。
+`getDerivedStateFromProps`生命周期的意思就是从`props`中获取`state`，其功能实际上就是将传入的`props`映射到`state`上面。这个函数会**在每次`re-rendering`之前被调用**，意味着即使你的`props`没有任何变化，而是父`state`发生了变化，导致子组件发生了`re-render`，这个生命周期函数依然会被调用。
 
 **基本使用**
 
@@ -77,7 +127,7 @@ this.setState((state, props) => ({
 
 **需要注意的是：**
 
-- 如果使用了这个方法并且返回值不是null，此时的state的值就有两个来源(props的更新,this.setState)
+- 如果使用了这个方法并且返回值不是null，此时的`state`的值就有两个来源(`props`的更新，`this.setState`)
 - 如果返回了一个对象，它是以追加的方式，追加到当前的state对象上面的，如果有重名的就覆盖掉。
 
 ![image-20200614154420020](images/image-20200614154420020.png)
