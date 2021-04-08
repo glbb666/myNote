@@ -1,0 +1,30 @@
+快手一面
+1.hook，说了useState和useEffect方法
+2.问了setstate，问我如果多重组件嵌套，会怎么渲染，生命周期函数执行顺序
+3.react组件传值有哪些，context怎么用
+4.说一下promise，说一下promise.all，实现一个promise. all
+5.如何实现一个右下角的按钮
+6.如何设置点击按钮到达页面顶部
+7.如何实现弹窗
+8.this的指向，apply
+9.pureComponent和fragment
+10.高阶组件是什么
+11.实现扁平化去重
+快手二面
+1. 用数组实现一个promise.then的链式调用，用reduce实现了
+2. 说一下除了jsonp的跨域，cors，window.name，document.domain，postMessage
+3. 一个搜索框，匹配的列的字高亮，正则
+4. 做单行文本截断，如果被截断，...hover显示内容，否则不显示	
+	设置text-ellipsis和overflow:hidden
+    如果内部是用div盒子包裹的话
+	方法一：判断传入的字符串和显示的innerHTML是否全等，如果不全等则发生了截断
+	方法二：比较clientWidth和scrollWidth的值，如果scrollWidth大于clientWidth，那么就是发生了截断
+5.询问了react的diff算法，说了fiber的遍历
+6.pureComponent
+7.key
+8.display:none和visibility:hidden的差别，v-if和v-show的差别，提到设置display:none之后进行操作，不会导致回流和重绘
+9.回流和重绘，回流和重绘队列，避免回流和重绘。
+10.问了一下hook和class如何进行页面的优化，useEffect的依赖数组，class的shouldComponentMount，然后说了一下如果是消费组件，shouldComponent将不能阻拦更新
+三面
+1. 问了一下项目
+2. 算法，检验回文链表（旋转+双指针）

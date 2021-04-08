@@ -2,6 +2,8 @@
 
 ### 初始化
 
+[首先我们需要了解`package.json`](./package.json详解.md)
+
 ```nginx
 yarn init -y
 ```

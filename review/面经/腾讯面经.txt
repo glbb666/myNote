@@ -1,0 +1,35 @@
+csig
+3. 输入url之后发生了什么，css树和dom树的对应关系。
+4. 闭包，闭包的优点和缺点
+5. 原型链
+5. 做题
+7. http状态码
+8. vue和react的区别
+9. 介绍一下proxy，proxy的优点和缺点
+11. webpack3和webpack4的区别，webpack3去除console.log
+12. react进行setState之后发生了什么，（通过setState主动更新state，生命周期触发流程）
+pcg
+一面
+1. 微信扫码登录的流程
+扫码之后，后台会得知二维码和账号的对应信息。
+如何获取到后台信息呢？
+- 轮询（最优），因为不需要连续的信息
+- ssr
+- websocket
+2. webpack的优化
+3. 新学什么东西
+二面
+1. 算法，饮料瓶兑换，两种解法
+- 面向过程
+- 数学规律
+2. 写排序算法（写了快排和归并）
+3. 实现一个计数器（闭包）
+4. 问怎么监听数据变化（proxy和object的setter）
+三面
+1. 字节的项目，工作流程，遇到的困难。
+2. 讲了setState源码，问我fiber如何区分任务优先级
+3. 对前端发展前景的理解（flutter,serveless,eletron,h5)
+- 问我serveless具体做什么，用node开发云函数
+4. 问了我一些学习方法
+5. 问了我vue项目
+6. 智力题，用5L和3L装4L水

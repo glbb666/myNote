@@ -44,7 +44,7 @@ const el = <Mycomponent foo = {const value = 1+2;return value};
 
 #### 标签属性
 
-- DOM标签属性：因为jsx的风格更接近于JavaScript，所以onblur，onclick，onfocus的写法均变为驼峰形式的**onBlur，onClick，onFocus**，同时因为clas是react的关键词，所以**class变为className**
+- DOM标签属性：因为jsx的风格更接近于JavaScript，所以onblur，onclick，onfocus的写法均变为驼峰形式的**onBlur，onClick，onFocus**，同时因为class是react的关键词，所以**class变为className**
 
 - 自定义标签属性：支持自定义标签属性，有以下两种方式
 	- “”，字符串字面量
