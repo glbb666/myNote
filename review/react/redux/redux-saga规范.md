@@ -1,10 +1,18 @@
-### 背景：
+### 简介：
 
 `redux-saga`主要用来处理异步的`actions`。
 
-把`action->reducer`的过程变为`action->中间件->reducer`
+把`action->reducer`的过程变为`action->中间件->reducer`。
 
-由于团队内部的`saga`使用不规范，因此输出一些saga通用使用。
+### 描述：
+
+如果按照原始的`redux`工作流程，当组件中产生一个`action`后会直接触发`reducer`修改`state`，`reducer`又是一个纯函数，也就是不能在`reducer`中进行异步操作。
+
+**而往往实际中，组件中发生的`action`后，在进入`reducer`之前需要完成一个异步任务,比如发送`ajax`请求后拿到数据后，再进入`reducer`,显然原生的`redux`是不支持这种操作的**
+
+这个时候急需一个中间件来处理这种业务场景，目前最优雅的处理方式自然就是`redux-saga`
+
+
 
 ### 准备：
 
@@ -53,9 +61,11 @@ export default function* rootSaga() {
 }
 ```
 
-### 使用：
+### 方法介绍：
 
-##### 调用函数(call)
+##### effect：
+
+##### call：调用函数（阻塞）
 
 我们从 Generator 里` yield Effect`以表达 Saga 逻辑。 
 
@@ -107,7 +117,7 @@ function* fetchPostsWithTimeout() {
 }	
 ```
 
-2. 自动取消失败的 Effects
+2. 自动取消失败的 `Effects`。
 
 ```javascript
 import { race, take, call } from 'redux-saga/effects'
@@ -128,9 +138,9 @@ function* watchStartBackgroundTask() {
 }
 ```
 
-##### 发起action(put)
+##### put：发起action（非阻塞）
 
- `put`，这个函数用于创建 dispatch Effect。检查 yield 后的 Effect，并确保它包含正确的指令。
+ `put`，这个函数用于创建 dispatch Effect。这个 `effect` 是非阻塞型的，并且所有向下游抛出的错误（例如在` reducer` 中），都不会冒泡回到` saga `当中。
 
 ```javascript
 import { call, put } from 'redux-saga/effects'
@@ -181,11 +191,11 @@ export default function* rootSaga() {
 }
 ```
 
-##### 等待action(take)
+##### take：等待action
 
-1. takeEvery
+1. `takeEvery`
 
-把监听的动作换为通配符`*`。在每次 action 被匹配时一遍又一遍地被调用（**无法控制何时被调用**），**无法控制何时停止监听**。
+把监听的动作换为通配符`*`。在每次`action `被匹配时一遍又一遍地被调用。**无法控制何时被调用**，**无法控制何时停止监听**。
 
 ```javascript
 import { select, takeEvery } from 'redux-saga/effects'
@@ -200,7 +210,7 @@ function* watchAndLog() {
 }
 ```
 
-2. take
+2. `take`
 
   `take` 会暂停 `Generator `直到一个匹配的 `action` 被主动拉取。
 
@@ -349,7 +359,7 @@ function* fetchProducts() {
 }
 ```
 
-2. 捕捉 Promise 的拒绝操作，并将它们映射到一个错误字段对象。
+2. 捕捉 `Promise `的拒绝操作，并将它们映射到一个错误字段对象。
 
 ```javascript
 import Api from './path/to/api'

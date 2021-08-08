@@ -47,6 +47,12 @@ this.setState((state, props) => ({
 
 ### 三、生命周期
 
+旧的生命周期
+
+![img](images/1)
+
+新的生命周期
+
 ![image-20200221144832966](images/image-20200221144832966.png)
 
 - 挂载过程
