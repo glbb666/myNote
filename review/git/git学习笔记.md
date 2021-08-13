@@ -59,7 +59,7 @@ git status
   - “*Changed but not updated*”中所列的内容是发现修改但没有保存在暂存区中。
   - “*Untracked files*”中所列的内容是尚未被Git跟踪的内容。
 - 🌳绿色文件名：“*Changes to be committed*”中所列的内容是修改内容已经保存至暂存区，等待进入git目录。
-- 🈚️文件名：“Nothing to commit,working directory clean”说明工作树已经清空。所有修改的内容都被提交到分支中。当工作区和
+- 🈚️文件名：“Nothing to commit,working directory clean”说明工作树已经清空。所有修改的内容都被提交到分支中。
 
 #### b.查询修改部分
 
@@ -182,7 +182,13 @@ git commit
 
 ## 5.分支管理
 
-每次提交，Git都把它们串成一条时间线，这条时间线就是一个分支。
+合理使用分支，分支的好处：
+
+1. 同时开发不同功能不冲突，可独立测试
+
+2. 可集中解决冲突
+
+3. 区分功能或未来某一版本
 
 - 查看分支
 
@@ -437,5 +443,30 @@ git config --global alias.lg "log --color --graph --pretty=format:'%Cred%h%Crese
 当你在 master 下，git pull等于 fetch origin，然后 merge origin/master；
 当你在 develop 下，git pull等于 fetch origin，然后 merge origin/deve
 ```
+
+
+
+### 4.开发新功能步骤
+
+1. 从开发分支拉一个功能分支
+2. 功能分支开发和测试
+3. 功能分支 `rebase` 开发分支（为什么）
+4. 功能分支合并到开发分支
+
+#### 注意：
+
+- 一次提交做一件事，写清楚 `comment`
+- 每次 `pull` 远程分支时使用 `git pull --rebase`
+- 分支从哪拉出来，最后合到哪回去
+- 合并之前先 `rebase`
+
+### 5.线上bug的修复
+
+1. 从`master`拉一个fix分支（为什么是master）
+2. 测试完后 `rebase master`
+3. 合并回`master`
+
+
+
 
 
