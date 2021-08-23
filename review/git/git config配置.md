@@ -9,10 +9,18 @@
 3. 列出全局配置：`git config --global --list`;
 4. 列出系统配置：`git config --system --list`;
 
-> 第一次使用git，配置用户信息
+> 配置用户信息
 
-1. 配置用户名：`git config --global user.name "your name"`;
-2. 配置用户邮箱：`git config --global user.email "youremail@github.com"`;
+1. 配置用户名：`git config user.name "your name"`;
+2. 配置用户邮箱：`git config user.email "youremail@github.com"`;
+
+也可以加上以下参数
+
+```
+--global 全局配置
+--local 仓库配置
+（什么都不加） 相当于配置当前信息用户信息，但是用户信息是基于仓库的，所以相当于--local
+```
 
 > 其他配置
 
