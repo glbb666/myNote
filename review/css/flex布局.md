@@ -79,7 +79,7 @@ flex的取值：
 **单值**
 
 - 无单位数：flex-grow的值
-- 有效的宽度：当作flex-basis的值
+- 有效的宽度/长度：当作flex-basis的值
 
 - `initial(flex: 0 1 auto)`元素不会伸长会缩短
 - `auto(flex: 1 1 auto)`元素会伸长缩短
@@ -89,8 +89,8 @@ flex的取值：
 
 第一个值必须为无单位数，当作`flex-grow`的值，第二个值必须为以下之一
 
-- 一个无单位数：`flex-shrink`的值
-- 一个有效的宽度值：它会被当作`flex-basis`的值
+- 无单位数：`flex-shrink`的值
+- 有效的宽度/长度：它会被当作`flex-basis`的值
 
 💛<font color='red'>当使用一个或两个无单位数时, flex-basis会从auto变为0</font>
 
@@ -283,4 +283,75 @@ flex的取值：
 
 
 ![img](https://lc-gold-cdn.xitu.io/0dd26d8e99257ff36443.png?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
+
+### 3.flex-grow和flex-shrink增加/减少的宽度是如何计算的
+
+- flex-grow
+
+假设有一个div内包含三个子div1， div2, div3,宽度分别200px. 对于flex-grow对于剩余空间分配比例的计算相信用过flex布局的都非常熟悉了。这里还是简单列一下计算公式： 假设div1, div2, div3的flex-grow分别设置为 1，2，3. 现在假定外层div的宽度是800px, 那么剩下的800px - 3*200px = 200px如何分配给三个子div呢？ 三个div额外分配的空间如下：
+
+div1：**1** / (1 + 2 + 3) * 200px = 1/6 * 200px
+
+div2：**2** / (1 + 2 + 3) * 200px = 2/6 * 200px
+
+div3：**3** / (1 + 2 + 3) * 200px = 3/6 * 200px
+
+
+
+![img](images/1668f94048163317~tplv-t2oaga2asx-watermark.awebp)
+
+- flex-shrink
+
+flex-shink属性主要是在外层div宽度不够的情况下，子div收缩一定的空间来抵消不够的那部分宽度。 举个栗子，现在三个子div的宽度是600px, 但是我给外层div的宽度设置成500px, 那么不够显示的600-500 px应该怎么让子div们收缩掉这100px。这个时候flex-shrink就派上用场了，那具体怎么计算呢？ 有人说这个属性跟flex-grow类似，计算方式也差不多吧(其实是有差异的)。但具体怎么算，MDN, W3CShcool也没给出具体公式。
+
+好了，不卖关子，来说说怎么计算收缩空间吧！ 先贴出例子的代码： 
+
+html部分：
+
+```html
+<div class="outer">
+    <div class='div1'>1</div>
+    <div class='div2'>2</div>
+    <div class="div3">3</div>
+</div>
+```
+
+css部分：
+
+```css
+.outer {
+  width: 500px;
+  display: flex;
+}
+.outer div {
+  height: 80px;
+}
+
+.div1 {
+  flex: 1 1 100px;
+  background: red;
+}
+.div2 {
+  flex: 1 2 200px;
+  background: yellow;
+}
+.div3 {
+  flex: 1 3 300px;
+  background: green;
+}
+```
+
+先计算总权重TW = 100px * 1(flex-shrink) + 200px *2(flex-shrink) + 300px *3(flex-shrink) = 1400px 也就是每个div的宽度乘以flex-shrink系数的总和。
+
+每个div收缩的空间为：div的宽度 * flex-shrink系数/ 总权重TW * 需要收缩的总宽度（在我们的例子中是600px - 500px = 100px）
+
+所以各div最后的宽度计算公式如下：
+
+```
+div1最后的宽度 = 100px - 100*1/1400 * 100px = 92.86px
+
+div2最后的宽度 = 200px - 200*2/1400 * 100px = 171.42px
+
+div3最后的宽度 = 300px - 300*3/1400 * 100px = 235.72px
+```
 

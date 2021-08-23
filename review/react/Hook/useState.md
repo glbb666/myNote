@@ -1,6 +1,12 @@
-### useState
+### useState(value)
 
-- 基础用法
+#### 基础用法
+
+- 接受`value`作为`state`的初始值
+
+- 返回一个`array` 
+  - `array[0]`当前`state`
+  - `array[1]`改变`state`的函数
 
 ```javascript
   const [state, setState] = useState(initialState);
@@ -8,6 +14,8 @@
 ```
 
 - 函数式更新
+
+  由于`useState`的更新是异步的，当你想要基于`count`当前的值去修改`count`，你需要使用函数式更新，在`prevCount`中，你可以拿到上次更新后最新的`count`值
 
 ```javascript
   const [count, setCount] = useState(initialCount);

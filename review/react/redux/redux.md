@@ -243,7 +243,7 @@ store.dispatch(actions.increase()) // {count: 3}
 
 将入口组件包进去（被包进的组件及其子组件才能访问到`Store`，才能使用`connect`方法
 
-```javascript
+```jsx
 import { Provider } from 'react-redux';
 render(
 	<Provider store = {store}>
@@ -255,28 +255,6 @@ render(
 #### Connect
 
 被`Provider`包裹的组件(例如上面的`App`)内部就可以使用`connect`
-
-```javascript
-import React from 'react';
-import './App.css';
-import connect from 'react-redux';
-
-function App() {
-  return (
-    <div className="App">
-      <p>
-        <button>+</button>
-      </p>
-    </div>
-  );
-}
-const mapStateToProps = (state) => {
-  return {
-    foo: state.bar
-  }
-}
-export default connect(mapStateToProps)(App);
-```
 
 ```javascript
 connect([mapStateToProps],[mapDispatchToprops],[mergeProps],[options])(MyComponent)
@@ -299,7 +277,7 @@ const mapStateToProps = (state) => {
 
 然后渲染的时候就可以使用`this.props.foo`
 
-```javascript
+```jsx
 class App extends Component {
     constructor(props){
         super(props);
@@ -349,6 +327,18 @@ const mapDispatchToProps2 = (dispatch,ownProps)=>{
     clearNum:bindActionCreators(action.number.clearNum,dispatch),
   }
 }
+```
+
+```jsx
+class App extends Component {
+    constructor(props){
+        super(props);
+    }
+    componentDidMount() {
+        this.props.clearNum();
+    }
+}
+export default connect(mapStateToProps)(App);
 ```
 
 ##### mergeProps
