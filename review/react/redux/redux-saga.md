@@ -608,7 +608,59 @@ function* saga() {
 1. 在 `race` Effect 中。所有参与 race 的任务，除了优胜者（译注：最先完成的任务），其他任务都会被取消。
 2. 并行的 Effect (`yield [...]`)。一旦其中任何一个任务被拒绝，并行的 Effect 将会被拒绝（受 `Promise.all` 启发）。在这种情况中，所有其他的 Effect 将被自动取消。
 
-### 辅助函数
+#### `select(selector, ...args)`
+
+创建一个 `Effect`，用来命令 `middleware` 在当前` Store` 的` state` 上调用指定的选择器。
+
+- `selector: Function` - 一个 `(state, ...args) => args` 的函数。它接受当前 state 和一些可选参数，并返回当前 `Store state` 上的一部分数据。
+- `args: Array<any>` - 传递给选择器的可选参数，将追加在 `getState` 后。
+
+如果调用 `select` 的参数为空（即 `yield select()`），那么` effect` 会取得完整的` state`（与调用 `getState()` 的结果相同）。
+
+> 重要提醒：在向 store 发起 action 时，middleware 首先会把 action 转发给 reducers，然后通知 Sagas。这意味着，当你查询 Store 的 state 时，你获得的是 action 被应用 **后** 的 state。 但是，只有当所有后续中间件都以同步的形式调用 `next(action)` 时，才能保证此行为。如果有任何后续 middleware 异步地调用 `next(action)`（虽然不常见，但存在这种可能），那么 saga 会在 action 被应用 **前** 获得 state。因此，建议检查每一个后续的 middleware 的来源，以确保是通过同步的形式调用 `next(action)`；或者确保 redux-saga 是调用链中的最后一个中间件。
+
+#### 注意事项
+
+最好的话，`Saga` 应是自主独立的，并且不应依赖` Store` 的` state`。这使得我们在不影响 `Saga` 代码的情况下便可以轻松地修改 `state `的实现。如果可能，`saga` 最好只依赖其自身内部控制的状态。但有的时候我们可能会发现在 `Saga` 中查询 `state` 比单独维护所属数据更方便（例如，当一个` Saga` 重复调用某个` reducer`，来计算那些已经被` Store` 计算过的` state`）。
+
+例如，假设我们在应用程序中有这样结构的一份 state：
+
+```javascript
+state = {
+  cart: {...}
+}
+```
+
+我们创建一个 **选择器（selector）**，即一个知道如果从 State 中提取 `cart` 数据的函数：
+
+```javascript
+./selectors
+export const getCart = state => state.cart
+```
+
+然后，我们可以使用 `select` Effect 从 Saga 的内部使用该选择器：
+
+```javascript
+./sagas.js
+import { take, fork, select } from 'redux-saga/effects'
+import { getCart } from './selectors'
+
+function* checkout() {
+  // 使用被导出的选择器查询 state
+  const cart = yield select(getCart)
+
+  // ... 调用某些 API，然后发起一个 success/error action
+}
+
+export default function* rootSaga() {
+  while (true) {
+    yield take('CHECKOUT_REQUEST')
+    yield fork(checkout)
+  }
+}
+```
+
+`checkout` 可以通过 `select(getCart)` 直接地获得所需的信息。Saga 仅与 `getCart` 选择器相耦合。如果我们有许多个需要访问 `cart` 数据的 Saga（或 React Component），那么它们将被耦合到统一的 `getCart` 函数上。并且如果我们改变了 state 的结构，我们只需要更新 `getCart` 即可。
 
 #### 什么是辅助函数
 
@@ -943,4 +995,3 @@ export default function* rootSaga() {
 }
 ```
 
-### 

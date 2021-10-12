@@ -95,6 +95,8 @@ To git@...
 + 83***...23***** develop -> develop (forced update)
 ```
 
+⚠️当`HEAD`不指向当前分支的时候，是不能进行`git reset`操作的。
+
 ## git revert
 
 还是这个例子
