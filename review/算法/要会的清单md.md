@@ -38,13 +38,15 @@ function preOrder(root) {
 
 ### 二叉树中序遍历：左根右
 
+二叉搜索树一般都是用中序遍历，这样能够给出比较准确的结果。
+
 ```js
 function midOrder(root) {
   let stack = []
   let res = []
   let p = root
-  while (stack.length != 0 || p != null) {
-    if (p != null) {
+  while (stack.length|| p) {
+    if (p) {
       stack.push(p)
       p = p.left
     } else {
@@ -59,7 +61,7 @@ function midOrder(root) {
 
 ### 二叉树后序遍历：左右根
 
-可以用`unshift`把结果推进`result`，从左右根变成，根右左。
+可以用 `unshift`把结果推进 `result`，从左右根变成，根右左。
 
 ```js
 function laterOrder(root) {
@@ -140,7 +142,7 @@ var levelOrder = function(root) {
 
 - 之字形打印二叉树
 
-思路：用一个odd值标志奇数行和偶数行，如果是奇数行就用`push`推入值，如果是偶数行，就用`unshift`推入值，奇数行和偶数行在换行的时候进行切换。
+思路：用一个odd值标志奇数行和偶数行，如果是奇数行就用 `push`推入值，如果是偶数行，就用 `unshift`推入值，奇数行和偶数行在换行的时候进行切换。
 
 ```javascript
 var levelOrder = function(root) {
@@ -215,7 +217,7 @@ var buildTree = function(preorder, inorder) {
 
 1. 哈夫曼编码，如果带权路径长度达到最小，这样的二叉树称为最优二叉树，可以用来进行数据压缩。
 2. B+树在文件系统中的目录会使用到
-3. 红黑树的查找/删除/插入，时间复杂度均为`O(logn)`
+3. 红黑树的查找/删除/插入，时间复杂度均为 `O(logn)`
 
 ## 排序
 
@@ -224,11 +226,11 @@ var buildTree = function(preorder, inorder) {
 - 时间复杂度：`O(n^2)`
 - 空间复杂度： `O(1)`
 - 稳定性：冒泡和插入稳定，选择不稳定（记忆：人的选择就是不一定的）
+
 ### 冒泡
 
 - 外层控制轮次，表示第几轮
-
-- 内层控制交换，若`arr[j]>arr[j+1]`则交换`arr[j]`和`arr[j+1]`，`j`代表被排序的前一个值的下标
+- 内层控制交换，若 `arr[j]>arr[j+1]`则交换 `arr[j]`和 `arr[j+1]`，`j`代表被排序的前一个值的下标
 
   (不写错可以判断临界值有没有越界)
 
@@ -284,45 +286,12 @@ function select(arr){
     }
 ```
 
-### 快速排序
-
-- 时间复杂度，`O(n^2)`,平均`O(nlogn)`，大多数情况下小于平均值
-- 空间复杂度：`O(logn)`
-- 稳定性：不稳定
-
-思路：选定一个目标值，比目标值小的放在目标值的左边，比目标值大的放在目标值的右边。
-
-```javascript
-function quickSort(arr,start,end){
-        if(end-start<1){
-            return;
-        }
-        let l = start;
-        let r = end;
-        const target = arr[start];
-        while(l<r){
-            while(l<r&&arr[r]>=target){
-                r--;
-            }
-            arr[l] = arr[r];
-            while(l<r&&arr[l]<target){
-                l++;
-            }
-            arr[r] = arr[l];
-        }
-        arr[l] = target;
-        quickSort(arr,start,l-1);
-        quickSort(arr,l+1,end)
-        return arr
-}
-```
-
 ### 归并排序
 
 归并排序是建立在归并操作上的一种有效的排序算法，该算法是采用**分治法**的一个非常典型的应用。将已有的子序列合并，得到完全有序的序列，即先使每个子序列有序，再使子序列段间有序。若将两个有序表合并成一个有序表，称为二路归并。
 
-- 时间复杂度`O(nlog(n))`
-- 空间复杂度`O(n)`
+- 时间复杂度 `O(nlog(n))`
+- 空间复杂度 `O(n)`
 - 稳定性：稳定
 
 ```javascript
@@ -361,6 +330,7 @@ arr = mergeSortRec(arr)
 ## 链表
 
 ### 反序输出递归
+
 ```js
 function printListFromTailToHead(h) {
   if (h && h.next) {
@@ -369,6 +339,7 @@ function printListFromTailToHead(h) {
   console.log(h.val)
 }
 ```
+
 ### 反序输出非递归（开辟空间）
 
 思路：用栈存储，pop输出
@@ -385,12 +356,13 @@ function printListFromTailToHead(h) {
   }
 }
 ```
+
 ### 原地翻转非递归
 
 思想：一个旧头一个新头，利用cur把旧头之后的结点放在最前面（指向新头）作为头节点，新头始终指向头节点，当旧头后面没有东西了，即head.next = null，说明遍历结束。
 
 ```js
-function reserveList(head) {                                                                                                             
+function reserveList(head) {                                                                                                         
   let newHead = head,
     cur = null
   while (head && head.next) {
@@ -403,7 +375,8 @@ function reserveList(head) {
   return newHead
 }
 ```
-### 删除链表给定`val`节点
+
+### 删除链表给定 `val`节点
 
 思路：把头节点当作哑结点后继结点，这样就可以进行删除操作了。注意的是，如果后续结点被删除，则不需要后移，因为后续结点已经不是之前的那一个结点了。
 
@@ -543,7 +516,7 @@ var middleNode = function(head) {
 };
 ```
 
-### 回文链表（时间复杂度`O(n)`，空间复杂度`O(1)`）
+### 回文链表（时间复杂度 `O(n)`，空间复杂度 `O(1)`）
 
 首先通过快慢指针找出中间结点，接着把后半段链表进行翻转，然后把前后两段链表进行比较。
 
@@ -587,7 +560,7 @@ var insertionSortList = function(head) {
 
 ### 两数之和
 
-遍历数组，把数组的值当作`hash`的键，把数组的下标当作`hash`的值，边存之前的值，边计算当前数的补，只要`hash`表中存在当前数的补，就返回数组的下标即可。
+遍历数组，把数组的值当作 `hash`的键，把数组的下标当作 `hash`的值，边存之前的值，边计算当前数的补，只要 `hash`表中存在当前数的补，就返回数组的下标即可。
 
 ### 搜索二维矩阵
 
@@ -984,7 +957,7 @@ sleep(output,1000);
 
 ## 数组操作
 
-### `reduce`实现`flat`
+### `reduce`实现 `flat`
 
 ```js
 Array.prototype.flat = function(){
@@ -993,7 +966,7 @@ Array.prototype.flat = function(){
 }
 ```
 
-### `reduce`实现`map`
+### `reduce`实现 `map`
 
 ```js
 Array.prototype.map1 = function(fn){
@@ -1004,7 +977,7 @@ Array.prototype.map1 = function(fn){
 }
 ```
 
-### `reduce`实现`flatMap`
+### `reduce`实现 `flatMap`
 
 ```js
 Array.prototype.flatMap2 = function(fn){
@@ -1013,7 +986,7 @@ Array.prototype.flatMap2 = function(fn){
 }
 ```
 
-### `reduce`实现`filter`
+### `reduce`实现 `filter`
 
 ```js
 Array.prototype.filter1 = function(fn){
@@ -1026,7 +999,7 @@ Array.prototype.filter1 = function(fn){
 
 ### 数组去重
 
-双重`for`循环
+双重 `for`循环
 
 ```javascript
 Array.prototype.unique = function(){
@@ -1060,7 +1033,9 @@ Array.prototype.unique = function(){
 	return result;
 }
 ```
+
 排序后去重
+
 ```javascript
 Array.prototype.unique = function(){
 	arr.sort();
@@ -1079,7 +1054,7 @@ Array.prototype.unique = function(){
 Array.prototype.unique = function(){
 	let result = [];
 	this.forEach(item=>{
-    	!result.includes(item)?result.push(item):null;            
+    	!result.includes(item)?result.push(item):null;        
     })
 }
 ```
@@ -1180,6 +1155,3 @@ class EventEmit {
   }
 }
 ```
-
-
-
