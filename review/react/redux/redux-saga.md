@@ -1,18 +1,18 @@
 ### 什么是redux-saga
 
-`redux-saga`是一个库，他以`redux`中间件的形式存在，目的是更好的管理`redux`应用程序中的副作用（side effect)。
+`redux-saga`是一个库，他以 `redux`中间件的形式存在，目的是更好的管理 `redux`应用程序中的副作用。
 
-`redux-saga`主要用来处理异步的`actions`。
+`redux-saga`主要用来处理异步的 `actions`。
 
-简而言之，就是把`action->reducer`的过程变为`action->中间件->reducer`。
+简而言之，就是把 `action->reducer`的过程变为 `action->中间件->reducer`。
 
-如果按照原始的`redux`工作流程，当组件中产生一个`action`后会直接触发`reducer`修改`state`，`reducer`又是一个纯函数，也就是不能在`reducer`中进行异步操作。
+如果按照原始的 `redux`工作流程，当组件中产生一个 `action`后会直接触发 `reducer`修改 `state`，`reducer`又是一个纯函数，也就是不能在 `reducer`中进行异步操作。
 
-而往往实际中，组件中发生的`action`后，在进入`reducer`之前需要完成一个异步任务，比如发送`ajax`请求后拿到数据后，再进入`reducer`。这个时候急需一个中间件来处理这种业务场景，目前最优雅的处理方式自然就是`redux-saga`。
+而往往实际中，组件中发生的 `action`后，在进入 `reducer`之前需要完成一个异步任务，比如发送 `ajax`请求后拿到数据后，再进入 `reducer`。这个时候急需一个中间件来处理这种业务场景，目前最优雅的处理方式自然就是 `redux-saga`。
 
 ### 一些概念
 
-在学习`redux-saga`之前，我们先了解一些概念。
+在学习 `redux-saga`之前，我们先了解一些概念。
 
 #### effect
 
@@ -22,7 +22,7 @@
 
 #### saga与generator
 
-一个`saga`文件中会有一至多个`generator`函数来处理`effect`。
+一个 `saga`文件中会有一至多个 `generator`函数来处理 `effect`。
 
 #### Task
 
@@ -49,7 +49,7 @@ function* saga() {
 
 **为什么使用call**
 
-我们从 `Generator` 里` yield Effect`以表达 `Saga` 逻辑。 
+我们从 `Generator` 里 ` yield Effect`以表达 `Saga` 逻辑。
 
 其实我们也可以这样写
 
@@ -57,9 +57,9 @@ function* saga() {
 const users = yield Api.fetch('/users')
 ```
 
-`Api.fetch('/users')` 触发了一个 `AJAX `请求并返回一个` Promise`，`Promise` 会` resolve `请求的响应， 这个` AJAX `请求将立即执行。看起来简单又地道，但...
+`Api.fetch('/users')` 触发了一个 `AJAX `请求并返回一个 ` Promise`，`Promise` 会 `resolve`请求的响应， 这个 `AJAX`请求将立即执行。看起来简单又地道，但...
 
-假设我们想测试上面的` generator`：
+假设我们想测试上面的 ` generator`：
 
 ```javascript
 const iterator = fetchProducts()
@@ -80,7 +80,7 @@ assert.deepEqual(iterator.next().value, ??) // 我们期望得到什么？我们
 }
 ```
 
-`Generator` 将会` yield` 包含 *指令* 的文本对象（`plain Objects`），`redux-saga` middleware 将确保执行这些指令并将指令的结果回馈给 `Generator`。 这样的话，在测试` Generator` 时，所有我们需要做的就是，将 `yield` 后的对象作一个简单的 `deepEqual` 来检查它是否 `yield `了我们期望的指令。
+`Generator` 将会 ` yield` 包含 *指令* 的文本对象（`plain Objects`），`redux-saga` middleware 将确保执行这些指令并将指令的结果回馈给 `Generator`。 这样的话，在测试 ` Generator` 时，所有我们需要做的就是，将 `yield` 后的对象作一个简单的 `deepEqual` 来检查它是否 `yield `了我们期望的指令。
 
 出于这样的原因，`redux-saga` 提供了一个不一样的方式来执行异步调用。
 
@@ -93,10 +93,9 @@ function* fetchProducts() {
 }
 ```
 
+我们使用了 `call(fn, ...args)` 这个函数。**与前面的例子不同的是，现在我们不立即执行异步调用，相反，`call` 创建了一条描述结果的信息**。 就像在 Redux 里你使用 action 创建器，创建一个将被 Store 执行的、描述 action 的纯文本对象。 `call` 创建一个纯文本对象描述函数调用。`redux-saga` middleware 确保执行函数调用并在响应被 ` resolve` 时恢复 ` generator`。
 
-我们使用了 `call(fn, ...args)` 这个函数。**与前面的例子不同的是，现在我们不立即执行异步调用，相反，`call` 创建了一条描述结果的信息**。 就像在 Redux 里你使用 action 创建器，创建一个将被 Store 执行的、描述 action 的纯文本对象。 `call` 创建一个纯文本对象描述函数调用。`redux-saga` middleware 确保执行函数调用并在响应被` resolve` 时恢复` generator`。
-
-这让你能容易地测试` Generator`，就算它在` Redux` 环境之外。因为 `call` 只是一个返回纯文本对象的函数而已。
+这让你能容易地测试 ` Generator`，就算它在 ` Redux` 环境之外。因为 `call` 只是一个返回纯文本对象的函数而已。
 
 ```javascript
 import { call } from 'redux-saga/effects'
@@ -112,7 +111,7 @@ assert.deepEqual(
 )
 ```
 
-`yield`后如果是一个`promise`，因为`promise`不能进行比较，为了**方便测试**，在调用函数的时候都写成`call`的形式。`yield` 后的表达式 `call(fetch, '/users')` 被传递给 `next` 的调用者。
+`yield`后如果是一个 `promise`，因为 `promise`不能进行比较，为了**方便测试**，在调用函数的时候都写成 `call`的形式。`yield` 后的表达式 `call(fetch, '/users')` 被传递给 `next` 的调用者。
 
 现在我们不需要模拟任何东西了，一个简单的相等测试就足够了。
 
@@ -148,7 +147,7 @@ const [users, repos] = yield [
 ]
 ```
 
-- 获取执行最快的任务 
+- 获取执行最快的任务
 
 在 `race` Effect 中。所有参与 race 的任务，除了优胜者（译注：最先完成的任务），其他任务都会被取消。
 
@@ -169,7 +168,7 @@ function* fetchPostsWithTimeout() {
     put({type: 'POSTS_RECEIVED', posts})
   else
     put({type: 'TIMEOUT_ERROR'})
-}	
+}
 ```
 
 2. 自动取消失败的 `Effects`。
@@ -193,7 +192,7 @@ function* watchStartBackgroundTask() {
 }
 ```
 
-#### put`(action)`：发起action（非阻塞）
+#### put `(action)`：发起action（非阻塞）
 
 **put是什么**
 
@@ -214,9 +213,9 @@ function* fetchUsers(dispatch)
 }
 ```
 
-然而，该解决方案与我们在上一节中看到的从` Generator` 内部直接调用函数，有着相同的缺点。如果我们想要测试 `fetchUsers` 接收到` AJAX `响应之后执行` dispatch`， 我们还需要模拟 `dispatch` 函数。
+然而，该解决方案与我们在上一节中看到的从 ` Generator` 内部直接调用函数，有着相同的缺点。如果我们想要测试 `fetchUsers` 接收到 `AJAX`响应之后执行 ` dispatch`， 我们还需要模拟 `dispatch` 函数。
 
-相反，我们需要同样的声明式的解决方案。只需创建一个对象来指示` middleware `我们需要发起一些` action`，然后让 `middleware `执行真实的` dispatch`。 这种方式我们就可以同样的方式测试` Generator `的 `dispatch`：只需检查` yield `后的` Effect`，并确保它包含正确的指令。
+相反，我们需要同样的声明式的解决方案。只需创建一个对象来指示 `middleware`我们需要发起一些 ` action`，然后让 `middleware `执行真实的 ` dispatch`。 这种方式我们就可以同样的方式测试 `Generator`的 `dispatch`：只需检查 `yield`后的 ` Effect`，并确保它包含正确的指令。
 
 **怎么使用put**
 
@@ -248,25 +247,23 @@ function* fetchProducts() {
 - 如果它是一个函数，那么将匹配 `pattern(action)` 为 true 的 action。（例如，`take(action => action.entities)` 将匹配哪些 `entities` 字段为真的 action）
 
   > 注意: 如果 pattern 函数上定义了 `toString`，`action.type` 将改用 `pattern.toString` 来测试。这个设定在你使用 action 创建函数库（如 redux-act 或 redux-actions）时非常有用。
-
+  >
 - 如果它是一个字符串，那么将匹配 `action.type === pattern` 的 action。
 
   ```
   take('LOGOUT') 
   ```
-
 - 如果它是一个数组，那么数组中的每一项都适用于上述规则 —— 因此它是支持字符串与函数混用的。不过，最常见的用例还属纯字符串数组，其结果是用 `action.type` 与数组中的每一项相对比。（例如，`take([INCREMENT, DECREMENT])` 将匹配 `INCREMENT` 或 `DECREMENT` 类型的 action）
 
   ```
   take(['LOGOUT', 'LOGIN_ERROR'])
   ```
-
-- 监听所有的`action`：空参数或 `'*'` 
+- 监听所有的 `action`：空参数或 `'*'`
 
   ```
   take('*')，take()
   ```
-  
+
   middleware 提供了一个特殊的 action —— `END`。如果你发起 END action，则无论哪种 pattern，只要是被 take Effect 阻塞的 Sage 都会被终止。假如被终止的 Saga 下仍有分叉（forked）任务还在运行，那么它在终止任务前，会先等待其所有子任务均被终止。
 
 ```javascript
@@ -283,7 +280,7 @@ function* watchAndLog() {
 }
 ```
 
-我们先把上面的代码`copy`下来
+我们先把上面的代码 `copy`下来
 
 ```javascript
 import { takeEvery } from 'redux-saga/effects'
@@ -301,13 +298,13 @@ export default function* rootSaga() {
 }
 ```
 
-当两到多个`action`互相之间没有逻辑关系时，我们可以使用`takeEvery`。
+当两到多个 `action`互相之间没有逻辑关系时，我们可以使用 `takeEvery`。
 
-但是，当`action`之间存在逻辑关系后，使用`takeEvery`就会出现问题。比如登陆和登出。
+但是，当 `action`之间存在逻辑关系后，使用 `takeEvery`就会出现问题。比如登陆和登出。
 
-由于`takeEvery`对`action`的分开监管降低了可读性，程序员必须阅读多个处理函数的`takeEvery`源代码并建立起它们之间的逻辑关系。
+由于 `takeEvery`对 `action`的分开监管降低了可读性，程序员必须阅读多个处理函数的 `takeEvery`源代码并建立起它们之间的逻辑关系。
 
-我们可以用`take`把它改成这样，这样两个代码
+我们可以用 `take`把它改成这样，这样两个代码
 
 ```javascript
 export default function* loginFlow() {
@@ -326,7 +323,7 @@ export default function* rootSaga() {
 
 优点
 
-1. `saga`主动拉取`action`，可以控制监听的开始和结束
+1. `saga`主动拉取 `action`，可以控制监听的开始和结束
 2. 用同步的风格描述控制流，提高了可读性。
 
 #### `fork(fn, ...args)`：调用函数（无阻塞）
@@ -335,7 +332,7 @@ export default function* rootSaga() {
 
 创建一个 Effect 描述信息，用来命令 `middleware` 以 **非阻塞调用** 的形式执行 `fn`。
 
-- `fn: Function` - 一个` Generator` 函数，或返回` Promise` 的普通函数
+- `fn: Function` - 一个 ` Generator` 函数，或返回 ` Promise` 的普通函数
 - `args: Array<any>` - 传递给 `fn` 的参数数组。
 
 返回一个 [Task](https://redux-saga-in-chinese.js.org/docs/api/#task) 对象。
@@ -344,7 +341,7 @@ export default function* rootSaga() {
 
 `fork` 类似于 `call`，可以用来调用普通函数和 `Generator` 函数。不过，`fork` 的调用是非阻塞的，`Generator` 不会在等待 `fn` 返回结果的时候被 `middleware `暂停；恰恰相反地，它在 `fn` 被调用时便会立即恢复执行。
 
-`fork`，以及 `race`，都是用于管理` Saga` 间并发的中心化` Effect`。
+`fork`，以及 `race`，都是用于管理 ` Saga` 间并发的中心化 ` Effect`。
 
 `yield fork(fn ...args)` 的结果是一个 [Task](https://redux-saga-in-chinese.js.org/docs/api/#task) 对象 —— 一个具备着某些实用方法及属性的对象。
 
@@ -360,7 +357,7 @@ export default function* rootSaga() {
 
 **为什么要使用fork**
 
-`call`调用时会发生阻塞。 当我们不想错过`call`下面的`take`等待的`action`，想让异步调用和等待并行发生时，我们可以用`fork`取代`call`。
+`call`调用时会发生阻塞。 当我们不想错过 `call`下面的 `take`等待的 `action`，想让异步调用和等待并行发生时，我们可以用 `fork`取代 `call`。
 
 当 `fork` 被调用时，它会在后台启动 task 并返回 task 对象。
 
@@ -514,7 +511,7 @@ function* main() {
 
 **cancel是什么**
 
-创建一个 Effect 描述信息，用来命令 middleware 取消之前的一个`fork`任务。
+创建一个 Effect 描述信息，用来命令 middleware 取消之前的一个 `fork`任务。
 
 - `task: Task` - 由之前 `fork` 指令返回的 [Task](https://redux-saga-in-chinese.js.org/docs/api/#task) 对象
 
@@ -527,13 +524,11 @@ function* main() {
 - 你可以执行任何清理逻辑，或发起某些 action 来保持 store 处于一致状态(例如，当 ajax 请求被取消时，将 spinner 的状态重置为 false)。
 - 你可以在yield cancelled()条件下编写只有在取消时执行的逻辑。
 
-`cancel` 是一个非阻塞的` Effect`。也就是说，执行 `cancel` 的 Saga 会在发起取消动作后立即恢复执行。
+`cancel` 是一个非阻塞的 ` Effect`。也就是说，执行 `cancel` 的 Saga 会在发起取消动作后立即恢复执行。
 
 对于返回 `Promise` 结果的函数，你可以通过给 `promise` 附加一个 `[CANCEL]` 来插入自己的取消逻辑。
 
-下述例子演示了如何将取消逻辑附加到` Promise` 结果上:
-
-
+下述例子演示了如何将取消逻辑附加到 ` Promise` 结果上:
 
 ```javascript
 import { take, call, put, cancelled } from 'redux-saga/effects'
@@ -580,7 +575,7 @@ function* subtask2() {
 }
 ```
 
-**取消信息会向下传播到子 saga**。当取消任务时，`middleware` 还会取消当前 `Effect`（当前阻塞` task `的 `Effect`，即一些`ajax`请求等）。如果当前` Effect `调用了另一个` saga`，那么该` saga` 也会被取消。当取消` saga` 时，所有 **附加分叉（attached forks）**（用 `yield fork()` 分叉出的 saga）将被取消。这意味着取消动作会有效地影响属于取消任务的整个执行树。
+**取消信息会向下传播到子 saga**。当取消任务时，`middleware` 还会取消当前 `Effect`（当前阻塞 `task`的 `Effect`，即一些 `ajax`请求等）。如果当前 `Effect`调用了另一个 ` saga`，那么该 ` saga` 也会被取消。当取消 ` saga` 时，所有 **附加分叉（attached forks）**（用 `yield fork()` 分叉出的 saga）将被取消。这意味着取消动作会有效地影响属于取消任务的整个执行树。
 
 ⚠️注意：`yield cancel(task)` **不会等待被取消的任务完成（即执行其 catch 区块）**。一旦取消，任务通常应尽快完成它的清理逻辑然后返回。
 
@@ -610,18 +605,18 @@ function* saga() {
 
 #### `select(selector, ...args)`
 
-创建一个 `Effect`，用来命令 `middleware` 在当前` Store` 的` state` 上调用指定的选择器。
+创建一个 `Effect`，用来命令 `middleware` 在当前 ` Store` 的 ` state` 上调用指定的选择器。
 
 - `selector: Function` - 一个 `(state, ...args) => args` 的函数。它接受当前 state 和一些可选参数，并返回当前 `Store state` 上的一部分数据。
 - `args: Array<any>` - 传递给选择器的可选参数，将追加在 `getState` 后。
 
-如果调用 `select` 的参数为空（即 `yield select()`），那么` effect` 会取得完整的` state`（与调用 `getState()` 的结果相同）。
+如果调用 `select` 的参数为空（即 `yield select()`），那么 ` effect` 会取得完整的 ` state`（与调用 `getState()` 的结果相同）。
 
 > 重要提醒：在向 store 发起 action 时，middleware 首先会把 action 转发给 reducers，然后通知 Sagas。这意味着，当你查询 Store 的 state 时，你获得的是 action 被应用 **后** 的 state。 但是，只有当所有后续中间件都以同步的形式调用 `next(action)` 时，才能保证此行为。如果有任何后续 middleware 异步地调用 `next(action)`（虽然不常见，但存在这种可能），那么 saga 会在 action 被应用 **前** 获得 state。因此，建议检查每一个后续的 middleware 的来源，以确保是通过同步的形式调用 `next(action)`；或者确保 redux-saga 是调用链中的最后一个中间件。
 
 #### 注意事项
 
-最好的话，`Saga` 应是自主独立的，并且不应依赖` Store` 的` state`。这使得我们在不影响 `Saga` 代码的情况下便可以轻松地修改 `state `的实现。如果可能，`saga` 最好只依赖其自身内部控制的状态。但有的时候我们可能会发现在 `Saga` 中查询 `state` 比单独维护所属数据更方便（例如，当一个` Saga` 重复调用某个` reducer`，来计算那些已经被` Store` 计算过的` state`）。
+最好的话，`Saga` 应是自主独立的，并且不应依赖 ` Store` 的 ` state`。这使得我们在不影响 `Saga` 代码的情况下便可以轻松地修改 `state `的实现。如果可能，`saga` 最好只依赖其自身内部控制的状态。但有的时候我们可能会发现在 `Saga` 中查询 `state` 比单独维护所属数据更方便（例如，当一个 ` Saga` 重复调用某个 ` reducer`，来计算那些已经被 ` Store` 计算过的 ` state`）。
 
 例如，假设我们在应用程序中有这样结构的一份 state：
 
@@ -670,7 +665,7 @@ export default function* rootSaga() {
 
 **takeEvery是什么**
 
-在发起（`dispatch`）到` Store` 并且匹配 `pattern` 的每一个` action` 上派生一个 `saga`。
+在发起（`dispatch`）到 ` Store` 并且匹配 `pattern` 的每一个 ` action` 上派生一个 `saga`。
 
 - `pattern: String | Array | Function` - 有关更多信息，请参见 [`take(pattern)`](https://redux-saga-in-chinese.js.org/docs/api/#takepattern) 的文档
 - `saga: Function` - 一个 `Generator `函数
@@ -678,7 +673,7 @@ export default function* rootSaga() {
 
 **takeEvery如何使用**
 
-把监听的动作换为通配符`*`。在每次`action `被匹配时一遍又一遍地被调用。**无法控制何时被调用**，**无法控制何时停止监听**。
+把监听的动作换为通配符 `*`。在每次 `action `被匹配时一遍又一遍地被调用。**无法控制何时被调用**，**无法控制何时停止监听**。
 
 ```javascript
 import { select, takeEvery } from 'redux-saga/effects'
@@ -714,7 +709,7 @@ const takeEvery = (patternOrChannel, saga, ...args) => fork(function*() {
 
 **takeLatest是什么**
 
-每当一个 `action` 被发起到 `Store`，并且匹配 `pattern` 时，则 `takeLatest` 将会在后台启动一个新的 `saga` 任务。 如果此前已经有一个 `saga` 任务启动了（在当前 `action` 之前发起的最后一个` action`），并且仍在执行中，那么这个任务将被取消。
+每当一个 `action` 被发起到 `Store`，并且匹配 `pattern` 时，则 `takeLatest` 将会在后台启动一个新的 `saga` 任务。 如果此前已经有一个 `saga` 任务启动了（在当前 `action` 之前发起的最后一个 ` action`），并且仍在执行中，那么这个任务将被取消。
 
 - `pattern: String | Array | Function` - 有关更多信息，请参见 [`take(pattern)`](https://redux-saga-in-chinese.js.org/docs/api/#takepattern) 的文档
 - `saga: Function` - 一个 Generator 函数
@@ -765,7 +760,7 @@ const takeLatest = (patternOrChannel, saga, ...args) => fork(function*() {
 
 **race如何使用**
 
-1. 可以用`race`进行超时处理
+1. 可以用 `race`进行超时处理
 
 ```javascript
 import { race, call, put } from 'redux-saga/effects'
@@ -890,7 +885,7 @@ assert.deepEqual(
 )
 ```
 
-当测试出现分叉的时候，可以调用`clone`方法
+当测试出现分叉的时候，可以调用 `clone`方法
 
 ```javascript
 import { put, take } from 'redux-saga/effects';
@@ -901,7 +896,7 @@ test('doStuffThenChangeColor', assert => {
   //前面都是一样的
   gen.next(); // DO_STUFF
   gen.next(); // CHOOSE_NUMBER
-	
+
   
   //判断奇偶的时候出现了分叉
   assert.test('user choose an even number', a => {
@@ -947,7 +942,9 @@ test('doStuffThenChangeColor', assert => {
 $ yarn test
 ```
 
-### 在项目中使用
+### 在项目中使用流程
+
+- 
 
 安装
 
@@ -971,7 +968,7 @@ const store = createStore(
 sagaMiddleware.run(rootSaga)
 ```
 
-有多个`saga`同时启动，需要进行整合，在`saga.js`模块中引入`rootSaga`
+有多个 `saga`同时启动，需要进行整合，在 `saga.js`模块中引入 `rootSaga`
 
 ```javascript
 //sagas.js
@@ -994,4 +991,3 @@ export default function* rootSaga() {
   ])
 }
 ```
-
