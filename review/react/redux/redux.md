@@ -6,7 +6,7 @@
 
 在大型的 `js`应用中势必存在非常多的 `View`和 `Model`，且它们之间存在双向绑定的关系，如果处理不好就会出现混乱的绑定关系，对于项目的维护和问题的追踪都不友好。针对这种现象，`facebook`团队提出了单向数据流，禁止 `view`直接对话 `model`。
 
-`Redux`是一种基于 `Flux`思想的具体实现，替你维护难以管理的 `state`，让 `state`的变化可控。
+Redux 是一个用于应用程序状态管理的库，它通过维护一个状态树（state tree）来帮助应用程序保持一致性和预测性。Redux 包含三个核心概念：action、reducer 和 store。
 
 ### Action
 
@@ -177,17 +177,13 @@ rootReducer在创建store时通过 `createStore` 或 `configureStore`（如果�
 
 ### Store
 
-内部存储数据的仓库。
+它是维护应用状态的对象。
 
-#### createStore
+- 组件通过调用 `store.dispatch(action)` 方法来派发 actions，从而触发状态变化。
+- 通过 `store.getState()` 获取当前 state
+- 通过 `store.subscribe(listener)` 注册监听函数以响应状态变化。
 
-创建 `store`
-
-```javascript
-const store = createStore(reducer,[initialState],[enhancer]);
-// initialState用来初始化state
-// enhancer是高阶函数，用来增强Store
-```
+### store中方法的使用
 
 #### getState
 
@@ -221,6 +217,150 @@ const update = ()=>{}//更新view
 const cancelUpdate = store.subscribe(update);
 <Button onClick={cancelUpdate}>unsubscribe</Button>
 ```
+
+store用createStore创建。
+
+### createStore
+
+创建 `store`
+
+```javascript
+const store = createStore(reducer,[initialState],[enhancer]);
+// initialState用来初始化state
+// enhancer是高阶函数，一般来说会使用applyMiddleware添加中间件，增强Store，
+```
+
+看看createStore源码
+
+```js
+function createStore(reducer, preloadedState, enhancer) {
+  // 如果 preloadedState 是函数而不是状态对象，说明它是中间件的增强器
+  if (typeof preloadedState === 'function' && typeof enhancer === 'undefined') {
+    enhancer = preloadedState;
+    preloadedState = undefined;
+  }
+
+  // 如果存在 enhancer，那么使用 enhancer 来增强 createStore 函数
+  if (typeof enhancer !== 'undefined') {
+    return enhancer(createStore)(reducer, preloadedState);
+  }
+
+  let currentReducer = reducer;
+  let currentState = preloadedState;
+  let currentListeners = [];
+  let nextListeners = currentListeners;
+  let isDispatching = false;
+
+  // 确保 listeners 列表是可变的
+  function ensureCanMutateNextListeners() {
+    if (nextListeners === currentListeners) {
+      nextListeners = currentListeners.slice();
+    }
+  }
+
+  // 获取当前的 state
+  function getState() {
+    return currentState;
+  }
+
+  // 注册监听函数
+  function subscribe(listener) {
+    let isSubscribed = true;
+
+    ensureCanMutateNextListeners();
+    nextListeners.push(listener);
+
+    return function unsubscribe() {
+      if (!isSubscribed) {
+        return;
+      }
+
+      isSubscribed = false;
+
+      ensureCanMutateNextListeners();
+      const index = nextListeners.indexOf(listener);
+      nextListeners.splice(index, 1);
+    };
+  }
+  
+  // 派发 action
+  function dispatch(action) {
+    if (typeof action !== 'object' || action === null || typeof action.type === 'undefined') {
+      throw new Error('Action must be a plain object and contain a `type` property');
+    }
+
+    if (isDispatching) {
+	//isDispatching 用于标记是否当前正处于派发（dispatch）action 的过程中。
+	//isDispatching 为 true 时，正在执行的 reducer 函数尝试再次派发 action 是不被允许的。
+      throw new Error('Reducers may not dispatch actions');
+    }
+
+    try {
+      isDispatching = true;
+      currentState = currentReducer(currentState, action);
+    } finally {
+      isDispatching = false;
+    }
+
+    const listeners = (currentListeners = nextListeners);
+    for (let i = 0; i < listeners.length; i++) {
+      const listener = listeners[i];
+      listener();
+    }
+
+    return action;
+  }
+
+  // 当我们创建 store 时，我们需要派发一个初始化的 action
+  // 以便每个 reducer 返回它们的初始 state
+  dispatch({ type: '@@redux/INIT' });
+
+  return {
+    dispatch,
+    subscribe,
+    getState,
+  };
+}
+
+export default createStore;
+
+```
+
+#### 一些问题
+
+**什么情况会导致isDispatching为true的错误？**
+
+- 在reducer中dispatch action
+- `dispatch` 方法在中间件(middleware)中被错误地同步调用，可能也会引起冲突。举个例子：中间件在捕获某个action的同时dispacth了同一个action，导致死循环。
+  ```js
+  const incrementMiddleware = store => next => action => {
+    if (action.type === 'INCREMENT') {
+      console.log('Current count:', store.getState().count);
+
+      // 错误的同步调用 dispatch，尝试再次派发相同的 action
+      store.dispatch({ type: 'INCREMENT' }); // 这将导致无限循环
+
+      // 这个递归调用没有结束的条件，因此 'INCREMENT' action 会被无限派发
+    }
+
+    // Pass the action to the next middleware in the chain
+    return next(action);
+  };
+  ```
+
+下面的部分我们详细讲中间件
+
+### applyMiddleware
+
+在 Redux 中，中间件是通过 `applyMiddleware()` 函数添加的。这个函数实质上是一个 "store enhancer"，它接收多个中间件作为参数，然后增强 `createStore` 函数，允许中间件在 action 发送到 reducer 之前进行操作。
+
+### 自定义中间件
+
+Redux 中间件有一个统一的形式。中间件是一系列依次调用的函数。
+
+每个中间件接受一个简易的 `store` 对象（仅包含getState和dispatch方法）作为参数，并返回一个函数。
+
+这个函数又会被调用并传入 `next` 函数，并返回另一个接受 `action` 的函数。这就是中间件的标准形式，你可以根据需要自定义中间件。
 
 ### 实例
 
