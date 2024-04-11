@@ -135,10 +135,10 @@ const ref = React.createRef();
 ```
 
 1. 我们通过调用 React.createRef 创建了一个 React ref 并将其赋值给 ref 变量。
-2. 我们通过指定 ref 为 JSX 属性，将其向下传递给 <FancyButton ref={ref}>。
+2. 我们通过指定 ref 为 JSX 属性，将其向下传递给 `<FancyButton ref={ref}>`。
 3. React 传递 ref 给 forwardRef 内函数 (props, ref) => ...，作为其第二个参数。
-4. 我们向下转发该 ref 参数到 <button ref={ref}>，将其指定为 JSX 属性。
-5. 当 ref 挂载完成，ref.current 将指向 <button> DOM 节点。
+4. 我们向下转发该 ref 参数到 `<button ref={ref}>`，将其指定为 JSX 属性。
+5. 当 ref 挂载完成，ref.current 将指向 `<button>` DOM 节点。
 
 > Ref 转发不仅限于 DOM 组件，你也可以转发 refs 到 class 组件实例中。
 
@@ -169,3 +169,57 @@ function logProps(Component) {
 }
 ```
 
+### ref在不同情况下的使用
+
+- DOM元素：指向的是真实的DOM节点
+- 类组件：指向的是组件的实例，可以调用组件的方法或访问实例属性。
+- 函数组件：不能直接使用ref的，因为他们没有实例。但是，可以通过使用React.forwardRef API或useImperativeHandle hook配合useRef来使得函数组件可以接受ref。
+
+函数组件没有ref，需要用forwardRef的方式转发从外层获取的ref，外层获取的ref一般是用React.createRef创建。
+
+⚠️：调用函数组件时不能用回调ref。因为回调ref本质上还是拿的组件自身的ref，而函数组件没有ref。
+
+forwardRef有两种使用方法
+
+- const RefComponent = forwardRef((props,ref)=>return Component)，这里的ref就是从外部传入的，
+- export forwardRef(Component)，这里外部传入的ref可以用useImperativeHandle(ref)的第一个参数接收到
+
+### 实践
+
+- 如果对函数组件使用ref的意图是获取根节点的状态，可以用方法一接受ref，把ref放在根节点上（注意，根节点是dom节点，这里就直接用了dom节点的ref机制）
+- 如果对函数组件使用ref的意图是通过ref控制组件的自定义方法，那么forwardRef就需要结合useImperativeHandle钩子来使用。
+  ```js
+  import React, { useRef, useImperativeHandle } from 'react';
+
+  function FancyInput(props, ref) {
+    const localInputRef = useRef();
+
+    useImperativeHandle(ref, () => ({
+      focus: () => {
+        localInputRef.current.focus();
+      },
+      pageShow: ()=> {
+  	//当外部监听到页面展示的时候可以调用页面内部的pageshow方法，完成页面内部状态的切换
+      }
+      // ...其他方法
+    }));
+
+    return <input ref={localInputRef} {...props} />;
+  }
+
+  // 在组件外部使用`forwardRef`进行包装
+  const WrappedFancyInput = React.forwardRef(FancyInput);
+
+  // 父组件中使用
+  function ParentComponent() {
+    const inputRef = useRef();
+
+    return (
+      <>
+        <WrappedFancyInput ref={inputRef} />
+        <button onClick={() => inputRef.current.focus()}>Focus input</button>
+      </>
+    );
+  }
+
+  ```
