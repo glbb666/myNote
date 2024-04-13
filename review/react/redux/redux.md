@@ -227,7 +227,7 @@ store用createStore创建。
 ```javascript
 const store = createStore(reducer,[initialState],[enhancer]);
 // initialState用来初始化state
-// enhancer是高阶函数，一般来说会使用applyMiddleware添加中间件，增强Store，
+// enhancer是高阶函数，一般来说会使用applyMiddleware添加中间件，增强Store，applyMiddleware我们在下面说
 ```
 
 看看createStore源码
@@ -348,15 +348,96 @@ export default createStore;
   };
   ```
 
-下面的部分我们详细讲中间件
+下面的部分我们讲中间件的增强器，也就是createStore的第三个参数
+
+### 中间件增强器机制：洋葱模型
+
+这个模型可以将中间件想象成一个个洋葱圈，每一个“圈”对应一个中间件，第一个中间件在洋葱圈的最外层。
+
+首先是进洋葱圈：（action从第一个中间件->最后一个中间件->reduce）
+
+1. 当一个 action 被派发时，它会从第一个中间件开始，通过中间件栈的每一层。
+2. 每个中间件可以修改action、产生副作用。
+3. 如果中间件不调用 `next(action)`，那么 action 就不会继续传递下去，Redux 的 dispatch 过程就在这里停止。
+4. 如果中间件调用了 `next(action)`，action 将继续向下传递经过可能的其他中间件，直到到达到达实际的 reducer。
+5. 在执行完所有 reducer 之后，state 更新完成。
+
+接着是出洋葱圈：（最后一个中间件->第一个中间件的回溯）
+
+1. 出洋葱圈是next(action)函数调用之后的流程，可以理解为中间件堆栈的一个回溯。
+2. 这部分代码在后续中间件处理 action 并且 action 到达 reducer、state 更新以后才执行。
+3. **中间件函数里的 `next(action)` 之后的代码通常会在同一个事件循环中同步执行** 。当然，也可以创建异步的中间件，它可能会在未来的某一时刻调用 `next()`，或者根据一些异步操作（如 API 调用）的结果来决定是否和何时调用 `next()`。
+
+⚠️注意：
+
+- 如果你尝试在 `next(action)` 前同步地 dispatch 另一个 action，Redux 会抛出错误，因为在内部 `isDispatching` 标志仍然是 `true`。要在中间件中 dispatch 新的 action，你应该确保它发生在 `next(action)` 调用之后，或者在异步逻辑中。
+- 异步逻辑的处理，如在中间件内使用 setTimeout 或处理 Promise 结果时，dispatch 调用会被放入到事件循环的下一个“tick”，在该 tick 时当前的 action 已经处理完毕，`isDispatching` 也会被复位为 `false`，因此可以安全地执行新的 dispatch 调用。以下是一个异步场景的示例：
+  ```js
+  const asyncMiddleware = ({ dispatch }) => next => action => {
+    if (action.type === 'ASYNC_ACTION_TYPE') {
+      // 异步操作，在一段时间后 dispatch 新的 action
+      setTimeout(() => {
+        dispatch({ type: 'RESULT_OF_ASYNC_ACTION' });
+      }, 1000);
+    }
+
+    next(action);
+  };
+  ```
 
 ### applyMiddleware
 
-在 Redux 中，中间件是通过 `applyMiddleware()` 函数添加的。这个函数实质上是一个 "store enhancer"，它接收多个中间件作为参数，然后增强 `createStore` 函数，允许中间件在 action 发送到 reducer 之前进行操作。
+在 Redux 中，中间件是通过 `applyMiddleware()` 函数添加的。这个函数实质上是一个 "store enhancer"，它接收多个中间件作为参数，然后增强 `createStore` 函数，允许中间件在 `action` 发送到 `reducer `之前进行操作。
+
+以下是 `applyMiddleware` 的源码
+
+```js
+export default function applyMiddleware(...middlewares) {
+  return (createStore) => (reducer, preloadedState, enhancer) => {
+    // 创建一个没有中间件功能的 store
+    const store = createStore(reducer, preloadedState, enhancer);
+
+    // 这个变量可能会在下面的中间件闭包函数中被覆盖，从而实现增强的 dispatch
+    let dispatch = store.dispatch;
+
+    // 提供给每个中间件的 API，一个简易的store对象
+    const middlewareAPI = {
+      getState: store.getState,
+      dispatch: (action) => dispatch(action) // 初始时，等同于 store.dispatch
+    };
+
+    // 用每个中间件处理并增强 middlewareAPI
+    const chain = middlewares.map(middleware => middleware(middlewareAPI));
+
+    // 使用 compose 函数将所有中间件组合到一个 dispatch 函数中
+    dispatch = compose(...chain)(store.dispatch);
+
+    // 返回强化的 store，替换原本的 store.dispatch
+    return {
+      ...store,
+      dispatch
+    };
+  };
+}
+
+// compose 函数，将函数从右到左组合成一个函数
+function compose(...funcs) {
+  if (funcs.length === 0) {
+    return arg => arg;
+  }
+
+  if (funcs.length === 1) {
+    return funcs[0];
+  }
+
+  return funcs.reduce((a, b) => (...args) => a(b(...args)));
+}
+
+```
 
 ### 自定义中间件
 
-Redux 中间件有一个统一的形式。中间件是一系列依次调用的函数。
+Redux 中间件是一系列依次调用的函数，他们有一个统一的形式。
 
 每个中间件接受一个简易的 `store` 对象（仅包含getState和dispatch方法）作为参数，并返回一个函数。
 
