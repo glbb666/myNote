@@ -404,14 +404,19 @@ export default function applyMiddleware(...middlewares) {
   return (createStore) => (reducer, preloadedState, enhancer) => {
     // 创建一个没有中间件功能的 store
     const store = createStore(reducer, preloadedState, enhancer);
-
-    // 这个变量可能会在下面的中间件闭包函数中被覆盖，从而实现增强的 dispatch
-    let dispatch = store.dispatch;
+  
+    //这个占位函数的目的是防止在构建中间件管道期间发出 dispatch。
+    let dispatch = () => {
+      throw new Error(
+        'Dispatching while constructing your middleware is not allowed. ' +
+          'Other middleware would not be applied to this dispatch.'
+      )
+    }
 
     // 提供给每个中间件的 API，一个简易的store对象
     const middlewareAPI = {
       getState: store.getState,
-      dispatch: (action) => dispatch(action) // 初始时，等同于 store.dispatch
+      dispatch:  (...args) => dispatch(...args),
     };
 
     // 用每个中间件处理并增强 middlewareAPI
@@ -445,11 +450,13 @@ function compose(...funcs) {
 
 #### 一些问题
 
-看到这里其实你应该会有一些问题。
+##### 问题1：middleware的调用顺序
 
-比如：洋葱圈模型中action的流动是从第一个中间件->最后一个中间件。
+洋葱圈模型中action的流动是从第一个中间件->最后一个中间件。
 
-但是源码中compose函数会把中间件函数从右到左组合成一个函数，最右的函数在最中间的位置，其实容易让我们对middleware究竟是从左到右调用，还是从右到左调用有一些疑惑。
+但是源码中compose函数会把中间件函数从右到左组合成一个函数，最右的函数在最中间的位置。
+
+这容易让我们对middleware究竟是从左到右调用，还是从右到左调用有一些疑惑。
 
 为了解释这个疑惑，我们用以下的demo进行解释。
 
@@ -544,6 +551,54 @@ store.dispatch({ type: 'TEST_ACTION' })
 //middleware2 end
 //middleware1 end
 ```
+
+##### 问题2：middlewareAPI的赋值问题
+
+```js
+const middlewareAPI = {
+      getState: store.getState,
+      dispatch: (...args) => dispatch(...args),
+      //为什么不直接给dispatch的引用
+}
+```
+
+目的：为了 `middlewares`内部能拿到最新的 `dispatch`
+
+根据源码，我们可以知道，中间件的构建过程分为两个主要的步骤：
+
+1.创建中间件函数链：
+
+```js
+const chain = middlewares.map(middleware => middleware(middlewareAPI));
+```
+
+利用 `map` 函数遍历中间件，调用它们并传入被构造的 `middlewareAPI` 对象，每个中间件使用这个对象来获取当前的 `state` 以及 `dispatch`（尽管此时的 `dispatch` 还是一个抛出错误的临时版本）。每个中间件都返回一个执行 `dispatch` 逻辑的函数（ `(next) => (action) => {}` ）。
+
+2.组合中间件增强的 `dispatch` 函数：
+
+```js
+dispatch = compose(...chain)(store.dispatch);
+```
+
+这一步调用 `compose` 函数并传入前一步构建的中间件函数链 `chain`。`compose` 从右向左将所有中间件的 `(next) => (action) => {}` 函数组合成一个单一的增强版 `dispatch` 函数。这个组合结束的结果是从第一个中间件到最后一个中间件的嵌套调用，每个中间件都包装了下一个 `dispatch` 函数，而内部最初的 `dispatch` 是原始的 `store.dispatch`。
+
+当运行 `compose(...chain)(store.dispatch)` 之后，我们得到了最终的增强版 `dispatch` 函数，该函数内部包含了所有中间件的逻辑，并且可以处理和转发 actions。这就是 Redux 中间件的功效：在 action 达到 reducer 之前，你可以进行日志记录、调用异步接口、处理 action 的数据等等。
+
+最后，这个增强版的 `dispatch` 会替换原来的 `store.dispatch`，中间件的构建过程在这里就完成了。
+
+在 dispatch 被替换成增强版的dispatch之前，如果有任何调用dispatch的行为，都会报错。
+
+```
+    //这个占位函数的目的是防止在构建中间件管道期间发出 dispatch。
+    let dispatch = () => {
+      throw new Error(
+        'Dispatching while constructing your middleware is not allowed. ' +
+          'Other middleware would not be applied to this dispatch.'
+      )
+    }
+```
+
+`dispatch`函数被替换后，由于闭包机制，如果在构建好的增强版 `dispatch`，即 `(action) => {}`这一层的函数中执行 `dispatch(action)` 不会抛出错误，因为此时 `dispatch` 已经是组合后的、可用的真正 `dispatch` 函数了。
 
 ### 自定义中间件
 
