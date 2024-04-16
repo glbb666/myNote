@@ -6,7 +6,25 @@
 
 在大型的 `js`应用中势必存在非常多的 `View`和 `Model`，且它们之间存在双向绑定的关系，如果处理不好就会出现混乱的绑定关系，对于项目的维护和问题的追踪都不友好。针对这种现象，`facebook`团队提出了单向数据流，禁止 `view`直接对话 `model`。
 
-Redux 是一个用于应用程序状态管理的库，它通过维护一个状态树（state tree）来帮助应用程序保持一致性和预测性。Redux 包含三个核心概念：action、reducer 和 store。
+## Redux是什么
+
+Redux 是一个用于应用程序状态管理的库。
+
+Redux 包含三个核心概念：action、reducer 和 store。
+
+1. **Action** : 描述了有什么改变发生的普通对象。每个 action 都有一个 `type` 字段，用来表示要执行的行为类型。Actions 是唯一的信息源，只能通过 `store.dispatch()` 发送到 store。
+2. **Reducer** : 是纯函数，它接收前一个状态和一个 action，然后返回一个新状态。给定相同的输入，总是返回相同的输出，不会有任何副作用。Reducers 指明了如何根据 action 更新状态。
+3. **Store** : 是把 actions 和 reducers 联系到一起的对象。它持有应用的状态，并且可以通过 `getState()` 获取当前状态，在应用启动时通过 `replaceReducer()` 替换 reducer，同时可以通过 `dispatch(action)` 更新状态，还能通过 `subscribe(listener)` 注册监听器。
+
+而 `combineReducers`, `createStore`, 和 `applyMiddleware` 是 Redux 提供的辅助函数，它们提供了实施上述核心概念的具体实现机制。
+
+* `combineReducers` 用于将多个 reducers 合并成一个单一的 root reducer，主要用于大型应用中，便于对状态管理进行模块化设计。
+* `createStore` 用于创建一个 Redux store 来以存储整个应用的状态树。
+* `applyMiddleware` 用于增强 Redux，通过中间件来扩展 Redux 的功能，例如为了支持异步 action 等。
+
+通过将这些函数与 Redux 的核心概念配合使用，开发者能够构建一个健壮、可扩展且易于维护的状态管理系统。
+
+## Redux的概念细说
 
 ### Action
 
@@ -218,7 +236,23 @@ const cancelUpdate = store.subscribe(update);
 <Button onClick={cancelUpdate}>unsubscribe</Button>
 ```
 
-store用createStore创建。
+store用createStore创建，所以createStore包含以上四种方法。
+
+#### `replaceReducer(nextReducer)`
+
+- Redux store 中的一个方法，用于替换 store 当前的 reducer 并且触发一次 action 以使新的 reducer 重新计算整个状态树。
+
+```js
+function newReducer(state = { count: 0 }, action) {
+  switch (action.type) {
+    /* ... 其它 action 处理逻辑 ... */
+    default:
+      return state;
+  }
+}
+// 使用新的 reducer 替换当前的 reducer
+store.replaceReducer(newReducer);
+```
 
 ### createStore
 
