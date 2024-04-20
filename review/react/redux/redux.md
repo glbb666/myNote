@@ -281,11 +281,11 @@ function createStore(reducer, preloadedState, enhancer) {
 
   let currentReducer = reducer;
   let currentState = preloadedState;
-  let currentListeners = [];
+  let currentListeners = []; // 监听器数组，存放监听state变化的回调函数
   let nextListeners = currentListeners;
   let isDispatching = false;
 
-  // 确保 listeners 列表是可变的
+  // 功能函数，确保nextListeners和currentListeners是独立的
   function ensureCanMutateNextListeners() {
     if (nextListeners === currentListeners) {
       nextListeners = currentListeners.slice();
@@ -295,26 +295,6 @@ function createStore(reducer, preloadedState, enhancer) {
   // 获取当前的 state
   function getState() {
     return currentState;
-  }
-
-  // 注册监听函数
-  function subscribe(listener) {
-    let isSubscribed = true;
-
-    ensureCanMutateNextListeners();
-    nextListeners.push(listener);
-
-    return function unsubscribe() {
-      if (!isSubscribed) {
-        return;
-      }
-
-      isSubscribed = false;
-
-      ensureCanMutateNextListeners();
-      const index = nextListeners.indexOf(listener);
-      nextListeners.splice(index, 1);
-    };
   }
   
   // 派发 action
@@ -339,10 +319,31 @@ function createStore(reducer, preloadedState, enhancer) {
     const listeners = (currentListeners = nextListeners);
     for (let i = 0; i < listeners.length; i++) {
       const listener = listeners[i];
+      //发布订阅模式的发布部分
       listener();
     }
 
     return action;
+  }
+
+    // 注册监听函数
+  function subscribe(listener) {
+    let isSubscribed = true;
+
+    ensureCanMutateNextListeners();
+    nextListeners.push(listener);
+
+    return function unsubscribe() {
+      if (!isSubscribed) {
+        return;
+      }
+
+      isSubscribed = false;
+
+      ensureCanMutateNextListeners();
+      const index = nextListeners.indexOf(listener);
+      nextListeners.splice(index, 1);
+    };
   }
 
   // 当我们创建 store 时，我们需要派发一个初始化的 action
@@ -366,6 +367,7 @@ export default createStore;
 
 - 在reducer中dispatch action
 - `dispatch` 方法在中间件(middleware)中被错误地同步调用，可能也会引起冲突。举个例子：中间件在捕获某个action的同时dispacth了同一个action，导致死循环。
+
   ```js
   const incrementMiddleware = store => next => action => {
     if (action.type === 'INCREMENT') {
@@ -381,6 +383,17 @@ export default createStore;
     return next(action);
   };
   ```
+
+**为什么要确保 `nextListeners` 和 `currentListeners` 是独立的**
+
+`ensureCanMutateNextListeners` 函数的目的是，当任何订阅者（listener）正在监听状态变化时，如果有新的订阅或取消订阅操作发生，我们不想直接修改 `currentListeners` 数组。因为这样做可能会影响到正在进行的遍历操作（比如在某个listener回调中执行了订阅/取消订阅操作）。所以，我们创建 `nextListeners` 副本进行修改，**保证 `currentListeners` 在当前的dispatch调用期间保持不变**。
+
+同时，下一次的dispatch会使用更新后的 `nextListeners`
+
+```js
+const listeners = currentListeners = nextListeners;
+
+```
 
 下面的部分我们讲中间件的增强器，也就是createStore的第三个参数
 
@@ -731,150 +744,6 @@ store.dispatch(actions.increase()) // {count: 1}
 store.dispatch(actions.increase()) // {count: 2}
 store.dispatch(actions.increase()) // {count: 3}
 ```
-
-### `Redux`三大原则
-
-1. 单一数据源 `Store`
-2. 只能通过 `Dispatch Action`来修改 `state`
-3. 使用 `Reducer`纯函数来执行修改 `state`
-
-使用 `Redux`有两个动作，一个是初始化，一个是更新。
-
-先看初始化：
-
-![image-20200225192618285](images/image-20200225192618285.png)
-
-再看更新：
-
-在新的网页中，用户会有非常多的交互行为，比如用户点击页面的按钮，去改变页面的数据。
-
-![image-20200225194309967](images/image-20200225194309967.png)
-
-用户点击，会调用 `store`的 `dispatch`方法， `dispatch`出一个 `action`由 `reducer`接受，`reducer`会根据 `action`生成一个新的 `state`，接着把它放到 `store`中存储。在初始化过程当中，注册在 `store`上的 `listener` 就会被一一调用和执行， 我们通常会在 `listener`中做视图的更新动作，并且在视图更新中获取 `store`的最新数据，通过获取和更新，用户就可以看到页面中数据的展示。
-
-## React-Redux
-
-React-Redux 是一个绑定库，建立在 Redux 之上，专门用于在 React 应用中将组件连接到 Redux store。
-
-如果仅使用 React-Redux 而没有 Redux，那么实际上是无法进行数据管理的。
-
-* 它提供了 `Provider` 组件和 `connect` 函数，以及新的 Hooks API (`useDispatch` 和 `useSelector`)。
-* `Provider` 组件使得 Redux store 对整个应用中的组件树可用。
-* `connect` 函数用于将 Redux state 映射到 React 组件的 props，并将 action dispatchers 传递给组件，这样组件就可以触发状态更新。
-* React-Redux 的 Hooks API 提供了一个更现代、函数式的方法来让 React 组件访问 Redux store 的状态，并派发 actions。
-
-#### `<Provider store>`
-
-作用：`store`直接集成到 `React`应用的顶层 `props`里面，只要各个子组件能访问到顶层 `props`就行了
-
-将入口组件包进去（被包进的组件及其子组件才能访问到 `Store`，才能使用 `connect`方法
-
-```jsx
-import { Provider } from 'react-redux';
-render(
-	<Provider store = {store}>
-  	<App />
-  </Provider>，
-  document.getElementById('app')
-)
-```
-
-#### Connect
-
-被 `Provider`包裹的组件(例如上面的 `App`)内部就可以使用 `connect`
-
-```javascript
-connect([mapStateToProps],[mapDispatchToprops],[mergeProps],[options])(MyComponent)
-```
-
-##### mapStateToProps（输出函数）
-
-- 作用：将 `<font color='red'>Store`里 `</font>`的 `state`变成 `<font color='red'>`组件的 `</font>props`。当 `state`更新时，会同步更新组件的 `props`，触发组件的 `render`方法。
-- 如果 `mapStateToProps`为空（ 即设置为()=>({}) )，那组件里的任何更新都不会触发组件的 `render`方法
-
-```jsx
-const mapStateToProps = (state) => {
-  return {
-    // prop : state.xxx  | 意思是将state中的某个数据映射到props中
-    foo: state.bar
-  }
-}
-```
-
-然后渲染的时候就可以使用 `this.props.foo`
-
-```jsx
-class App extends Component {
-    constructor(props){
-        super(props);
-    }
-    render(){
-        return(
-        	// 这样子渲染的其实就是state.bar的数据了
-            <div>this.props.foo</div>
-        )
-    }
-}
-export default connect(mapStateToProps)(App);
-```
-
-##### mapDispatchToprops
-
-- 可以是一个对象，也可以是一个函数（负责输出）
-- 作用：将 `dispatch(action)`绑定到组件的 `props`上，这样组件就可以派发 `Action`，更新 `state`了
-
-##### `object`型 `mapDispatchToprops`
-
-- `key`是组件 `props`，`value`是 `Actor creator`
-
-```jsx
-const mapDispatchToProps = {
-  incrementNum:action.number.incrementNum,
-  decrementNum:action.number.decrementNum,
-  clearNum:action.number.clearNum,
-}
-```
-
-这样组件就可以通过 `this.props.incrementNum()`来派发 `action`
-
-##### `function`型 `mapDispatchToprops`
-
-- 是一个 `function`
-- 参数是 `dispatch`方法
-- 返回值是 `object`型 `mapDispatchToprops`
-
-```jsx
-import { bindActionCreators } from 'redux';
-const mapDispatchToProps2 = (dispatch,ownProps)=>{
-	return {
-    incrementNum:bindActionCreators(action.number.incrementNum,dispatch),
-    decrementNum:bindActionCreators(action.number.decrementNum,dispatch),
-    clearNum:bindActionCreators(action.number.clearNum,dispatch),
-  }
-}
-```
-
-```jsx
-class App extends Component {
-    constructor(props){
-        super(props);
-    }
-    componentDidMount() {
-        this.props.clearNum();
-    }
-}
-export default connect(mapStateToProps)(App);
-```
-
-##### mergeProps
-
-经过 `connect`的 `props`有三个来源
-
-- 由 `mapStateToProps`将 `state`映射的 `props`
-- 由 `mapDispatchToprops`将 `dispatch(action)`映射的 `props`
-- 组件自身的 `props`
-
-`mergeProps`的参数对应了这三个来源，作用就是整合这三个来源（过滤，重新组织，根据 `ownProps`绑定不同的 `stateProps`和 `dispatchProps`
 
 ## redux-saga
 
