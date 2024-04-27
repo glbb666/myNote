@@ -127,11 +127,11 @@ class ChildComponent extends React.Component {
 
 * 使用 React 提供的 `React.createRef()` 或 `useRef()` Hook 来获取子组件的实例或 DOM 元素，并对其进行操作。
 
-### **事件发布/订阅模型** ：
+### **事件发布/订阅模型** ：（高级指引/EventBus）
 
 * 使用自定义事件系统或者第三方库（如 mitt、EventEmitter3 等）进行非关联组件间的通信。
 
-### **全局状态管理库** ：（redux有专门写一篇）
+### **全局状态管理库** ：（redux目录）
 
 * Redux提供了跨组件共享和管理状态的能力。
 * 通过定义全局的 actions 和 reducers（或其他实体），应用内的任意组件都可以访问和更新状态。
