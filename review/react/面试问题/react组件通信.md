@@ -131,6 +131,9 @@ class ChildComponent extends React.Component {
 
 * 使用自定义事件系统或者第三方库（如 mitt、EventEmitter3 等）进行非关联组件间的通信。
 
+### 广播
+广播和EventBus的机制类似，不过EventBus在每个页面都会创建一个新的实例。对于mpa架构的项目而言，广播可以进行跨页面共享状态或保持事件监听。
+
 ### **全局状态管理库** ：（redux目录）
 
 * Redux提供了跨组件共享和管理状态的能力。
