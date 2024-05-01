@@ -1,6 +1,6 @@
 ### 什么是 `useEffect`
 
-`useEffect` 是允许你在 React 函数组件中添加 `"effect"` 的 Hook。
+类似 componentDidMount/Update, componentWillUnmount，当效果为 componentDidMount/Update 时，总是在整个更新周期的最后（页面渲染完成后）才执行。
 
 ### 基本使用
 

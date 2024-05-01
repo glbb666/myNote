@@ -32,7 +32,9 @@ React的Hook是React 16.8中引入的新功能，它允许你在不编写类组�
 
 类似 componentDidMount/Update, componentWillUnmount，当效果为 componentDidMount/Update 时，总是在整个更新周期的最后（页面渲染完成后）才执行。
 
-* `useLayoutEffect` 的时机则类似于 `componentWillMount`（在 React 17 及以前）和 `componentWillUpdate`，以及 `getSnapshotBeforeUpdate`。它在所有 DOM 变更之后立即同步运行，并在新的更新被绘制之前完成，这意味着你可以在渲染发生前同步修改 DOM。
+* `useLayoutEffect`：（有专门写一篇）
+
+类似于 `componentWillMount`（在 React 17 及以前）和 `componentWillUpdate`，以及 `getSnapshotBeforeUpdate`。它在所有 DOM 变更之后立即同步运行，并在新的更新被绘制之前完成，这意味着你可以在渲染发生前同步修改 DOM。
 
 #### 3. context Hooks
 
