@@ -1,6 +1,6 @@
 ### Hook是什么
 
-React的Hook是React 16.8中引入的新功能，它允许你在不编写类组件的情况下使用React特性。常用的React Hook包括useState, useEffect, useContext等。
+React的Hook是React 16.8中引入的新功能，它允许你在不编写类组件的情况下“钩入” React 的特性。常用的React Hook包括useState, useEffect, useContext等。
 
 ### 为什么使用Hook
 
@@ -21,10 +21,18 @@ React的Hook是React 16.8中引入的新功能，它允许你在不编写类组�
   const [state, dispatch] = useReducer(reducer, initialState);
   ```
 
+`useReducer` 和 `useContext` 经常一起使用，它们共同提供了一种在 React 应用中进行状态管理的强大模式，特别是当你需要在多个组件间共享状态时。这种模式可以是类似 Redux 状态管理的轻量级替代方案。这种组合的优势是
+
+1. **维护性和可读性** ：`useReducer` 提供了将状态更新逻辑分离出来的能力，这意味着状态更新逻辑会集中在 reducer 函数中，而不是分散在各个组件的 `useState` 调用中。结合 `useContext` 使用可以进一步清晰地组织代码。
+2. **性能优化** ：在大型应用中，状态更新可能会引起大面积的组件重新渲染。使用 `useContext` 配合 `useReducer` 可以通过 context 分发 `dispatch` 函数，从而确保只有需要响应状态改变的组件才会重新渲染。
+
 #### 2.Effect Hooks
 
-* useEffect: 类似 componentDidMount/Update, componentWillUnmount，当效果为 componentDidMount/Update 时，总是在整个更新周期的最后（页面渲染完成后）才执行
-* useLayoutEffect: 用法与 useEffect 相同，区别在于该方法的回调会在数据更新完成后，页面渲染之前进行，该方法会阻碍页面的渲染
+- useEffect:（有专门写一篇）
+
+类似 componentDidMount/Update, componentWillUnmount，当效果为 componentDidMount/Update 时，总是在整个更新周期的最后（页面渲染完成后）才执行。
+
+* `useLayoutEffect` 的时机则类似于 `componentWillMount`（在 React 17 及以前）和 `componentWillUpdate`，以及 `getSnapshotBeforeUpdate`。它在所有 DOM 变更之后立即同步运行，并在新的更新被绘制之前完成，这意味着你可以在渲染发生前同步修改 DOM。
 
 #### 3. context Hooks
 
