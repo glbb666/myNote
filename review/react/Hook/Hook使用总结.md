@@ -1,6 +1,6 @@
 ### Hook是什么
 
-React的Hook是React 16.8中引入的新功能，它允许你在不编写类组件的情况下“钩入” React 的特性。常用的React Hook包括useState, useEffect, useContext等。
+React的Hook是React 16.8中引入的新功能，它将函数组件的能力扩展到了类组件的水平，甚至更上一层楼。它允许你在不编写类组件的情况下“钩入” React 的特性。常用的React Hook包括useState, useEffect, useContext等。
 
 ### 为什么使用Hook
 

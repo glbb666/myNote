@@ -1,23 +1,38 @@
-#  什么是WebWorker
+# 是什么
 
-web worker 是运行在后台的`JS`，不会影响页面的性能。
+* **Web Worker** 是渲染进程中的一个线程，允许执行耗时任务而不冻结用户界面。
+* **Service Worker** 是渲染进程中的一个线程，主要用于拦截和处理网络请求，缓存资源以实现离线访问，背景同步和推送通知等。
+* **Shared Worker** 是一个进程，可以把他理解为一种特殊类型的Web Worker，可以被多个执行上下文（如多个标签、iframe或window）共享。
 
-### Web Worker简介
+# **为什么**
 
-当在 HTML 页面中执行脚本时，页面的状态是不可响应的，直到脚本已完成。
+* 使用 **Web Worker** 可以将耗时的计算放置在后台执行，避免阻塞主线程，提高了应用的响应性能。
+* 使用 **Service Worker** 可以让Web应用进行离线工作，提高了应用的加载速度和可靠性，也可以接收服务器推送的消息，即使Web应用没有打开也能够更新数据。
+* 使用 **Shared Worker** 可以在多个浏览器上下文中共享同一个Worker实例，使得不同的浏览器标签之间可以共享数据和消息，有利于省去了不同标签页或iframe之间设置复杂通讯机制的麻烦。
 
-`web worker` 是运行在后台的` JavaScript`，独立于其他脚本，不会影响页面的性能。您可以继续做任何愿意做的事情：点击、选取内容等等，而此时 `web worker `在后台运行。
+# 怎么用
 
-### WebWorker与SharedWorker
+## webWorker
 
-每个`Tab`页就是一个浏览器渲染进程
 
-- `WebWorker`只属于某个页面，不会和其他页面的浏览器渲染进程共享
-  - 所以Chrome在浏览器渲染进程中创建一个新的线程来运行Worker中的JavaScript程序。
-- `SharedWorker`是浏览器所有页面共享的，它不隶属于某个Render进程
-  - 所以Chrome浏览器为SharedWorker单独创建一个进程来运行JavaScript程序，在浏览器中每个相同的JavaScript只存在一个SharedWorker进程，不管它被创建多少次。
 
-看到这里，应该就很容易明白了，本质上就是进程和线程的区别。SharedWorker由独立的进程管理，WebWorker只是属于render进程下的一个线程
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 ### 使用方法
 
@@ -68,13 +83,9 @@ web worker 是运行在后台的`JS`，不会影响页面的性能。
 ### 注意事项
 
 1. **同源限制** 分配给 Worker 线程运行的脚本文件，必须与主线程的脚本文件同源。
-
 2. **DOM 限制** Worker 线程所在的全局对象，与主线程不一样，无法读取主线程所在网页的 DOM 对象，也无法使用 document、window、parent 这些对象。但是，Worker 线程可以访问 navigator 对象和 location 对象。
-
 3. **通信限制** Worker 线程和主线程不在同一个上下文环境，它们不能直接通信，必须通过消息完成。
-
 4. **脚本限制** Worker 线程**不能**执行 **alert()** 方法和 **confirm()** 方法，但**可以**使用 XMLHttpRequest 对象发出 **AJAX** 请求。
-
 5. **文件限制** Worker 线程无法读取本地文件，即不能打开本机的文件系统（file://），它所加载的脚本，必须来自网络。
 
    注意：如果worker是引用的别的js文件，应该用服务器进行读取
