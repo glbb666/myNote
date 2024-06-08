@@ -64,72 +64,39 @@
 
 ## **Service Worker**
 
-1. **创建：**
-   Service Worker的注册通常在网站的入口页面JavaScript中进行：
+ServiceWorker遵循同源策略
 
-   ```javascript
-   // 检查Service Worker是否可用
-   // navigator 是一个内建的对象，它表示用户的浏览器信息
-   if ('serviceWorker' in navigator) {
-     // 注册Service Worker
-     navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
-       console.log('Service Worker 注册成功:', registration.scope);
-     }).catch(function(error) {
-       console.log('Service Worker 注册失败:', error);
-     });
-   }
-   ```
-
-   在 `service-worker.js` 文件里，处理安装、激活、抓取请求等逻辑：
-
-   ```javascript
-   // service-worker.js
-   addEventListener('install', function(event) {
-     // 在安装阶段预缓存资源
-   });
-
-   addEventListener('activate', function(event) {
-     // 激活时清理旧缓存
-   });
-
-   addEventListener('fetch', function(event) {
-     // 拦截网络请求并作出处理
-   });
-   ```
-2. **使用：**
-   一旦注册成功，Service Worker就会控制它注册时所在目录范围内的所有页面，并在相关事件触发时执行指定的事件处理程序。
-3. **销毁：**
-   Service Worker**不需要显式销毁**。当Service Worker不再控制任何页面并且事件监听回调都完成时，它会被终止，直到下一个事件触发时重新激活。
-
-### 控制页面的范围
-
-它注册时所在目录范围内的所有页面
+- 注册限制：只能为同源下服务的页面注册 Service Worker。
+- 作用域限制：不能在 Service Worker 中拦截或缓存跨源资源（除非这些资源允许跨源使用，如使用 CORS 头部的资源）。
 
 举个例子，假设你在网站根目录下注册了一个 Service Worker。
 
-```js
-// 位于 / 根目录的一个脚本文件内
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/service-worker.js')
-    .then(function(registration) {
-      // 注册成功
-    })
-    .catch(function(error) {
-      // 注册失败
-    });
-}
-
-```
-
 这意味着Service Worker的作用范围是整个网站（因为根目录是整个网站的基础路径）。因此，该 Service Worker 将会控制所有以 `https://YOUR_DOMAIN/`开头的页面。如果Service Worker是在一个子目录下注册的，那么它的作用范围将被限制在该子目录下。
 
-### 控制页面的时机
+#### Service Worker的用法
 
-仅在Service Worker完成**注册、安装、激活并且页面重新加载（如用户手动刷新）**后，它才能开始控制页面。
+- 缓存
+  在安装阶段，我们可以提前下载某一个资源作为缓存。
 
-下面是Service Worker生命周期的基本序列（顺序进行）：
+  `caches` 是一个全局变量，它是 Cache Storage API 的一部分，提供了一个脚本可用的缓存接口。通过这个接口，你可以在支持的浏览器中创建、读取、修改和删除特定的缓存。`caches` 对象只在 Service Worker、Web Workers 和 Window 上下文中可用（虽然在 Window 上下文中使用它是有限的）。
+- prefetch
+  Service Worker的预加载可以分为安装阶段和监听阶段
 
-1. **注册**：这个动作通常发生在页面的JavaScript代码中，用来告知浏览器Service Worker的脚本位置。注册成功后，浏览器会在后台下载Service Worker文件并尝试安装它。
+  **安装阶段的预加载**通常用于静态资源。有利于加快应用的加载时间，提升离线体验。
+
+  在监听阶段中，我们可以监听页面的fetch事件，但是并不对资源进行存储。这就是进行prefetch。
+
+#### 缓存的例子
+
+Service Worker比较复杂，它有生命周期。下面是一个进行缓存资源的示例，通过这个例子可以体会到Service Worker生命周期的顺序。
+
+接下来我们来看看流程：
+
+1. **注册**：
+
+   调用 `navigator.serviceWorker.register()` 函数进行注册。
+
+   最好在应用的入口文件（如 React 的 `index.js`）中进行注册。因为 `Service Worker`是在浏览器中全局运行的，所以不管在 `SPA`还是 `MPA`，都会接管多个页面，所以 `Service Worker`越早注册就能越早接管页面。
 
    ```js
    // 检查Service Worker API是否可用，并注册Service Worker
@@ -142,15 +109,24 @@ if ('serviceWorker' in navigator) {
    }
 
    ```
-2. **安装** ：注册成功后，Service Worker进入 `install`状态。这一个阶段主要用于打开缓存，缓存应用的重要资源。
+2. **安装** ：注册成功后，Service Worker进入 `install`状态。
+
+   - **打开缓存** (`caches.open`)：打开一个名为 `CACHE_NAME`的缓存。如果这个缓存不存在，浏览器会创建一个新的缓存。
+   - **prefetch，添加静态资源到缓存** (`cache.addAll`)：`cache.addAll` 方法接受一个 URL 数组（这些是你想要缓存的资源的路径），然后执行网络请求去下载这些资源，并将响应对象存储在打开的缓存中。
+   - `caches.open` 和 `cache.addAll` 都是异步的Promise。
+   - **等待异步操作完成** (`event.waitUntil`)：`event.waitUntil` 它内部的任务完成之前，Service Worker 不会进入下一个生命周期阶段。这里用来等待promise执行。
 
    ```js
    // Service Worker 文件内
    self.addEventListener('install', function(event) {
      event.waitUntil(
+       // 在 Service Worker 安装阶段打开一个缓存，并用缓存添加文件
        caches.open('v1').then(function(cache) {
+         //路径是相对于 Service Worker 文件所在的位置
          return cache.addAll([
-           // 列出要缓存的文件
+   	'/css/style.css',
+           '/images/logo.png',
+           '/js/script.js'
          ]);
        })
      );
@@ -160,23 +136,154 @@ if ('serviceWorker' in navigator) {
 3. **激活**：安装步骤后面紧随的是激活阶段。这一个阶段，Service Worker可以清理旧缓存，执行更新后的清理工作等。只有在这之后，Service Worker才有能力控制网页。
 
    ```js
-   // Service Worker 文件内
+   // 激活 Service Worker 并且清理旧缓存
    self.addEventListener('activate', function(event) {
-     // 生命周期的激活部分
+     var cacheWhitelist = [CACHE_NAME];
+
+     event.waitUntil(
+       caches.keys().then(function(cacheNames) {
+         return Promise.all(
+           cacheNames.map(function(cacheName) {
+             if (cacheWhitelist.indexOf(cacheName) === -1) {
+               console.log('Service Worker 清理了旧缓存');
+               return caches.delete(cacheName);
+             }
+           })
+         );
+       })
+     );
    });
 
    ```
-4. **控制**：在 `activate`事件完成后，Service Worker就能控制其作用范围内的所有页面了，但它控制的仅限于激活之后新加载或重新加载的页面。
+4. **控制**：Service Worker 将开始控制激活之后才打开的页面。此时为了让 Service Worker 控制页面，通常需要重新加载页面。或者你也可以调用 `clients.claim()`，这个方法使得活跃的 Service Worker 能够立即控制未被Service Worker 控制的任何客户端。
 
-   如果你想让Service Worker在注册后立即控制页面，你可以利用 `clients.claim()`方法在激活阶段调用，这样Service Worker就可以直接控制当前页面而不需重新加载
-
-   ```js
+```js
    // Service Worker 文件内
    self.addEventListener('activate', function(event) {
      event.waitUntil(
-       clients.claim() // Service Worker 取得页面的控制权，不需再重启页面
+       // 异步操作，返回一个promise
+       // 表示 Service Worker 取得页面的控制权，不需再重启页面
+       clients.claim() 
      );
    });
+```
+
+5. 监听 ：激活后，Service Worker 能监听并响应 `fetch` 事件（拦截网络请求并可提供缓存响应）和其他事件（如 `push` 和 `sync`）。
+
+```js
+   // 使用 Service Worker 来拦截并处理网络请求
+   self.addEventListener('fetch', function(event) {
+     event.respondWith(
+       caches.match(event.request)
+         .then(function(response) {
+           // 如果缓存中有匹配的请求，则返回缓存的响应
+           if (response) {
+             return response;
+           }
+           // 否则用fetch请求并返回结果
+           return fetch(event.request);
+         }
+       )
+     );
+   });
+```
+
+6. 终止 和 更新：回调完成之后 Service Worker 会自动终止。不过它**没有销毁**，而是在后台自动检查更新。如果 Service Worker 文件发生变化，浏览器会认为这是新的 Service Worker 并开始安装过程。更新后的 Service Worker 将经历相同的生命周期。
+
+#### prefetch的例子
+
+利用 `Service Worker`进行监听的步骤和缓存基本一致。
+
+区别在于：
+
+1. `Service Worker`文件内容，需要匹配不同的页面，发起不同的请求，利用postMessage分发给不同的页面。
+
+   ```js
+   // service-worker.js
+   importScripts('homePreload.js');
+   importScripts('aboutPreload.js');
+
+   self.addEventListener('fetch', event => {
+     // 你可以在这里根据 URL 调用不同文件中定义的预加载逻辑
+     if (event.request.url.includes('/api/home-data')) {
+       // 调用 homePreload.js 中的逻辑
+       handleHomeDataFetch(event);
+     } else if (event.request.url.includes('/api/about-data')) {
+       // 调用 aboutPreload.js 中的逻辑
+       handleAboutDataFetch(event);
+     }
+   });
+
+   ```
+
+   这里把不同页面的 `prefetch`逻辑剥离到不同的文件中，用 `importScripts`引入。使用 `importScripts()` 引入的脚本文件需要与 Service Worker 在同一域下
+
+   ```js
+   // homePreload.js
+   function handleHomeDataFetch(event) {
+     event.respondWith((async () => {
+       try {
+         // 假设这里有多个需要并行请求的API URLs
+         const apiUrls = ['/api/data1', '/api/data2', '/api/data3'];
+
+         // 将每个URL映射为fetch请求的Promise
+         const fetchPromises = apiUrls.map(url => fetch(url));
+
+         // 等待所有请求完成
+         const responses = await Promise.all(fetchPromises);
+
+         // 使用Promise.all再次确保所有响应都被转换为JSON
+         const data = await Promise.all(responses.map(res => res.json()));
+
+         // 根据业务逻辑处理数据...
+
+         // 创建一个合并后的响应返回
+         return new Response(JSON.stringify({data}), {
+           headers: { 'Content-Type': 'application/json' }
+         });
+       } catch (error) {
+         // 错误处理
+         return new Response('{"error": "请求失败，请稍候重试"}', {
+           headers: { 'Content-Type': 'application/json' }
+         });
+       }
+     })());
+   }
+
+   ```
+2. 页面，使用自定义hook注册监听时间，对Service Worker返回的数据进行监听。
+
+   ```js
+   import { useState, useEffect } from 'react';
+
+   function useServiceWorkerMessage() {
+     // 用于存储从 Service Worker 收到的消息数据
+     const [messageData, setMessageData] = useState(null);
+
+     useEffect(() => {
+       // 定义处理 Service Worker 消息的函数
+       const handleMessage = (event) => {
+         console.log('收到 Service Worker 的消息:', event.data);
+         setMessageData(event.data);
+       };
+
+       // 添加消息事件监听到 navigator.serviceWorker
+       if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+         navigator.serviceWorker.addEventListener('message', handleMessage);
+       }
+
+       // 组件卸载或重新执行该 useEffect 时的清理函数
+       return () => {
+         if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+           navigator.serviceWorker.removeEventListener('message', handleMessage);
+         }
+       };
+     }, []); // 该 useEffect 没有依赖，仅在组件挂载时执行
+
+     return messageData;
+   }
+
+
 
    ```
 
