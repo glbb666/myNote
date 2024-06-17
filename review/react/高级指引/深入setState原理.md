@@ -4,6 +4,8 @@
 
 setState(updater, callback)这个方法是用来告诉react组件数据有更新，有可能需要重新渲染。
 
+因为state的更新是异步的，所以回调中可以通过读取 `this.state`获取到最新的 `state`的值
+
 我们先看看以下两个场景
 
 场景一：点击按钮，把count的值增加2次。
@@ -63,43 +65,36 @@ add = ()=>{
 
 #### Fiber
 
-Fiber是新的调和器，每次有新的更新任务发生的时候，调度器都会按照策略给这些任务分配一个优先级。比如说动画的更新优先级会高点，离屏元素的更新优先级会低点。
-
-通过这个优先级我们可以获取一个该更新任务必须执行的截止时间，优先级越高那么截止时间就越近，反之亦然。这个截止时间是用来判断该任务是否已经过期，如果过期的话就会马上执行该任务。
-
-当开始执行更新任务时，如果有新的更新任务进 来，那么调度器就会按照两者的优先级大小来进行决策会判断两个任务的优先级高低。假如新任务优先级高，那么打断旧的任务，重新开始，否则继续执行任务。
+Fiber有专门的一篇介绍。
 
 #### fiber&&FiberRoot&RootFiber
 
 1. **FiberRoot**
 
 - FiberRoot是整个React应用的起点
-
-- FiberRoot包含应用挂载的目标节点（<div id='root'>root</div>）
-
+- FiberRoot包含应用挂载的目标节点（`<div id='root'>`root `</div>`）
 - FiberRoot记录整个React应用 更新过程中的各种信息
 
 2. **RootFiber**
 
-`RootFiber`的本质是一个`fiber`，但是它是一个特殊的`fiber`，我们可以把它看成根`fiber`
+`RootFiber`的本质是根 `fiber`
 
-- 它和`FiberRoot`的关系为
+- 它和 `FiberRoot`的关系为
 
 ```
 FiberRoot.current = RootFiber
 RootFiber.stateNode = FiberRoot
 ```
 
-- 它的`return`值为`null`（没有父节点）
+- 它的 `return`值为 `null`（没有父节点）
 
 3. **fiber**
 
-- `fiber`对象与`ReactElement`一一对应，如下图，`App`组件
+- `fiber`对象与 `ReactElement`一一对应，如下图，`App`组件
 
 ![img](images/(null)-20200902104932340.(null))
 
-- `fiber`是一种新型的数据结构，记录类组件的各种状态（`state`和`props`）。**this**上的**state**和**props**是根据**Fiber**对象的**state**、**props**更新的
-
+- `fiber`是一种新型的数据结构，记录类组件的各种状态（`state`和 `props`）。**this**上的**state**和**props**是根据**Fiber**对象的**state**、**props**更新的
 - fiber是改进版本的虚拟DOM(树形->链表）。每个ReactElement通过**props.children**与其他ReactElement连结起来
 
 下图阐述了它们之间的关系
@@ -107,15 +102,12 @@ RootFiber.stateNode = FiberRoot
 ![img](images/(null)-20200902103251487.(null))
 
 - `ReactElement`只会把子节点（`props.children`）的第一个子节点当做child节点，其余的子节点（也就是第一个子节点的兄弟节点）都是从第一个子节点开始，依次**单向连接**至后一个兄弟节点
-
-- 每个子节点都会指向父节点（红箭头），也就是`fiber`对象的`return`属性
+- 每个子节点都会指向父节点（红箭头），也就是 `fiber`对象的 `return`属性
 
 **遍历过程**
 
 - 找子节点（非上一次的）
-
 - 找兄弟节点
-
 - 返回父节点
 
 #### 为什么要使用fiber呢？
@@ -161,7 +153,7 @@ function FiberRootNode(containerInfo, tag, hydrate) {
 
 #### fiber对象的结构
 
-以下是`fiber`对象中一些我认为比较重要的属性
+以下是 `fiber`对象中一些我认为比较重要的属性
 
 ```javascript
 export type Fiber = {
@@ -199,12 +191,11 @@ export type Fiber = {
 
 #### expirationTime
 
-作用：当时间到了`expirationTime`的时候，如果某个`update`还未执行的话，`React`将会强制执行该`update`
+作用：当时间到了 `expirationTime`的时候，如果某个 `update`还未执行的话，`React`将会强制执行该 `update`
 
 - `expirationTime`越大优先级越高
-
-- 高优先级`update`的`expirationTime`**间隔**是10ms，低优先级`update`的`expirationTime`间隔是25ms。间隔的意思是：在间隔事件内提交的两个`update`计算出的`expirationTime`的值是一样的
-- `React`让两个相近的`update`得到相同的`expirationTime`，目的就是让这两个`update`自动合并成一个`update`，从而达到批量更新的目的
+- 高优先级 `update`的 `expirationTime`**间隔**是10ms，低优先级 `update`的 `expirationTime`间隔是25ms。间隔的意思是：在间隔事件内提交的两个 `update`计算出的 `expirationTime`的值是一样的
+- `React`让两个相近的 `update`得到相同的 `expirationTime`，目的就是让这两个 `update`自动合并成一个 `update`，从而达到批量更新的目的
 
 ### 源码解析
 
@@ -223,9 +214,7 @@ Component.prototype.setState = function(partialState, callback) {
 它接受了三个参数
 
 - inst 是this.setState的调用者，即类组件的实例
-
 - payload是需要合并的state
-
 - callback是合并state后的回调
 
 ```javascript
@@ -270,7 +259,6 @@ enqueueSetState(inst, payload, callback) {
 作用：获取一个存放update的单向链表，用next来串联update。
 
 - queue1将来要保存的是fiber的update队列
-
 - queue2将来要保存的是fiber的镜像的update队列
 
 ```javascript
@@ -320,10 +308,8 @@ export function enqueueUpdate(fiber: Fiber, update: Update) {
 - queue1取的是fiber.updateQueue，queue2取的是alternate.updateQueue
 
 1. 如果两者均为null，则调用createUpdateQueue()获取初始队列
-
-1. 如果两者之一为null，则调用cloneUpdateQueue()从对方中获取队列
-
-1. 如果两者都存在则不作处理
+2. 如果两者之一为null，则调用cloneUpdateQueue()从对方中获取队列
+3. 如果两者都存在则不作处理
 
 根据createUpdateQueue的代码，可以看出，用createUpdateQueue创建的是空队列
 
@@ -375,7 +361,6 @@ function cloneUpdateQueue(
 经过上面的获取队列操作后，现在只有两种情况
 
 - alternate不存在，一个（空）队列。
-
 - alternate存在，两个（空）队列，共享结构。
 
 ##### 2. 入队操作
@@ -424,9 +409,7 @@ function appendUpdateToQueue(
 ![img](images/(null)-20200902103320270.(null))
 
 - 大家可以看到，当两个队列不为空时，queue1和queue2是共享结构。
-
 - 当执行appendUpdateToQueue时，queue1的尾节点发生了改变。
-
 - 而queue2的lastUpdate指向的是queue1之前的lastUpdate，所以只需要将queue2的尾节点和queue1同步即可。
 
 #### 任务调度：scheduleWork
@@ -496,16 +479,14 @@ export function scheduleUpdateOnFiber(
 - 同步
 
   - 初次挂载，调用renderRoot进行循环渲染更新。
-
   - 非初次挂载，调用scheduleCallbackForRoot进行调度
-
 - 异步
 
   - 获取优先级，调用scheduleCallbackForRoot进行调度
 
 ##### 1. 遍历更新过期时间
 
-我们先来看看`markUpdateTimeFromFiberToRoot`，它的作用是找到`rootFiber`并遍历更新子节点的`expirationTime`。
+我们先来看看 `markUpdateTimeFromFiberToRoot`，它的作用是找到 `rootFiber`并遍历更新子节点的 `expirationTime`。
 
 ```javascript
 //目标fiber会向上寻找rootFiber对象，在寻找的过程中会进行一些操作
@@ -642,9 +623,8 @@ function scheduleCallbackForRoot(
 
 作用：比较新的回调的过期时间，和root的callback的过期时间。如果新的回调的过期时间更大，说明优先级更高，需要把root的callback取消掉。接着进行任务的调度
 
-- 同步任务：调用`scheduleSyncCallback`，在临时队列中进行调度
-
-- 异步任务：调用`scheduleCallback`，更新调度队列的状态。
+- 同步任务：调用 `scheduleSyncCallback`，在临时队列中进行调度
+- 异步任务：调用 `scheduleCallback`，更新调度队列的状态。
 
 ###### 2.1 中断正在执行的任务
 
@@ -726,7 +706,6 @@ export function scheduleSyncCallback(callback: SchedulerCallback) {
 ```
 
 - 当同步队列为空时，调用Scheduler_scheduleCallback()，将该callback入队并包装成newTask
-
 - 当同步队列不为空，将该callback入队，在入队的时候不需要执行callback，因为在创造队列的时候已经调度了，该callback将会在之后的调度中被函数自动执行。
 
 ###### 2.3 异步调度
@@ -748,7 +727,6 @@ export function scheduleCallback(
 总结：
 
 - 同步的时候，root.callbackNode被赋值fakeCallbackNode。并用Scheduler_scheduleCallback调度同步队列。
-
 - 异步的时候，则直接执行Scheduler_scheduleCallback()，对callback进行包装处理并赋值给root.callbackNode
 
 ##### 3. 调度过程中用到的一些函数
@@ -760,7 +738,6 @@ Scheduler_scheduleCallback的作用是，返回包装处理后的task
 它的callback入参，有两种情况
 
 - 同步：flushSyncCallbackQueueImpl
-
 - 异步：runRootCallback
 
 我们先不区分，把它们一律视作callback来进行看待
