@@ -287,6 +287,72 @@ Service Worker比较复杂，它有生命周期。下面是一个进行缓存资
 
    ```
 
+## Service Worker的缓存策略
+
+* **缓存优先** : 优先返回缓存中的内容，如果没有缓存再通过网络请求。
+* **网络优先** : 优先通过网络请求内容，如果网络请求失败则返回缓存中的内容。
+* **缓存更新** : 返回缓存中的内容，同时在后台进行更新。（意思是每次都返回上一次更新的内容）
+* **仅缓存**: 只从缓存中获取内容，不进行网络请求。
+* **仅网络**: 只通过网络请求内容，不使用缓存。
+
+### 自定义缓存策略
+
+带有过期时间的缓存策略
+
+* 在存入缓存时添加时间戳 。
+* 在读取缓存时检查时间戳 。
+
+```js
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    caches.match(event.request).then(cachedResponse => {
+      const now = Date.now();
+
+      if (cachedResponse) {
+        // 获取自定义的缓存时间戳
+        const cachedTime = parseInt(cachedResponse.headers.get('sw-cache-timestamp'), 10);
+
+        // 如果缓存的时间超过 1 小时（3600000 毫秒）
+        if (now - cachedTime > 3600000) {
+          // 超过1小时，进行网络请求并更新缓存
+          return fetchAndCache(event.request);
+        } else {
+          // 在1小时内，返回缓存
+          return cachedResponse;
+        }
+      } else {
+        // 缓存中没有内容，进行网络请求
+        return fetchAndCache(event.request);
+      }
+    })
+  );
+});
+
+function fetchAndCache(request) {
+  return fetch(request).then(networkResponse => {
+    return caches.open('dynamic-cache').then(cache => {
+      const clonedResponse = networkResponse.clone();
+      const headers = new Headers(clonedResponse.headers);
+      headers.append('sw-cache-timestamp', Date.now().toString());
+
+      const newResponse = new Response(clonedResponse.body, {
+        status: clonedResponse.status,
+        statusText: clonedResponse.statusText,
+        headers: headers
+      });
+
+      cache.put(request, newResponse.clone());
+      return newResponse;
+    });
+  }).catch(error => {
+    // 处理网络请求错误
+    console.error('Fetching failed:', error);
+    throw error;
+  });
+}
+
+```
+
 ## **Shared Worker**
 
 1. **创建：**
