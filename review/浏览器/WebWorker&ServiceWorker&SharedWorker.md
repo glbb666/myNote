@@ -75,18 +75,15 @@ ServiceWorker遵循同源策略
 
 #### Service Worker的用法
 
-- 缓存
-  在安装阶段，我们可以提前下载某一个资源作为缓存。
+Service Worker的预加载可以分为安装阶段和监听阶段，分别对应静态资源和业务请求。
+
+- 静态资源的prefetch
+  **在安装阶段**，我们可以提前下载某一个静态资源作为缓存。
 
   `caches` 是一个全局变量，它是 Cache Storage API 的一部分，提供了一个脚本可用的缓存接口。通过这个接口，你可以在支持的浏览器中创建、读取、修改和删除特定的缓存。`caches` 对象只在 Service Worker、Web Workers 和 Window 上下文中可用（虽然在 Window 上下文中使用它是有限的）。
-- prefetch
-  Service Worker的预加载可以分为安装阶段和监听阶段
+- 业务请求的prefetch**在监听阶段中**，我们可以监听页面的fetch事件，但是并不对资源进行存储。
 
-  **安装阶段的预加载**通常用于静态资源。有利于加快应用的加载时间，提升离线体验。
-
-  在监听阶段中，我们可以监听页面的fetch事件，但是并不对资源进行存储。这就是进行prefetch。
-
-#### 缓存的例子
+#### 静态资源的prefetch的例子
 
 Service Worker比较复杂，它有生命周期。下面是一个进行缓存资源的示例，通过这个例子可以体会到Service Worker生命周期的顺序。
 
@@ -118,17 +115,20 @@ Service Worker比较复杂，它有生命周期。下面是一个进行缓存资
 
    ```js
    // Service Worker 文件内
-   self.addEventListener('install', function(event) {
+   const CACHE_NAME = 'static-cache-v1';
+   const STATIC_ASSETS = [
+     '/index.html',
+     '/styles.css',
+     '/script.js',
+     '/logo.png'
+   ];
+
+   self.addEventListener('install', event => {
      event.waitUntil(
-       // 在 Service Worker 安装阶段打开一个缓存，并用缓存添加文件
-       caches.open('v1').then(function(cache) {
-         //路径是相对于 Service Worker 文件所在的位置
-         return cache.addAll([
-   	'/css/style.css',
-           '/images/logo.png',
-           '/js/script.js'
-         ]);
-       })
+       caches.open(CACHE_NAME)
+         .then(cache => {
+           return cache.addAll(STATIC_ASSETS);
+         })
      );
    });
 
@@ -137,18 +137,12 @@ Service Worker比较复杂，它有生命周期。下面是一个进行缓存资
 
    ```js
    // 激活 Service Worker 并且清理旧缓存
-   self.addEventListener('activate', function(event) {
-     var cacheWhitelist = [CACHE_NAME];
-
+   self.addEventListener('activate', event => {
      event.waitUntil(
-       caches.keys().then(function(cacheNames) {
+       caches.keys().then(cacheNames => {
          return Promise.all(
-           cacheNames.map(function(cacheName) {
-             if (cacheWhitelist.indexOf(cacheName) === -1) {
-               console.log('Service Worker 清理了旧缓存');
-               return caches.delete(cacheName);
-             }
-           })
+           cacheNames.filter(cacheName => cacheName !== CACHE_NAME)
+             .map(cacheName => caches.delete(cacheName))
          );
        })
      );
@@ -168,92 +162,114 @@ Service Worker比较复杂，它有生命周期。下面是一个进行缓存资
    });
 ```
 
-5. 监听 ：激活后，Service Worker 能监听并响应 `fetch` 事件（拦截网络请求并可提供缓存响应）和其他事件（如 `push` 和 `sync`）。
+5. **监听** ：激活后，Service Worker 能监听并响应 `fetch` 事件。更具体的见下面业务资源prefetch的例子。
 
 ```js
-   // 使用 Service Worker 来拦截并处理网络请求
-   self.addEventListener('fetch', function(event) {
-     event.respondWith(
-       caches.match(event.request)
-         .then(function(response) {
-           // 如果缓存中有匹配的请求，则返回缓存的响应
-           if (response) {
-             return response;
-           }
-           // 否则用fetch请求并返回结果
-           return fetch(event.request);
-         }
-       )
-     );
-   });
+self.addEventListener('fetch', event => {
+  if (STATIC_ASSETS.includes(new URL(event.request.url).pathname)) {
+    event.respondWith(
+      caches.match(event.request).then(cachedResponse => {
+        return cachedResponse || fetch(event.request).then(networkResponse => {
+          return caches.open(CACHE_NAME).then(cache => {
+            cache.put(event.request, networkResponse.clone());
+            return networkResponse;
+          });
+        });
+      })
+    );
+  }
+});
 ```
 
-6. 终止 和 更新：回调完成之后 Service Worker 会自动终止。不过它**没有销毁**，而是在后台自动检查更新。如果 Service Worker 文件发生变化，浏览器会认为这是新的 Service Worker 并开始安装过程。更新后的 Service Worker 将经历相同的生命周期。
+6. **终止 和 更新**：回调完成之后 Service Worker 会自动终止。不过它**没有销毁**，而是在后台自动检查更新。如果 Service Worker 文件发生变化，浏览器会认为这是新的 Service Worker 并开始安装过程。更新后的 Service Worker 将经历相同的生命周期。
 
-#### prefetch的例子
-
-利用 `Service Worker`进行监听的步骤和缓存基本一致。
+#### 业务资源prefetch的例子
 
 区别在于：
 
-1. `Service Worker`文件内容，需要匹配不同的页面，发起不同的请求，利用postMessage分发给不同的页面。
-
-   ```js
-   // service-worker.js
-   importScripts('homePreload.js');
-   importScripts('aboutPreload.js');
-
-   self.addEventListener('fetch', event => {
-     // 你可以在这里根据 URL 调用不同文件中定义的预加载逻辑
-     if (event.request.url.includes('/api/home-data')) {
-       // 调用 homePreload.js 中的逻辑
-       handleHomeDataFetch(event);
-     } else if (event.request.url.includes('/api/about-data')) {
-       // 调用 aboutPreload.js 中的逻辑
-       handleAboutDataFetch(event);
-     }
-   });
-
-   ```
+1. `Service Worker`文件内容，需要把需要进行prefetch的页面方法进行调用。
 
    这里把不同页面的 `prefetch`逻辑剥离到不同的文件中，用 `importScripts`引入。使用 `importScripts()` 引入的脚本文件需要与 Service Worker 在同一域下
 
    ```js
-   // homePreload.js
-   function handleHomeDataFetch(event) {
-     event.respondWith((async () => {
-       try {
-         // 假设这里有多个需要并行请求的API URLs
-         const apiUrls = ['/api/data1', '/api/data2', '/api/data3'];
+   importScripts('homePreload.js');
+   importScripts('aboutPreload.js');
 
-         // 将每个URL映射为fetch请求的Promise
-         const fetchPromises = apiUrls.map(url => fetch(url));
-
-         // 等待所有请求完成
-         const responses = await Promise.all(fetchPromises);
-
-         // 使用Promise.all再次确保所有响应都被转换为JSON
-         const data = await Promise.all(responses.map(res => res.json()));
-
-         // 根据业务逻辑处理数据...
-
-         // 创建一个合并后的响应返回
-         return new Response(JSON.stringify({data}), {
-           headers: { 'Content-Type': 'application/json' }
-         });
-       } catch (error) {
-         // 错误处理
-         return new Response('{"error": "请求失败，请稍候重试"}', {
-           headers: { 'Content-Type': 'application/json' }
-         });
-       }
-     })());
-   }
+   self.addEventListener('fetch', event => {
+     // 调用 homePreload.js 中的处理函数
+     homePreload.handleFetch(event);
+     // 调用 aboutPreload.js 中的处理函数
+     aboutPreload.handleFetch(event);
+   });
 
    ```
-2. 页面，使用自定义hook注册监听时间，对Service Worker返回的数据进行监听。
+
+   homePreload.js
 
    ```js
+   // 定义处理函数
+   const homePreload = {
+     handleFetch: function(event) {
+       if (event.request.url.includes('/api/home-data')) {
+         event.respondWith((async () => {
+           try {
+             const apiUrls = ['/api/data1', '/api/data2', '/api/data3'];
+             const fetchPromises = apiUrls.map(url => fetch(url));
+             const responses = await Promise.all(fetchPromises);
+             const data = await Promise.all(responses.map(res => res.json()));
+
+             return new Response(JSON.stringify({data}), {
+               headers: { 'Content-Type': 'application/json' }
+             });
+           } catch (error) {
+             return new Response('{"error": "请求失败，请稍候重试"}', {
+               headers: { 'Content-Type': 'application/json' }
+             });
+           }
+         })());
+       }
+     }
+   };
+
+   // 将处理函数导出到全局作用域
+   self.homePreload = homePreload;
+
+   ```
+
+   aboutPreload.js
+
+   ```javascript
+   // 定义处理函数
+   const aboutPreload = {
+     handleFetch: function(event) {
+       if (event.request.url.includes('/api/about-data')) {
+         event.respondWith((async () => {
+           try {
+             const apiUrls = ['/api/about1', '/api/about2'];
+             const fetchPromises = apiUrls.map(url => fetch(url));
+             const responses = await Promise.all(fetchPromises);
+             const data = await Promise.all(responses.map(res => res.json()));
+
+             return new Response(JSON.stringify({data}), {
+               headers: { 'Content-Type': 'application/json' }
+             });
+           } catch (error) {
+             return new Response('{"error": "请求失败，请稍候重试"}', {
+               headers: { 'Content-Type': 'application/json' }
+             });
+           }
+         })());
+       }
+     }
+   };
+
+   // 将处理函数导出到全局作用域
+   self.aboutPreload = aboutPreload;
+
+   ```
+2. 页面，使用自定义hook注册监听事件，对Service Worker返回的数据进行监听。
+
+```js
    import { useState, useEffect } from 'react';
 
    function useServiceWorkerMessage() {
@@ -282,10 +298,7 @@ Service Worker比较复杂，它有生命周期。下面是一个进行缓存资
 
      return messageData;
    }
-
-
-
-   ```
+```
 
 ## Service Worker的缓存策略
 
