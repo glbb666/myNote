@@ -8,15 +8,6 @@
 Expires: Wed, 21 Oct 2015 07:28:00 GMT
 ```
 
-客户端通过HTML `<meta>` 标签模拟。如下
-
-```html
-//也可以设置在在html文件头中
-<meta http-equiv="expires" content="Thu, 30 Nov 2017 11:17:26 GMT">
-```
-
-HTML中 `<meta http-equiv="...">`的缓存控制能力受限，并且不是所有浏览器都会完全遵守这些指令。
-
 如果在 `Cache-Control`响应头设置了 `max-age`或者 `s-max-age`指令，那么 `Expires` 头会被忽略。
 
 # Cache-control
@@ -117,38 +108,11 @@ Cache-Control: private, max-age=300
 
 # 协商缓存部分（缓存验证）
 
-## HTTP1.0
+## HTTP1.0和HTTP1.1响应头
 
 ### Last-Modified
 
 响应头，包含**资源修改的时间**。 浏览器会缓存这个资源及其最后修改时间，并被用来和上一次的修改时间比较是否一致。只能精确到秒，精确度比 `ETag`要低。包含有 `If-Modified-Since`或 `If-Unmodified-Since`首部的条件请求会使用这个字段。
-
-### If-Modified-Since
-
-请求头，等于上一次请求的Last-Modified。服务器比较请求头里的 If-Modified-Since 时间和服务器上 a.js的上次修改时间：
-
-对于 `GET`和 `HEAD`请求方法来说
-
-- 如果一致，返回一个不带有消息主体的 `304` 响应。浏览器收到后使用本地缓存。
-- 如果不一致，返回一个带有最近修改时间 `Last-Modified`以及过期时间 `Expries`以及消息主体的 `200`响应。
-- 当与 `If-None-Match`一同出现时，会被覆盖，除非服务器不支持 `If-None-Match`。
-
-对于其他方法，HTTP没有定义其表现，一般会被服务器忽略。
-
-### if-Unmodified-Since
-
-请求头，它的用法和 `If-Modified-Since` 相反。客户端通过这个头告诉服务器，只有当请求的资源自给定日期以来没有被修改时，请求才会成功。
-
-- 如果资源在 `If-Unmodified-Since` 头部指定的时间之后被修改过，服务器会返回一个 `412 Precondition Failed` 状态码。这主要用来防治空中碰撞，下面会说。
-
-缺点：
-
-- 精度精确到秒：浏览器给资源设置无缓存，资源在一秒内修改，浏览器拿不到最新资源。
-- 资源变更检查机制：资源打开并保存，但没有修改也会更新 `last-modified`的时间，服务器会因为时间匹配不上重新返回资源主体。
-
-为了增加文件内容对比，引入了 `Etag`
-
-## HTTP1.1
 
 ### Etag
 
@@ -201,22 +165,38 @@ Cache-Control: private, max-age=300
 
 在这种情况下，由于输出内容（即渲染在浏览器中的结果）没有实质性改变，服务器可以决定继续使用相同的弱ETag，表示资源语义上没有变化。弱ETag主要用于性能优化，当不需要字节级精确匹配的内容时，它可以减轻服务器压力，并减少不必要的数据传输。
 
-### If-none-match
+## HTTP1.0和HTTP1.1请求头
 
-请求头。值为上次请求同一资源时，服务器返回给浏览器的Etag，可以有多个Etag值。（这个在下面QA中解释）
+### If-Modified-Since和If-None-Match
 
-对于 `GET`和 `HEAD`请求方法来说
+#### 不同点
 
-- 当不匹配时，服务器端会返回所请求的资源，响应码为 `200`。当匹配时，服务器端必须返回响应码 304（未改变）。
-- 304 的响应 和  200 响应中的共有首部 ：`Cache-Control`、 `Expires`、`ETag`。
-- 当与 `If-Modified-Since`一同使用的时候，`If-None-Match`优先级更高。
+- If-Modified-Since：是基于时间的条件请求头，服务器比较请求头里的 `If-Modified-Since` 时间和服务器上资源的上次修改时间。
+- If-None-Match：基于内容的条件请求头，浏览器会在请求头中包含资源的ETag，可以有多个ETag值。
+- If-Modified-Since：对于非GET和HEAD请求，HTTP没有定义其表现，一般会被服务器忽略。
+- If-None-Match：对于非GET和HEAD请求
+  * 通常使用 `If-None-Match:*` 创建新资源。设置 `If-None-Match: *` 表示仅当服务器上没有任何版本的资源时才执行创建操作。
+  * 如果不匹配，会返回 `201 Created`，响应可能会包括 `Location` 头部，指示新创建资源的URI。
+  * 如果 `If-None-Match` 的任何一个值与服务器的 `ETag` 相匹配，返回状态码 `412 Precondition Failed`。
 
-对于除 `GET` 和 `HEAD` 之外的其他HTTP请求方法（如 `POST`、`PUT`、`DELETE`、`PATCH` 等）：
+#### 相同点
 
-- 这通常用于创建操作，避免创建重复资源。
-- 通常使用 `If-None-Match:*` 创建新资源。设置 `If-None-Match: *`表示仅当服务器上没有任何版本的资源时才执行创建操作。
-- 如果不匹配，会返回 `201 Created`，响应可能会包括 `Location` 头部，指示新创建资源的UR。
-- 如果 `If-None-Match` 的任何一个值与服务器的 `ETag` 相匹配，返回状态码 `412`
+- 常见请求：get和head。如果一致，返回一个不带有消息主体的 `304 Not Modified` 响应。浏览器收到后使用本地缓存。如果不一致，返回一个带有消息主体的 `200 OK` 响应。
+- 常见场景：通常用于获取资源，保证资源已更新
+- 当与 `If-None-Match` 一同出现时，会被覆盖，除非服务器不支持 `If-None-Match`。
+
+### if-Unmodified-Since和If-Match
+
+#### 不同点
+
+- if-Unmodified-Since：是基于时间的条件请求头，服务器比较请求头里的 `If-Modified-Since` 时间和服务器上资源的上次修改时间。
+- If-Match：基于内容的条件请求头，浏览器会在请求头中包含资源的ETag，可以有多个ETag值。
+
+### 相同点
+
+- 常见请求：put和delete。当资源匹配，返回200，说明资源没有被修改过，则允许操作，不匹配则返回 `412 Precondition Failed`。
+- 常见场景：编辑资源，保证资源未被他人更新。
+- 当与 `If-Match` 一同出现时，会被覆盖，除非服务器不支持 `If-None-Match`。
 
 #### QA
 
@@ -239,35 +219,3 @@ Cache-Control: private, max-age=300
 - 客户端代理和同步工具
 
 代理服务器或内容同步工具可能会代表多个客户端进行资源检索，同时持有不同ETag版本。
-
-### If-match
-
-对于 `GET`和 `HEAD`请求方法来说， `If-Match` 请求头的使用不多见，情况如下。
-
-* 如果提供的 ETag 与资源当前的 ETag 匹配，服务器会正常返回资源，并且响应通常是 `200 OK` 状态（对于 `GET` 请求）或 `304 Not Modified` 状态（如果还有 `If-None-Match` 首部且条件满足）。
-* 如果 ETag 不匹配，意味着自从客户端上次获取资源以来资源已被修改，服务器会返回 `412`状态码，拒绝响应这个请求。这确保了客户端不会基于过时的资源信息进行读取操作。
-
-对于诸如 `PUT`、`DELETE` 以及其他可能修改资源状态的HTTP方法，`If-Match` 的作用就变得非常关键了。这里是它的行为：
-
-- 通常用于编辑更新情况，保证更新是基于服务端的最新版本
-- 如果匹配，会返回 `200`或 `204 No Content` 状态码来表明请求已成功处理。
-- 如果 ETag 不匹配，服务器会返回 `412`状态码
-
-## 比较
-
-### If-Modified-Since和If-None-Match的同与异
-
-#### 同：
-
-1. **缓存验证** ：对于 `GET` 和 `HEAD` 请求, 它们都用于缓存验证，资源未被修改返回304，被修改返回200
-
-#### 异：
-
-1. **基于时间 vs. 基于版本** ：`If-Modified-Since` 基于资源的最后修改时间（精确到秒）。`If-None-Match` 的ETag通常是基于资源内容生成的哈希值，能够更细粒度地标识资源的变更，特别适用于资源频繁更新的情形。
-2. **值的复杂性** ：`If-Modified-Since` 只能包含一个时间值，而 `If-None-Match` 可以包含多个ETag值。
-3. **对其他请求的影响** ：`If-Modified-Since` 通常不用于其他请求。而 `If-None-Match` 在结合诸如 `PUT` 或 `DELETE` 这样的方法时非常有用，有相同的值会412，能够防止“空中碰撞”，即确保客户端只有在拥有最新版本的资源时才可以操作。
-4. **优先级问题** ：`If-None-Match` 优先级高
-
-### 补充：
-
-5. **弱验证器与强验证器** ：`If-None-Match` 使用的ETag可以区分为“强验证器”和“弱验证器”。强ETag严格表示资源的每个字节都未发生变化，而弱ETag允许服务端对资源做一些不影响内容含义的改变（如格式化变化）。
