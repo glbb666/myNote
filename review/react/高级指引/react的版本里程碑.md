@@ -2,15 +2,19 @@
 
 ### React 16.0
 
-React在这个版本中引入了新的核心算法Fiber，这个算法使React能够更好地处理动画，布局和手势等异步UI任务。这也为未来的React功能打下了基础。
+- 引入了新的核心算法Fiber，这个算法使React能够更好地处理动画，布局和手势等异步UI任务。这也为未来的React功能打下了基础。
 
 ### React 16.3
 
-这个版本中React对生命周期方法进行了更新。它引入了新的生命周期方法getDerivedStateFromProps和getSnapshotBeforeUpdate，同时弃用了componentWillMount，componentWillReceiveProps和componentWillUpdate这三个生命周期方法。
+- 引入了新的生命周期方法getDerivedStateFromProps和getSnapshotBeforeUpdate，
+- 同时弃用了componentWillMount，componentWillReceiveProps和componentWillUpdate这三个生命周期方法。
+- 引入forwardRef
 
 ### React 16.6
 
-这个版本中引入了一个新的静态方法getDerivedStateFromError和一个新的生命周期方法componentDidCatch，这两个方法都是为了更好地处理错误。
+- 引入了一个新的静态方法getDerivedStateFromError，可以和componentDidCatch结合处理错误情况。
+- 引入React.memo
+- 引入了 `<Suspense>`组件，配合 `React.lazy`实现代码分割。
 
 ### React 16.8
 
