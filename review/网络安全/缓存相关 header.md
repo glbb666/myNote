@@ -108,6 +108,12 @@ Cache-Control: private, max-age=300
 
 # 协商缓存部分（缓存验证）
 
+## 缓存相关HTTP状态码
+
+* **200 OK** :表示请求成功，并且服务器返回了请求的资源。通常用于返回新的或更新后的资源。
+* **304 Not Modified** :当客户端发送的条件请求（比如包含 `If-Modified-Since` 或 `If-None-Match` 头部）满足服务器上的资源状态时，服务器返回304状态码。这表示客户端缓存的资源仍然有效，可以继续使用缓存的版本，而无需下载新的副本。
+* **412 Precondition Failed** :当客户端发送的条件请求中的某个前提条件（如 `If-Match`、`If-None-Match`、`If-Modified-Since`、`If-Unmodified-Since` 或 `If-Range`）未能满足时，服务器返回412状态码，告知客户端请求失败。
+
 ## HTTP1.0和HTTP1.1响应头
 
 ### Last-Modified
@@ -177,7 +183,7 @@ Cache-Control: private, max-age=300
 - If-None-Match：对于非GET和HEAD请求
   * 通常使用 `If-None-Match:*` 创建新资源。设置 `If-None-Match: *` 表示仅当服务器上没有任何版本的资源时才执行创建操作。
   * 如果不匹配，会返回 `201 Created`，响应可能会包括 `Location` 头部，指示新创建资源的URI。
-  * 如果 `If-None-Match` 的任何一个值与服务器的 `ETag` 相匹配，返回状态码 `412 Precondition Failed`。
+  * 如果 `If-None-Match` 的任何一个值与服务器的 `ETag` 相匹配，返回状态码 `412`。
 
 #### 相同点
 
@@ -194,7 +200,7 @@ Cache-Control: private, max-age=300
 
 ### 相同点
 
-- 常见请求：put和delete。当资源匹配，返回200，说明资源没有被修改过，则允许操作，不匹配则返回 `412 Precondition Failed`。
+- 常见请求：put和delete。当资源匹配，返回200，说明资源没有被修改过，则允许操作，不匹配则返回 `412`。
 - 常见场景：编辑资源，保证资源未被他人更新。
 - 当与 `If-Match` 一同出现时，会被覆盖，除非服务器不支持 `If-None-Match`。
 
