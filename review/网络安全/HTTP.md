@@ -43,15 +43,66 @@ http报文分为两种类型，请求报文和响应报文。
 
 举例：
 
-* `Content-Type: application/x-www-form-urlencoded`：这是最常见的数据提交方式，主要用于HTML表单提交。
-* `Content-Type: multipart/form-data`：这种方式一般用于上传文件。
-* `Content-Type: application/json`：指示请求体是JSON格式的字符串，这在现代Web API中极为常见。
+- `Content-Type: text/plain;charset=UTF-8`，默认值，没有任何额外的编码。
+- `Content-Type: application/x-www-form-urlencoded`：它会将所有数据变成键值对的形式，并且特殊字符需要转义成utf-8编号。
+
+  ```js
+  title=test&sub%5B%5D=1&sub%5B%5D=2&sub%5B%5D=3
+  ```
+- `Content-Type: multipart/form-data`：这种方式一般用于上传文件。请求体被 ` --boundary`分割成多部分
+
+  ```js
+       --boundary
+       Content-Disposition: form-data; name="field"
+
+       value
+       --boundary
+       Content-Disposition: form-data; name="file"; filename="example.txt"
+       Content-Type: text/plain
+
+       contents of the file
+       --boundary--
+  ```
+- `Content-Type: application/json`：用来告诉服务器格式是JSON字符串，一般用来传递复杂的数据对象。
+
+  ```js
+  {
+         "key1": "value1",
+         "key2": "value2"
+  }
+  ```
+- `Content-Type: application/xml`：用于发送XML格式的数据，例如：
+
+  ```xml
+       <?xml version="1.0"?>
+       <note>
+           <to>Tove</to>
+           <from>Jani</from>
+           <heading>Reminder</heading>
+           <body>Don't forget me this weekend!</body>
+       </note>
+  ```
+- `Content-Type: application/octet-stream`：用于传输二进制数据，例如图像、音频或视频文件。
+- `Content-Type: text/css`：用于CSS样式表数据。
+- `Content-Type: application/javascript`：用于JavaScript代码
+- `Content-Type: image/jpeg ,  image/png , image/gif`：分别用于JPEG, PNG, GIF 图像格式。
 
 **响应头中的 `Content-Type`**
 
 在HTTP响应头中，`Content-Type` 起着告知客户端它收到的内容是什么格式的作用。这让客户端（如浏览器）知道如何解析和展示这些数据。例如，如果响应体是一个HTML文档，服务器会用 `Content-Type: text/html` 来告诉客户端；如果是一个JSON对象，使用 `Content-Type: application/json`。
 
 正确的 `Content-Type` 能保证HTTP通信双方能够正确理解数据的含义和格式，因此是HTTP协议中非常重要的一部分。
+
+- `Content-Type: text/html`：表示HTML文档，通常用于服务器返回网页，例如：
+
+  ```html
+       <html>
+       <head><title>Page Title</title></head>
+       <body>
+       <p>This is a paragraph.</p>
+       </body>
+       </html>
+  ```
 
 ##### Connection：
 
