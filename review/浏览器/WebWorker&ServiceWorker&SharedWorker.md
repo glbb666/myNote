@@ -204,21 +204,36 @@ self.addEventListener('fetch', event => {
 
    ```
 
-   homePreload.js
+   这里会检测请求页面的url，在原生Service worker中，fetch能拦截的是http页面请求。在类React Native框架中，我们编写的React组建和业务逻辑代码会被打包成JavaScript代码，然后与应用的其他资源一起被打包进原生应用中。
+   自研框架实现了当跳转本地页面，也会触发Service Worker的fetch事件。
+
+   这里就举一个homePreload.js的例子，其他的文件类似
 
    ```js
-   // 定义处理函数
    const homePreload = {
      handleFetch: function(event) {
        if (event.request.url.includes('/api/home-data')) {
          event.respondWith((async () => {
            try {
+             // 假设这里有多个需要并行请求的API URLs
              const apiUrls = ['/api/data1', '/api/data2', '/api/data3'];
-             const fetchPromises = apiUrls.map(url => fetch(url));
-             const responses = await Promise.all(fetchPromises);
-             const data = await Promise.all(responses.map(res => res.json()));
 
-             return new Response(JSON.stringify({data}), {
+             // 将每个URL映射为fetch请求的Promise
+             const fetchPromises = apiUrls.map(url => fetch(url).then(res => res.json()));
+
+             // 等待所有请求完成
+             const data = await Promise.all(fetchPromises);
+
+             // 将数据通过 postMessage 发送给发起请求的页面
+             if (event.clientId) {
+               const client = await clients.get(event.clientId);
+               if (client) {
+                 client.postMessage({ url: event.request.url, data: data });
+               }
+             }
+
+             // 返回一个合并后的响应
+             return new Response(JSON.stringify({ data }), {
                headers: { 'Content-Type': 'application/json' }
              });
            } catch (error) {
@@ -231,40 +246,7 @@ self.addEventListener('fetch', event => {
      }
    };
 
-   // 将处理函数导出到全局作用域
    self.homePreload = homePreload;
-
-   ```
-
-   aboutPreload.js
-
-   ```javascript
-   // 定义处理函数
-   const aboutPreload = {
-     handleFetch: function(event) {
-       if (event.request.url.includes('/api/about-data')) {
-         event.respondWith((async () => {
-           try {
-             const apiUrls = ['/api/about1', '/api/about2'];
-             const fetchPromises = apiUrls.map(url => fetch(url));
-             const responses = await Promise.all(fetchPromises);
-             const data = await Promise.all(responses.map(res => res.json()));
-
-             return new Response(JSON.stringify({data}), {
-               headers: { 'Content-Type': 'application/json' }
-             });
-           } catch (error) {
-             return new Response('{"error": "请求失败，请稍候重试"}', {
-               headers: { 'Content-Type': 'application/json' }
-             });
-           }
-         })());
-       }
-     }
-   };
-
-   // 将处理函数导出到全局作用域
-   self.aboutPreload = aboutPreload;
 
    ```
 2. 页面，使用自定义hook注册监听事件，对Service Worker返回的数据进行监听。
