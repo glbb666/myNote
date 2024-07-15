@@ -30,3 +30,19 @@ JS Bridge 是 React Native 最初使用的通信机制。它充当了 JavaScript
 2. **TurboModules** ：JSI 与 TurboModules 结合使用，后者是一种更高效的原生模块，它们可以被 JavaScript 直接调用。
 
 ### NativeEventEmitter
+
+`NativeEventEmitter`是React Native提供的一个类，用于处理JavaScript和原生代码之间的事件通信。它允许原生模块通过事件的方式将数据传递给JavaScript，从而实现异步通信。
+
+#### 工作原理
+
+1. **注册事件** ：在JavaScript代码中，通过 `NativeEventEmitter`实例注册事件监听器。
+2. **发送事件** ：在原生代码中，通过事件发送器发送事件。
+3. **处理事件** ：JavaScript代码中的事件监听器接收到事件后，执行相应的处理逻辑。
+
+### 原生监听JavaScript事件
+
+在某些场景下，可以在原生代码中注册监听器，等待JavaScript的调用来触发这些监听器。
+
+* **工作原理** ：原生代码监听特定的JavaScript事件，并在事件触发时执行相应的操作。JavaScript代码可以通过调用原生模块的方法来触发这些事件。
+* **优点** ：适合需要原生代码主动监听某些JavaScript事件的场景。
+* **缺点** ：实现和维护可能比较复杂，需要在原生代码中实现相应的监听逻辑。
