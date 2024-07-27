@@ -2,9 +2,9 @@
 
 # Webpack是什么
 
-`webpack`是一个**模块打包机**，它从一个给定的的主文件开始找到项目的所有依赖文件，使用`loader`进行处理，最后打包成浏览器可识别的`js`文件。
+`webpack`是一个**模块打包机**，它从一个给定的的主文件开始找到项目的所有依赖文件，使用 `loader`进行处理，最后打包成浏览器可识别的 `js`文件。
 
-在使用`webpack`命令的时候，他将接受`webpack`的配置文件，除非我们使用其他的操作。
+在使用 `webpack`命令的时候，他将接受 `webpack`的配置文件，除非我们使用其他的操作。
 
 # webpack执行流程
 
@@ -20,7 +20,7 @@ var baseConfig = {
 }
 ```
 
-- 当我们需要多个入口文件的时候，可以把entry写成一个对象。**`entry`中不同的`key`都会成为`output`出口文件的`[name]`**
+- 当我们需要多个入口文件的时候，可以把entry写成一个对象。**`entry`中不同的 `key`都会成为 `output`出口文件的 `[name]`**
 
 ```javascript
 var baseConfig = {
@@ -31,13 +31,12 @@ var baseConfig = {
 }
 ```
 
-- 我们还可以向`entry`中传入一个数组，这样将创建多个主入口。
-
-- 我们还可以分离应用`app`和第三方库入口
+- 我们还可以向 `entry`中传入一个数组，这样将创建多个主入口。
+- 我们还可以分离应用 `app`和第三方库入口
 
  webpack 从 `app.js` 和 `vendors.js` 开始创建依赖图。这些依赖图是彼此完全分离、互相独立的
 
-第三方库入口的代码打包一次之后就不会变了，除非你手动更新`package.json`的依赖
+第三方库入口的代码打包一次之后就不会变了，除非你手动更新 `package.json`的依赖
 
 ```javascript
 const config = {
@@ -48,13 +47,9 @@ const config = {
 };
 ```
 
-`vendor`允许你使用`CommonsChunkPlugin`从「应用程序 bundle」中提取 vendor 引用到 vendor bundle，并把引用 vendor 的部分替换为 `__webpack_require__()` 调用。如果应用程序 bundle 中没有 vendor 代码，那么你可以在 webpack 中实现被称为[长效缓存](https://www.webpackjs.com/guides/caching)的通用模式。
-
-缓存我们在后面讲。
-
 # output
 
-**output:** 即使入口文件有多个，但是**只有一个输出配置**
+**output定义入口文件的输出格式，**即使入口文件有多个，但是**只有一个输出配置**
 
 - `filename` 用于输出文件的文件名。
 - `path`目标输出目录的绝对路径。
@@ -76,7 +71,7 @@ output: {
     	//此处的__dirname为/Users/bytedance/Desktop/webpack-test/config
     	path: path.resolve(__dirname, '../dist')
     	//path必须是绝对路径
-    	
+  
 }
 ```
 
@@ -97,40 +92,72 @@ var path = require('path')
 
 ![webpack.png](https://github.com/glbb666/myNote/blob/master/review/webpack/images/webpack.png?raw=true)
 
-如今这么少的配置，就能够让你运行一个服务器并在本地使用命令`npm start`或者`npm run build`来打包我们的代码进行发布
+如今这么少的配置，就能够让你运行一个服务器并在本地使用命令 `npm start`或者 `npm run build`来打包我们的代码进行发布
 
 # Loader
 
-### loader的作用
+### Loader是什么
 
-`loader`可以将文件从不同的语言转化成`js`，从而使其能够被添加到依赖图中。
+loader 是一个模块转换器，用于将各种类型的文件转换为 Webpack 可以处理的模块。通过使用 loader，你可以在项目中直接引入并处理非 JavaScript 文件，如 CSS、图像、字体、TypeScript 等。
 
-`loader`可以在`import`或者加载模块时预处理文件。
+### 为什么要使用Loader
+
+在 Webpack 中，依赖图是一个包含所有模块及其依赖关系的结构。虽然依赖图的主要目标是 JavaScript 模块，但**通过 loader，可以使其他类型的文件（如 CSS、HTML）间接地被包含在依赖图中。**
+
+### Loader是怎么工作的
+
+当 Webpack 遇到某个文件类型时，会根据配置找到相应的 loader，并使用该 loader 对文件进行处理，最后将处理后的结果包含在依赖图中。
+
+### Loader使用
+
+`loader`可以在 `import`或者加载模块时预处理文件。
 
 在你的应用程序中，有三种使用 loader 的方式：
 
-- [配置](https://www.webpackjs.com/concepts/loaders/#configuration)（推荐）：在 **webpack.config.js** 文件中指定 loader。
+- [配置
+  ](https://www.webpackjs.com/concepts/loaders/#configuration)
 
-```javascript
+在 Webpack 配置文件中，使用 `module.rules` 字段来定义 loader。每个 loader 的配置通常包括 `test`、`use` 和可选的 `exclude` 或 `include` 字段：
+
+* **test** : 用于匹配文件的正则表达式。
+* **use** : 指定使用的 loader，可以是字符串、对象或数组。
+* **exclude/include** : 排除或包含特定的文件或目录。
+
+以下是一个示例 Webpack 配置文件，展示了如何配置多个 loader：
+
+```js
+const path = require('path');
+
 module.exports = {
+  entry: './src/index.js',
+  output: {
+    filename: 'bundle.js',
+    path: path.resolve(__dirname, 'dist')
+  },
   module: {
     rules: [
-      { test: /\.ts$/, use: 'ts-loader' },
-      { 
+      {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        use: 'babel-loader'
+      },
+      {
         test: /\.css$/,
-        use: [
-          { loader: 'style-loader' },
-          {
-            loader: 'css-loader',
-            options: {
-              modules: true
-            }
-          }
-        ]
+        use: ['style-loader', 'css-loader']
+      },
+      {
+        test: /\.(png|jpg|gif)$/,
+        use: 'file-loader'
+      },
+      {
+        test: /\.tsx?$/,
+        use: 'ts-loader',
+        exclude: /node_modules/
       }
     ]
   }
 };
+
 ```
 
 - [内联](https://www.webpackjs.com/concepts/loaders/#inline)：在每个 `import` 语句中显式指定 loader。使用 `!` 将资源中的 loader 分开。分开的每个部分都相对于当前目录解析。
@@ -145,29 +172,83 @@ import Styles from 'style-loader!css-loader?modules!./styles.css';
 webpack --module-bind jade-loader --module-bind 'css=style-loader!css-loader'
 ```
 
-### loader的链式调用
+### Loader的链式调用
 
-当链式调用多个` loader `的时候，请记住它们会以相反的顺序执行。取决于数组写法格式，从右向左或者从下向上执行。
+当链式调用多个 `loader`的时候，它们会以相反的顺序执行。
 
 - 最后的 `loader` 最早调用，将会传入原始资源内容。
-- 第一个 `loader` 最后调用，期望值是传出` JavaScript `和 `source map`（可选）。
+- 第一个 `loader` 最后调用，期望值是传出 `JavaScript`和 `source map`（可选）。
 - 中间的 `loader` 执行时，会传入前一个 `loader` 传出的结果。
 
 ### 常用的loader
 
-- `file-loader`: 生成的默认文件名就是**文件内容的`md5`哈希值**([hash.[ext])，并会保留所引用资源的原始扩展名。
+#### **CSS Loader 和 Style Loader**：
 
+`css-loader` 和 `style-loader` 的组合让 Webpack 可以处理 CSS 文件。
 
-- `url-loader`：和`file-loader`类似，但可以在`options`属性中进行一个`limit`的配置。这是因为当页面图片较多时，需要发起很多`http`请求，会降低页面的性能，所以`url-loader`可以把图片进行编码，打包进`js`文件中，当然，如果图片过大，进行编码会消耗性能。所以在配置中有一个`limit`值，如果文件的大小比`limit`小，就会将文件转为`dataURI`存在`js`文件中，并返回`DATAURI`。如果文件的大小比`limit`大，就会用`file-loader`进行处理。详情可以了解[详解webpack url-loader和file-loader](https://segmentfault.com/a/1190000018987483)
-- `babel-loader`： 让下一代的`js`文件转换成现代浏览器能够支持的`js`文件。`babel`有些复杂，所以大多数都会新建一个`.babelrc`进行配置。
-- `style-loader`：在 `DOM` 里插入一个 `<style>` 标签，并且将 `CSS` 写入这个标签内。
-- `css-loader`：解析`CSS`文件后，使用 `import `加载，并且返回` CSS` 代码。
+他们像这样配置
 
-```javascript
-{test:/\.css$/,use:['style-loader','css-loader']}
+```js
+const path = require('path');
+
+module.exports = {
+  entry: './src/index.js',
+  output: {
+    filename: 'bundle.js',
+    path: path.resolve(__dirname, 'dist')
+  },
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader']
+      }
+    ]
+  }
+};
 ```
 
-`less-loader`和`sass-loader`可以加载和转译`less`和`sass`文件
+他们的作用
+
+* **解析和转换 CSS** ：
+  `css-loader` 读取 `css`文件的内容并解析为 CSS AST（抽象语法树），然后将其转换为一个 JavaScript 模块。这个模块包含了一个包含所有解析后的 CSS 字符串的对象。
+* **导出 CSS 模块** ：
+  生成的 JavaScript 模块会导出一个包含 CSS 内容的字符串。例如，转换后的模块可能如下所示（简化版）：
+  ```js
+  // 转换后的 JavaScript 模块（简化版）
+  module.exports = `
+    body {
+      background-color: lightblue;
+    }
+    h1 {
+      color: darkblue;
+    }
+  `;
+
+  ```
+
+- **注入样式** ：
+  `style-loader` 会接收到 `css-loader` 导出的 CSS 字符串，并将其动态地插入到 HTML 的 `<style>` 标签中。具体来说，它会创建一个 `<style>` 元素，将 CSS 字符串设置为其内容，并将其添加到文档的 `<head>` 部分。
+  `style-loader` 的核心代码可能类似于以下内容（简化版）：
+
+  ```js
+  var css = require('./styles.css');
+
+  var style = document.createElement('style');
+  style.type = 'text/css';
+  style.appendChild(document.createTextNode(css));
+
+  document.head.appendChild(style);
+  ```
+
+  如果要把 `css`输出成单独的文件，而不是往 `DOM`里插入 `<style>`标签，那么就不能用 `style-loader`，而需要用 `MiniCssExtractPlugin`。
+
+#### File Loader
+
+- `file-loader`: 生成的默认文件名就是**文件内容的 `md5`哈希值**([hash.[ext])，并会保留所引用资源的原始扩展名。
+- `url-loader`：和 `file-loader`类似，但可以在 `options`属性中进行一个 `limit`的配置。这是因为当页面图片较多时，需要发起很多 `http`请求，会降低页面的性能，所以 `url-loader`可以把图片进行编码，打包进 `js`文件中，当然，如果图片过大，进行编码会消耗性能。所以在配置中有一个 `limit`值，如果文件的大小比 `limit`小，就会将文件转为 `dataURI`存在 `js`文件中，并返回 `DATAURI`。如果文件的大小比 `limit`大，就会用 `file-loader`进行处理。详情可以了解[详解webpack url-loader和file-loader](https://segmentfault.com/a/1190000018987483)
+- `babel-loader`： 让下一代的 `js`文件转换成现代浏览器能够支持的 `js`文件。`babel`有些复杂，所以大多数都会新建一个 `.babelrc`进行配置。
+- `less-loader`和 `sass-loader`可以加载和转译 `less`和 `sass`文件
 
 ```javascript
 {test:/\.less$/,use:['style-loader','css-loader','less-loader']},
@@ -176,34 +257,28 @@ webpack --module-bind jade-loader --module-bind 'css=style-loader!css-loader'
 //配置处理.scss文件的第三方loader规则
 ```
 
-如果要把`css`输出成单独的文件，而不是往`DOM`里插入`<style>`标签，那么就不能用`style-loader`，而需要用`MiniCssExtractPlugin`。
-
-
-### loader的解析
-
-loader 遵循标准的[模块解析](https://www.webpackjs.com/concepts/module-resolution/)。多数情况下，loader 将从[模块路径](https://www.webpackjs.com/concepts/module-resolution/#module-paths) `node_modules`解析。
-
 # Plugins
 
-`plugins`和`loader`都是外部引用
+`plugins`和 `loader`都是外部引用
 
 ### plugins和loader区别
 
-`loader`负责处理**源文件**，如`css`、`jsx`，一次处理一个文件。而`plugins`并不是直接操作单个文件，它直接对**整个构建过程**起作用，在特定的生命周期用特定的钩子处理回调。
+`loader`负责处理**源文件**，如 `css`、`jsx`，一次处理一个文件。而 `plugins`并不是直接操作单个文件，它直接对**整个构建过程**起作用，在特定的生命周期用特定的钩子处理回调。
 
-### 常用的`plugins`的用法
+### 常用的 `plugins`的用法
+
 #### `MiniCssExtractPlugin`
 
-作用:将`css`提取到单独的文件中。它为每个包含`CSS`的`JS`文件创建一个`CSS`文件，它支持`CSS`和`SourceMap`的按需加载。
+作用:将 `css`提取到单独的文件中。它为每个包含 `CSS`的 `JS`文件创建一个 `CSS`文件，它支持 `CSS`和 `SourceMap`的按需加载。
 
 一般在生产环境下使用。
 
-在开发环境中，一般使用`style-loader`，把`css`变成`style`标签插入到`html`中，更新时，只要从内存中读取新的`html`文件。
+在开发环境中，一般使用 `style-loader`，把 `css`变成 `style`标签插入到 `html`中，更新时，只要从内存中读取新的 `html`文件。
 
-在生产环境中，由于以下情况，我们必须要使用`MiniCssExtractPlugin`
+在生产环境中，由于以下情况，我们必须要使用 `MiniCssExtractPlugin`
 
-- 把文件全部放在`html`中，`html`文件可能过大，影响用户体验。而加载多个文件，由于`html2.0`有多路传输的特性，所以会比加载一个文件更快。（在开发环境中，则要用io读取文件，所以更慢）
-- 把`CSS`都变成`style`标签插入到`html`中有点乱，不美观。
+- 把文件全部放在 `html`中，`html`文件可能过大，影响用户体验。而加载多个文件，由于 `html2.0`有多路传输的特性，所以会比加载一个文件更快。（在开发环境中，则要用io读取文件，所以更慢）
+- 把 `CSS`都变成 `style`标签插入到 `html`中有点乱，不美观。
 
 ```javascript
 const HtmlWebpackPlugin = require('html-webpack-plugin'); //通过 npm 安装
@@ -219,7 +294,8 @@ const config = {
 ```
 
 #### `HtmlWebpackPlugin`
-作用：根据模版生成`html`文件，并自动引用打包后的`js`，`css`文件。这对于在文件名中包含每次会随着编译而发生变化哈希的 `webpack bundle `尤其有用。 
+
+作用：根据模版生成 `html`文件，并自动引用打包后的 `js`，`css`文件。这对于在文件名中包含每次会随着编译而发生变化哈希的 `webpack bundle `尤其有用。
 
 ```javascript
 var HTMLWebpackPlugin = require('html-webpack-plugin')
@@ -235,7 +311,7 @@ var baseConfig = {
 
 #### `HotModuleReplacementPlugin`
 
-它允许你在修改组件代码时，自动刷新实时预览修改后的结果。注意永远不要在生产环境中使用`HMR`。这儿说一下一般情况分为开发环境，测试环境，生产环境。
+它允许你在修改组件代码时，自动刷新实时预览修改后的结果。注意永远不要在生产环境中使用 `HMR`。这儿说一下一般情况分为开发环境，测试环境，生产环境。
 用法如 `new webpack.HotModuleReplacementPlugin()`
 webapck.config.js的全部内容
 
@@ -277,7 +353,7 @@ const webpack = require("webpack")
 # 产品阶段的构建
 
 目前为止，在开发阶段的东西我们已经基本完成了。但是在产品阶段，还需要对资源进行别的
-处理，例如压缩，优化，缓存，分离`css`和`js`。首先我们来定义产品环境
+处理，例如压缩，优化，缓存，分离 `css`和 `js`。首先我们来定义产品环境
 
 ```javascript
 var ENV = process.env.NODE_ENV
