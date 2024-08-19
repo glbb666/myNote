@@ -60,7 +60,7 @@ js动画也具有较高的优先级，使得动画可以流畅执行。
 
 React内部有一个优先级系统，可以根据不同类型的更新分配不同的优先级。
 
-通过这个优先级我们可以获取一个该更新任务必须执行的过期时间，优先级越高那么过期时间就越近，反之亦然。这个过期时间是用来判断该任务是否已经过期，如果过期的话就会马上执行该任务。
+通过这个优先级我们可以获取一个该更新必须执行的过期时间，优先级越高那么过期时间就越近，反之亦然。这个过期时间是用来判断该更新是否已经过期，如果过期的话就会马上执行该更新。
 
 截止时间低的一般在浏览器的主线程空闲时才执行。
 
@@ -85,10 +85,6 @@ const IDLE_PRIORITY_TIMEOUT = Infinity;
 
 React 会根据当前时间和对应的时间片长度来计算过期时间。例如，对于用户交互事件（假设优先级为 `USER_BLOCKING_PRIORITY`）：
 
-```js
-const expirationTime = currentTime + USER_BLOCKING_PRIORITY_TIMEOUT;
-```
-
 #### **更新队列**
 
 存储位置：每个Fiber节点中
@@ -104,120 +100,238 @@ const expirationTime = currentTime + USER_BLOCKING_PRIORITY_TIMEOUT;
 - 当需要调度时，调度器会携带一个此次渲染的时间，遍历更新队列。
 - 调度器基于上次Fiber的state，把符合条件的更新都在state上进行应用，并移出队列。等全部应用完成，再把Fiber的state替换成这个新的state。
 
-### 批处理模式
+### Fiber的任务
 
-批处理模式批处理的是多个Fiber节点的更新。
+#### 任务的产生
 
-批处理模式执行全局同步队列，执行所有同步队列中传入的处理fiber节点的回调。让这些fiber节点的state都基于更新队列中过期时间内的更新进行变更，变为最新的state。
+在调度阶段，会遍历Fiber树。（以什么形式遍历，是一整棵树还是一部分树我们之后再讨论）
 
-#### 如何进入批处理模式
-
-* **事件处理器** ：在 React 事件处理函数中（如 `onClick`、`onChange` 等），React 会自动进入批处理模式。即使在事件处理函数中调用多个 `setState`，这些状态更新也会被批处理。
-* **生命周期方法** ：在组件的生命周期方法（如 `componentDidMount`、`componentDidUpdate`）中，React 也会自动进入批处理模式。
-* **调用 `batchedUpdates` 方法** ：可以显式调用 `ReactDOM.unstable_batchedUpdates` 将多个更新批处理。
-* **异步任务回调** ：在异步任务（如 `Promise` 回调、`setTimeout` 回调等）中，React 也会进入批处理模式。
-
-#### 如何退出批处理模式
-
-* **事件处理器执行完毕** ：当 React 事件处理函数执行完毕后，批处理模式会结束，并触发状态更新。
-* **生命周期方法执行完毕** ：当生命周期方法执行完毕后，批处理模式会结束，并触发状态更新。
-* **显式调用 `flushSync`** ：可以显式调用 `ReactDOM.flushSync` 立即处理同步队列中的更新。
-* **异步任务回调执行完毕** ：当异步任务回调执行完毕后，批处理模式会结束，并触发状态更新。
-
-以下是一个示例代码，展示批处理模式和非批处理模式下的行为：
+当发现Fiber的更新队列存在时，就会**根据更新队列和最早的更新时间创建一个任务**。
 
 ```js
-let syncQueue = null;
-let isBatchingUpdates = false;
+// 合成任务的函数
+function createTask(expirationTime) {
+  return {
+    expirationTime,
+    updates: [],
+  };
+}
 
-function batchedUpdates(callback) {
-  const prevIsBatchingUpdates = isBatchingUpdates;
-  isBatchingUpdates = true;
-  try {
-    return callback();
-  } finally {
-    isBatchingUpdates = prevIsBatchingUpdates;
-    if (!isBatchingUpdates) {
+// 在调度阶段合成任务
+function createTaskFromUpdates(updates) {
+  //这里的updates是单个fiber节点的更新队列
+  let earliestExpiration = NoWork;
+  for (const update of updates) {
+    if (update.expirationTime < earliestExpiration) {
+      earliestExpiration = update.expirationTime;
+    }
+  }
+  const task = createTask(earliestExpiration);
+  task.updates = updates;
+  return task;
+}
+```
+
+#### 任务的类型
+
+同步任务：如果是高优先级的任务且当前没有任务在执行，会直接执行
+
+异步任务：任务会进入队列，等到合适的时机（如当前帧有空闲时间）执行
+
+#### 任务的优先级 & 过期时间
+
+这一块比较复杂。放在一起讲。
+
+1. 任务生成时，从更新队列中获取最早的 `expirationTime`。
+2. 任务的优先级基于这个 `expirationTime`计算。`expirationTime`与**当前时间**的差异越小，任务优先级越高，越早执行。
+3. 在调度任务时，根据任务的优先级进一步调整任务的 `expirationTime`，计算出最终的 `renderExpirationTime`，这确保了高优先级任务能按时执行。
+
+#### 任务队列
+
+存储位置：全局
+
+存储单元：任务
+
+任务队列是一个全局唯一的同步队列。
+
+入队：所有的任务都会被放入同步任务队列中，然后按任务过期时间进行升序排序，这样每次都可以取出最早的任务。
+
+#### 任务的调度
+
+当任务入队之后，开始任务的调度。
+
+任务调度有两种模式，是在调度不同优先级的任务时触发的。
+
+1. flushSyncCallbackQueue。这种模式在任务优先级高，且没有任务在执行中的时候调用，一旦调用开启，会把当前同步队列中所有回调（即任务）依次执行，这里的任务优先级较高，是不会被打断的。
+2. flushWork。这种模式在当前任务优先级低的时候使用，使用的是 `requestIdleCallback` 在空闲时间处理这些任务。一旦开启，只会执行过期任务，或者当前帧有剩余时间，会继续执行任务。这里的任务优先级较低，当碰到更高优先级的任务的时候会被打断。
+
+```js
+// scheduleCallback 是任务调度的入口
+function scheduleCallback(priorityLevel, callback, options) {
+  // 获取当前时间
+  const currentTime = getCurrentTime();
+  const startTime = currentTime;
+  // 根据任务优先级获取时间片
+  const timeout = expirationTimeForPriorityLevel(priorityLevel);
+  // 计算出任务的过期时间
+  const expirationTime = startTime + timeout;
+
+  const newTask = {
+    id: taskIdCounter++,
+    callback,
+    priorityLevel,
+    startTime,
+    expirationTime,
+  };
+
+  // 将任务放入队列
+  pushTask(newTask);
+  // 按过期时间升序排序任务队列
+  sortTaskQueue(taskQueue);
+
+
+  // 如果任务优先级高，立即调度执行
+  if (newTask.priorityLevel === ImmediatePriority) {
+    // 如果当前没有正在执行的任务
+    if (!isPerformingWork) {
+      // 执行任务
       flushSyncCallbackQueue();
     }
+    // 如果当前有在执行的任务，因为任务已经入队，且flushSyncCallbackQueue会清空同步队列，所以等待执行就好了。
+  } else {
+    // 注册下一个空闲时间执行任务
+    requestHostCallback(flushWork);
   }
 }
 
 function flushSyncCallbackQueue() {
-  if (syncQueue !== null) {
-    const queue = syncQueue;
-    syncQueue = null;
-    for (let i = 0; i < queue.length; i++) {
-      const callback = queue[i];
+  while (syncQueue.length > 0) {
+    const callback = syncQueue.shift();
+    try {
       callback();
+    } catch (error) {
+      console.error(error);
     }
   }
 }
 
-function scheduleUpdate(fiber, update) {
-  const updateQueue = fiber.updateQueue;
-  if (updateQueue.lastUpdate === null) {
-    updateQueue.firstUpdate = update;
-  } else {
-    updateQueue.lastUpdate.next = update;
-  }
-  updateQueue.lastUpdate = update;
 
-  if (isBatchingUpdates) {
-    if (syncQueue === null) {
-      syncQueue = [() => processUpdateQueue(fiber)];
+// flushWork 执行任务队列
+function flushWork(hasTimeRemaining, initialTime) {
+  let currentTask = peekTaskQueue();
+
+  while (currentTask !== null) {
+    //当任务已经过期 或者 当前帧还有剩余的时间去执行任务
+    if (currentTask.expirationTime <= initialTime || hasTimeRemaining) {
+      const callback = currentTask.callback;
+      if (callback !== null) {
+        currentTask.callback = null;
+        const didTimeout = currentTask.expirationTime <= initialTime;
+        callback(didTimeout);
+      }
     } else {
-      syncQueue.push(() => processUpdateQueue(fiber));
+      break;
     }
-  } else {
-    processUpdateQueue(fiber);
-  }
-}
-
-function processUpdateQueue(fiber) {
-  const updateQueue = fiber.updateQueue;
-  let firstUpdate = updateQueue.firstUpdate;
-  let newState = fiber.memoizedState;
-
-  while (firstUpdate !== null) {
-    newState = applyUpdate(newState, firstUpdate);
-    firstUpdate = firstUpdate.next;
+    //从任务队列头部取出一个任务
+    currentTask = peekTaskQueue();
   }
 
-  fiber.memoizedState = newState;
-  updateQueue.firstUpdate = null;
-  updateQueue.lastUpdate = null;
+  return null;
 }
-
-function applyUpdate(state, update) {
-  return { ...state, ...update.payload };
-}
-
-// 使用示例
-batchedUpdates(() => {
-  scheduleUpdate(fiber1, { payload: { foo: 'bar' } });
-  scheduleUpdate(fiber2, { payload: { baz: 'qux' } });
-});
 
 ```
 
-#### 全局同步队列
+### 批处理模式
 
-批处理模式依赖全局同步队列。
+#### 是什么
 
-存储位置：全局
+**批处理模式** 是 React 的优化性能的机制。
 
-存储单元：对某个Fiber节点的处理。
+在批处理模式下，React 会将多个状态更新（`setState`）或其他更新操作（如 `useReducer` 的 `dispatch`）合并在一起，延迟到一个批次中统一执行，而不是逐一同步处理每个更新。
 
-创建：当触发批处理模式时，对某个Fiber节点的调度不会立刻执行，而是进入同步队列。
+#### 为什么
 
-处理更新：
+* **优化性能** ：批处理模式减少了在同一帧内多次渲染的可能性，从而降低了浏览器的负载，尤其是在复杂组件或应用中，性能提升尤为明显。
+* **一致性** ：在同一批次中的所有更新被视为一个事务，避免出现中间状态。
 
-当退出批处理模式时，会清空同步队列。即每个Fiber节点都会进行调度，基于自己的旧state和更新队列去更新自己的state值。
+#### 开启时机
 
-渲染：
+批处理模式大多在React的控制范围内自动开启，如事件处理和生命周期函数中。也可以通过 `unstable_batchedUpdates` 手动开启。
 
-一次批处理周期内，所有涉及的 `fiber` 节点都会完成状态更新，并在同一个渲染周期内更新实际的 DOM
+当开启批处理模式时，全局的isBatchingUpdates标识被置为true。
+
+#### 关闭时机
+
+- 原生 DOM 事件处理程序：如直接通过 `addEventListener` 绑定的事件处理器。
+- 非 React 管理的环境中进行的状态更新： setTimeout 或 setInterval 回调中。
+- 手动控制：你可以通过 `flushSync` 强制让 React 立即渲染，而不等待批处理。这样做会关闭当前批处理机制。
+
+#### 批处理模式和非批处理模式下的表现
+
+我们先说非批处理模式，因为它更简单。
+
+以下是非批处理模式下的更新处理流程的源码片段示例：
+
+1. **立即更新触发** ：非批处理模式下，更新触发后会立即调用调度函数。
+
+```js
+function setState(newState) {
+  // 调用更新状态的函数，不使用批处理模式
+  const update = createUpdate(newState);
+
+  // 立即调度
+  scheduleUpdate(update);
+}
+```
+
+2. **任务生成和调度** ：在 `scheduleUpdate` 中，React 会根据更新生成一个任务，并立即开始调度这个任务。
+
+```js
+function scheduleUpdate(update) {
+  const currentTime = getCurrentTime();
+  const expirationTime = computeExpirationTime(currentTime, update);
+
+  // 创建任务并立即调度
+  const task = createTask(expirationTime);
+  scheduleCallback(task);
+}
+```
+
+3. **立即执行更新** ：调度函数 `scheduleCallback` 会立即尝试执行任务，不会等待其他更新的完成。
+
+```js
+function scheduleCallback(task) {
+  // 如果当前没有执行中的任务，直接执行
+  if (!isPerformingWork) {
+    performWork(task);
+  } else {
+    // 否则任务进入队列等待执行
+    pushTaskToQueue(task);
+  }
+}
+
+```
+
+4. **立即渲染** ：如果 `isPerformingWork` 为 `false`，React 会立即调用 `performWork` 函数来处理任务。任务会包含更新队列中的更新并立即进行渲染。
+
+```js
+function performWork(task) {
+  isPerformingWork = true;
+
+  // 执行任务，渲染组件
+  renderComponent(task);
+
+  isPerformingWork = false;
+}
+```
+
+总结：在非批处理模式下，每一个更新会立刻触发调度，并且在没有其他任务执行的情况下，会立刻渲染。这个过程是同步的，不会累积多次更新来进行批量处理。
+
+# flushSyncCallbackQueue和批处理模式的区别
+
+flushSyncCallbackQueue是在高优先级任务调度，需要立刻执行的时候触发。批处理模式是React根据剩余帧，任务调度等情况，判断出一些更新可以合并在一次渲染内执行。
+
+# 接着是调度（todo:什么时候会发生调度——
 
 ### 更新处理流程（setState之后会发生什么）
 
