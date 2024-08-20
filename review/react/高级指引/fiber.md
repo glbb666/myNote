@@ -379,10 +379,22 @@ function flushWork(hasTimeRemaining, initialTime) {
 
 任务被放入队列后，React 会根据任务的优先级来调度执行。执行过程中，React 会处理每个任务所包含的 `updateQueue`，更新对应的 Fiber 树部分并最终渲染。
 
-### **关键点总结**
+### **关键区别**
 
 在 **非批处理模式** 中，更新触发后立即标记 Fiber 节点，并立即生成和执行任务。
 
 在 **批处理模式** 中，更新触发后不会立即标记，而是等批处理结束后，再统一标记、生成任务并执行。
 
 标记和任务生成的顺序取决于是否启用了批处理模式。如果有批处理，标记和任务生成是延迟的，等待批处理结束时才进行；如果没有批处理，标记和任务生成是同步进行的。
+
+# 关键浏览器api
+
+在 React 的 Fiber 架构中，`requestIdleCallback` 和 `requestAnimationFrame` 是两个关键的浏览器 API，它们在不同的情况下发挥作用，以确保 React 在执行任务时既高效又能保持 UI 的流畅性。
+
+### 1. **`requestIdleCallback`**
+
+* **时间分片** : 在并发模式下，React 会将低优先级任务分成小的时间片，通过 `requestIdleCallback` 来执行这些任务，从而避免阻塞 UI 渲染这种高优先级任务。
+
+### 2. **`requestAnimationFrame`**
+
+`requestAnimationFrame` 的主要作用是让浏览器在下一帧刷新之前执行指定的回调函数，这样可以确保所有的 DOM 操作都在浏览器的刷新周期内完成。通过在下一帧之前完成绘制，`requestAnimationFrame` 可以有效避免重绘过程中出现的闪烁或抖动问题。
