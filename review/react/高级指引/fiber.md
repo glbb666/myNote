@@ -394,15 +394,15 @@ function flushWork(hasTimeRemaining, initialTime) {
 
 任务被放入队列后，React 会根据任务的优先级来调度执行。
 
-执行过程中，React 会处理每个任务所包含的 `updateQueue`，更新对应的 Fiber 树的镜像节点。
+执行过程中，React 会处理每个任务所包含的 `updateQueue`。构建对应的镜像Fiber节点（工作树节点），并对其进行更新。
 
-### 5. 渲染
+### 5. Commit
 
-当任务执行完成之后。
+当任务执行完成之后，React 会进入 Commit 阶段。React 会把镜像 Fiber 节点替换到当前的 Fiber 树上，生成一棵新的 Fiber 树。
 
-Fiber树需要更新的节点会被替换成相应的镜像节点，接着根据更新后的Fiber树渲染真实的DOM树
+### 6. 渲染
 
-React 在此时会使用 `requestAnimationFrame` 在下一帧绘制前执行 Commit 阶段。
+接着，React 使用 `requestAnimationFrame` 确保在下一帧之前，将新生成的 Fiber 树所代表的变化反映到真实的 DOM 上，完成渲染。这是一个同步过程，无法被中断。
 
 ### **关键区别**
 
