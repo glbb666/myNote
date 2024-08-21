@@ -158,11 +158,11 @@ function createTaskFromUpdates(updates) {
 
 # 任务的调度
 
-## 是什么
+# 是什么
 
 任务调度是确定何时应该执行一个任务的过程。它是由调度器负责的，其核心工作是根据任务的优先级和过期时间来决定任务何时运行。
 
-## 怎么做
+# 怎么做
 
 当任务入队之后，开始任务的调度。
 
@@ -246,7 +246,7 @@ function flushWork(hasTimeRemaining, initialTime) {
 }
 ```
 
-# 任务的执行
+# 任务的执行（任务的Render）
 
 ## 是什么
 
@@ -256,7 +256,7 @@ function flushWork(hasTimeRemaining, initialTime) {
 
 如果当前没有其他任务在执行，React 会立刻开始执行优先级最高的任务。
 
-在执行任务的过程中，React 会处理对应 `Fiber` 节点上的 `updateQueue`，根据 `renderExpirationTime` 判断 `updateQueue`中的哪些update需要立刻应用，接着把镜像fiber节点中旧的state根据这些update生成新的state。
+在执行任务的过程中，React 会处理对应 `Fiber` 节点上的 `updateQueue`，根据 `renderExpirationTime` 判断 `updateQueue`中的哪些update需要立刻应用。当发现节点需要更新，就会创建出一个镜像fiber节点，这个镜像fiber节点的别名为fiber工作树节点。接着把镜像fiber节点中旧的state根据这些update生成新的state。
 
 当碰到低优先级任务时，会使用到时间分片机制，让任务延迟执行。
 
@@ -314,6 +314,21 @@ function flushWork(hasTimeRemaining, initialTime) {
 
 使得渲染任务更加高效和丝滑。
 
+# 任务的Commit
+
+当任务执行完成之后，React 会进入 Commit 阶段。React 会把镜像 Fiber 节点替换到当前的 Fiber 树上，生成一棵新的 Fiber 树。
+
+# 任务的渲染
+
+接着，React 使用 `requestAnimationFrame` 确保在下一帧之前，将新生成的 Fiber 树所代表的变化反映到真实的 DOM 上，完成渲染。这是一个同步过程，无法被中断。
+
+渲染最终触发的条件是任务的完成状态和浏览器的帧管理机制：
+
+* **高优先级任务完成后** : 如果高优先级任务（如用户输入）完成，并且时间允许，React 会立即进入 Commit 阶段进行渲染。
+* **低优先级任务完成后** : 低优先级任务可能会被分成多个时间片执行。当这些任务执行完成后，如果时间允许，React 也会进入 Commit 阶段。
+* **浏览器下一帧绘制之前** : React 通常会在浏览器即将进行下一帧绘制之前，通过 `requestAnimationFrame` 来触发渲染，确保 DOM 更新与绘制同步，从而避免用户界面出现闪烁或不一致。
+* **强制更新** : 某些情况下，React 可能会在特定事件（如用户强制刷新）后立即触发渲染，无论是否还有未完成的低优先级任务。
+
 # 批处理模式
 
 ## 是什么
@@ -343,7 +358,7 @@ function flushWork(hasTimeRemaining, initialTime) {
 - 非 React 管理的环境中进行的状态更新： setTimeout 或 setInterval 回调中。
 - 手动控制：你可以通过 `flushSync` 强制让 React 立即渲染，而不等待批处理。这样做会关闭当前批处理机制。
 
-## 批处理模式&非批处理模式总流程对比
+## 批处理模式&非批处理模式总流程对比（调用setState之后会发生什么）
 
 ### **1. 触发更新**
 
@@ -377,7 +392,17 @@ function flushWork(hasTimeRemaining, initialTime) {
 
 ### **4. 调度与执行任务**
 
-任务被放入队列后，React 会根据任务的优先级来调度执行。执行过程中，React 会处理每个任务所包含的 `updateQueue`，更新对应的 Fiber 树部分并最终渲染。
+任务被放入队列后，React 会根据任务的优先级来调度执行。
+
+执行过程中，React 会处理每个任务所包含的 `updateQueue`，更新对应的 Fiber 树的镜像节点。
+
+### 5. 渲染
+
+当任务执行完成之后。
+
+Fiber树需要更新的节点会被替换成相应的镜像节点，接着根据更新后的Fiber树渲染真实的DOM树
+
+React 在此时会使用 `requestAnimationFrame` 在下一帧绘制前执行 Commit 阶段。
 
 ### **关键区别**
 
