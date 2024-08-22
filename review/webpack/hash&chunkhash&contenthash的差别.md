@@ -1,14 +1,18 @@
-### 为什么需要hash？
+# 为什么文件名中需要带hash？
 
-每次`前端静态`资源需要更新时，客户端必须重新下载资源。因为从网络中获取资源会很慢，这显然非常低效。这也是为什么浏览器会缓存静态资源的原因。但是有一个缺陷：如果在部署新的版本中不修改文件名，浏览器会认为它没有更新，会继续使用缓存中的旧版本。
+每次 `前端静态`资源需要更新时，客户端必须重新下载资源。因为从网络中获取资源会很慢，这显然非常低效。这也是为什么浏览器会缓存静态资源的原因。但是有一个缺陷：如果在部署新的版本中不修改文件名，浏览器会认为它没有更新，会继续使用缓存中的旧版本。
 
 文件名加上hash可以保证我们应用发版更新的同时客户端也能及时获取最新版本。
 
-### hash
+# hash的类型
 
-- 基于build
-- 所有chunk文件使用相同的hash。
-- 项目中任一文件内容发生变化都会影响所有chunk文件hash
+## hash
+
+**生成依据** ：当你使用 `[hash]` 时，Webpack 会基于整个项目的构建状态生成一个全局哈希值。如果项目中的任何一个文件（无论是 JavaScript、CSS、图片，还是其他资源文件）发生变化，或者是 Webpack 配置改变了，整个构建的哈希值 `[hash]` 都会发生变化。
+
+**影响范围** ：由于 `[hash]` 是全局的，当[hash]发生变化，所有使用了 `[hash]` 的文件名都会更新。
+
+**适用场景** ：`[hash]` 通常适用于生成一次构建对应的文件名。比如开发环境，因为它保证每次构建后文件名都是唯一的，避免缓存问题。
 
 ```javascript
 entry:{
@@ -26,7 +30,7 @@ plugins:[
 
 ```
 
-- 修改css文件导致index.css、index.js和vendor.js的hash内容都改变了
+如下：修改css文件导致index.css、index.js和vendor.js的hash内容都改变了
 
 ```javascript
 dist
@@ -41,10 +45,13 @@ dist
 └── vendor.c4275599e9a903cd4997.js
 ```
 
-### chunkhash
+## chunkhash
 
-- 基于 webpack 的 `entry point`
-- 任意文件改变只会影响其所属的chunk，不会影响其它chunk。
+**生成依据** ：`[chunkhash]` 基于 chunk 的内容生成。因此当某个 chunk 中的文件内容发生变化时，只有该 chunk 的 `[chunkhash]` 会变化，而其他 chunk 的 `[chunkhash]` 不受影响。
+
+**影响范围** ：用于生成 `[chunkhash]`的 所有文件。
+
+**适用场景** ：适用于分离打包后的文件（chunk）之间的缓存控制。例如，在动态加载的代码块中，只有当某个代码块发生变化时，相关的 `[chunkhash]` 才会更新，其他没有变化的代码块可以继续使用旧的缓存文件。
 
 ```javascript
 entry:{
@@ -52,7 +59,7 @@ entry:{
   vendor:['react','react-dom'] //每个entry都会打一个
 }
 output:{
-  filename:'[name].[chunkhash].js', //chunkhash和contenthash不能在这用, 这能用hash
+  filename:'[name].[chunkhash].js', 
 },
 plugins:[
   new MiniCssExtractPlugin({
@@ -78,10 +85,11 @@ dist
 └── vendor.c6fa41a5d8c4f0002b09.js
 ```
 
-### contenthash
+## contenthash
 
-- 基于文件内容产生的hash
-- 影响范围只限于`本文件`
+* **生成依据** : `[contenthash]` 是基于单个文件内容生成的哈希值。
+* **影响范围**: 用于生成 `[contenthash]`的文件。
+* **适用场景** : `[contenthash]` 常用于处理静态资源文件（如 CSS、图片等），因为它可以更好地控制文件级别的缓存。当文件内容不变时，浏览器缓存可以继续使用旧的文件，减少不必要的网络请求。
 
 ```javascript
 entry:{
@@ -112,8 +120,13 @@ dist
 └── vendor.d67f4f207409e75aec17.js
 ```
 
-### 场景与使用
+## 场景与使用
 
-- production 只需要`contenthash`就可以了，修改哪个文件才改变哪个文件的`hash`。其它的`hash`不变可以继续从缓存里读取，以加快访问速度
-- development环境 不需要hash直接展示名称，毕竟生成hash也需要消耗一定资源，cache还会影响开发体验。
+### 开发环境
 
+开发环境不需要hash直接展示名称，毕竟生成hash也需要消耗一定资源，cache还会影响开发体验。
+
+### 生产环境
+
+- 公共库使用chunkhash：公共库（如 React、Lodash 等第三方库）通常更新频率较低。使用 `chunkhash` 能确保当这些库的代码没有变化时，它们的哈希值保持不变，这样浏览器可以有效地缓存这些文件，减少重新下载的次数。
+- 非库使用要 `contenthash`：修改哪个文件才改变哪个文件的 `hash`。其它的 `hash`不变可以继续从缓存里读取，以加快访问速度
