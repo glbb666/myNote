@@ -1,98 +1,302 @@
 [前端面试之webpack篇](https://segmentfault.com/a/1190000011383224)
 
-# Webpack是什么
+# 概念介绍
 
-`webpack`是一个**模块打包机**，它从一个给定的的主文件开始找到项目的所有依赖文件，使用 `loader`进行处理，最后打包成浏览器可识别的 `js`文件。
+## Webpack是什么
+
+`webpack`是一个**模块打包机**。它从一个给定的的主文件开始找到项目的所有依赖文件，使用 `loader`进行处理，最后打包成浏览器可识别的 `js`文件。
 
 在使用 `webpack`命令的时候，他将接受 `webpack`的配置文件，除非我们使用其他的操作。
 
-# webpack执行流程
+## 模块是什么
 
-webpack启动后会在entry里配置的module开始递归解析entry所依赖的所有module，每找到一个module, 就会根据配置的loader去找相应的转换规则，对module进行转换后在解析当前module所依赖的module，这些模块会以entry为分组，一个entry和所有相依赖的module也就是一个chunk，最后webpack会把所有chunk转换成文件输出，在整个流程中webpack会在恰当的时机执行plugin的逻辑
+**模块** 是 Webpack 中的基本构建单元。每个文件都被视为一个模块。可以通过 `import` 或 `require` 语句引用其他模块。
+
+## chunk是什么
+
+**Chunk** 是 Webpack 构建过程中生成的代码块。简单来说，Chunk 是模块的一个集合，它是打包输出的基本单位。在 Webpack 中，多个模块会被合并成一个或多个 Chunk，以便最终输出为一个或多个文件（通常是 JavaScript 文件）。
+
+具体可以见webpack/webpack拆分代码。
+
+# webpack运行流程
+
+Webpack的核心运行在 Node.js 环境中。并且可以通过 Node.js 提供的 API 来处理文件系统、路径等。
+
+以下是 Webpack 在 Node.js 环境中运行的基本过程：
+
+## 1. **启动 Webpack**
+
+当在命令行中运行 `webpack` 命令时，Node.js 会加载并执行 Webpack 的 CLI 脚本。这个脚本用来解析配置文件（如 `webpack.config.js`）。
+
+## 2. **读取 Webpack 配置**
+
+Webpack 的配置文件通常是一个 CommonJS 模块（通过 `module.exports` 导出配置对象），它定义了入口文件、输出选项、模块解析规则、插件等。Node.js 会使用 `require()` 加载这个配置文件，并将配置对象传递给 Webpack。
+
+## 3. **创建 Compiler 实例**
+
+Webpack 使用配置对象创建一个 `Compiler` 实例，这是整个构建过程的核心。`Compiler` 负责从入口文件开始，递归解析模块之间的依赖关系，应用各种加载器（Loader）和插件（Plugin），最终生成打包后的文件。
+
+## 4. **入口解析 & 代码拆分**
+
+Webpack 从指定的 `entry` 文件开始，使用 Node.js 的 `fs` 模块读取文件内容，递归解析所有的依赖模块。
+
+每个入口点会作为一个构建的起点，Weback 会从这些入口点出发，构建依赖树。
+
+同时Webpack 的代码分割功能（如 `SplitChunksPlugin`）可以将模块分离到不同的 chunks 中，以便更高效地加载和缓存。这也意味着公共库可以被提取到独立的 chunks 中
+
+## 5. 使用 Loader**模块转换**
+
+对于每个模块，Webpack 会根据配置中的 `rules` 查找合适的 loader，并应用这些 loader 进行转换。例如，Babel 可以用于转换 JavaScript 代码，CSS loader 可以处理 CSS 文件等。
+
+## 6. **应用插件**
+
+* 在整个流程中，Webpack 会在恰当的时机执行插件的逻辑。Webpack 插件可以在特定的事件（如编译开始、模块解析、文件输出等）触发时执行自定义的逻辑。
+
+## 7. **输出和插件执行**
+
+ Webpack 会将所有生成的 chunks 转换为最终的文件，并根据 `output` 配置中的 `filename` 和 `path` 选项将这些文件写入到指定的输出目录。
+
+## 8. **生成 Source Map（可选）**
+
+如果配置了 Source Map，Webpack 会生成映射文件，用于将打包后的代码映射回源代码。这个过程通常也依赖于 Node.js 提供的文件系统操作。
 
 # entry
 
-**entry:** 用来写入口文件，它将是整个依赖关系的根
+## 是什么
 
-```javascript
+`entry` 是 Webpack 配置中的一个关键属性，用来指定构建的入口文件。Webpack 会从这个入口文件开始，创建一个依赖图，从而把应用程序所需的模块打包成一个或多个最终输出的文件。
+
+## **为什么需要配置 `entry`**
+
+配置 `entry` 是为了告诉 Webpack 应用程序的入口点在哪里，这样 Webpack 就可以从这个起点出发，递归解析出所有的依赖关系。对于单页面应用，通常只有一个入口文件，而对于多页面应用或复杂项目，可能需要配置多个入口文件。
+
+## 怎么做 (如何配置 `entry`)
+
+#### **1. 单入口配置**
+
+如果你的项目是一个简单的单页面应用，可以直接指定一个入口文件：
+
+```
 var baseConfig = {
-        entry: './src/index.js'
+    entry: './src/index.js'  // 单一入口
 }
+
 ```
 
-- 当我们需要多个入口文件的时候，可以把entry写成一个对象。**`entry`中不同的 `key`都会成为 `output`出口文件的 `[name]`**
+在这种情况下，Webpack 会从 `./src/index.js` 开始打包所有的依赖。
 
-```javascript
+#### **2. 多入口配置**
+
+对于需要多个入口文件的情况，可以将 `entry` 配置成一个对象：
+
+```js
 var baseConfig = {
-        entry: {
-            main: './src/index.js',
-            app:'./src/index1.js'
-        }
+    entry: {
+        main: './src/index.js',  // 主入口文件
+        app: './src/index1.js'   // 另一个入口文件
+    }
 }
+
 ```
 
-- 我们还可以向 `entry`中传入一个数组，这样将创建多个主入口。
-- 我们还可以分离应用 `app`和第三方库入口
+当有多个入口时，webpack会创建多张依赖图，这些依赖图是彼此完全分离、互相独立的
 
- webpack 从 `app.js` 和 `vendors.js` 开始创建依赖图。这些依赖图是彼此完全分离、互相独立的
+在这个配置中，Webpack 会为每个入口文件生成独立的依赖图，并输出对应的文件。每个 `entry` 的 `key` 会成为输出文件的 `[name]`。
 
-第三方库入口的代码打包一次之后就不会变了，除非你手动更新 `package.json`的依赖
+#### **3. 第三方库的单独打包**
 
-```javascript
+为了优化缓存，可以将第三方库（如 React、Lodash 等）单独打包，这样在代码变更时，公共库可以继续从缓存中读取，不需要重新加载：
+
+```js
 const config = {
-  entry: {
-    app: './src/app.js',
-    vendors: ["react", "react-redux", "react-router", "redux", "rc-form", "lodash"]
-  }
+    entry: {
+        app: './src/app.js',    // 应用的入口文件
+        vendors: ["react", "react-redux", "redux"] // 第三方库
+    }
 };
+
 ```
+
+通过这种方式，`vendors` 的内容在不变的情况下会保持相同的哈希值，从而优化加载速度。
 
 # output
+
+## **是什么** :
+
+* `output` 是 Webpack 配置中的一个关键属性，用于指定打包后的文件应该输出到哪里以及如何命名。
+* 它决定了 Webpack 最终生成的文件的路径和文件名模式。
+
+## **为什么需要 `output`** :
+
+* `output` 定义了打包文件的存放位置，这对于构建后的部署和发布至关重要。
+* 通过 `output` 配置，你可以控制文件名的格式，路径结构，以及如何处理诸如图片、字体等静态资源。
+* 配置正确的 `output` 可以帮助你优化缓存，避免文件名冲突，
+* 并且可以通过配置根路径，与服务器部署环境更好地兼容。
+
+## **怎么做 (`output` 配置方式)** :
+
+#### 1. **基本配置**
+
+```js
+module.exports = {
+  entry: './src/index.js',
+  output: {
+    filename: 'bundle.js',  // 指定输出文件的名称
+    path: path.resolve(__dirname, 'dist')  // 指定输出文件的路径（绝对路径）
+  }
+};
+
+```
+
+* `filename`: 定义输出文件的名称。可以使用模板字符串，比如 `[name].js`（基于 `entry` 的 `key` 命名），以及使用 `hash` 来确保文件的唯一性。详情见hash&chunkhash&contenthash的差别
+* `path`: 定义文件输出的目录。注意，必须是绝对路径，所以通常需要使用 Node.js 的 `path.resolve` 来设置。
 
 **output定义入口文件的输出格式，**即使入口文件有多个，但是**只有一个输出配置**
 
 - `filename` 用于输出文件的文件名。
 - `path`目标输出目录的绝对路径。
+- `[name]`：模块的名称。
 
-单个入口文件
+#### 2. **多入口配置**
+
+```js
+module.exports = {
+  entry: {
+    app: './src/app.js',
+    admin: './src/admin.js'
+  },
+  output: {
+    filename: '[name].[chunkhash].js',  // 使用chunkhash进行文件名控制
+    path: path.resolve(__dirname, 'dist')
+  }
+};
 
 ```
+
+多入口配置允许为每个入口文件生成独立的输出文件。`[name]` 会自动替换为 `entry` 中的 `key`，如 `app` 和 `admin`。
+
+这种配置可以确保每个入口文件打包后的输出文件具有独立的名称，如 `app.chunkhash.js` 和 `admin.chunkhash.js`。
+
+#### 3. **CDN 配置**
+
+```js
+module.exports = {
+  output: {
+    filename: '[name].[contenthash].js',
+    path: path.resolve(__dirname, 'dist'),
+    publicPath: 'https://cdn.example.com/assets/'  // 指定静态资源的公共路径，如CDN路径
+  }
+};
+
+```
+
+是什么：
+
+* `publicPath`: 定义了所有输出文件的公共 URL 路径。用于在运行时动态加载资源。
+
+为什么：
+
+* 当你的静态资源托管在 CDN 上时，配置 `publicPath` 可以确保所有资源从正确的 CDN 路径加载，提高加载速度和可用性。
+
+怎么做：
+
+* 根据部署环境配置 `publicPath`，在生产环境中指定 CDN 路径，确保资源加载的高效性。
+
+#### 4. **分离静态资源：优化图片、字体等资源的输出**
+
+```js
+module.exports = {
+  output: {
+    filename: '[name].[contenthash].js',
+    path: path.resolve(__dirname, 'dist'),
+    assetModuleFilename: 'images/[hash][ext][query]'  // 自定义静态资源（如图片）的输出路径和名称
+  }
+};
+
+```
+
+##### **是什么？**
+
+* **`assetModuleFilename`** : 用于自定义资源模块（如图片、字体等）的文件名和路径，Webpack 5 引入的 Asset Modules 特性可以取代 `file-loader` 和 `url-loader`。
+
+##### **为什么？**
+
+通过 `assetModuleFilename` 可以统一管理和优化静态资源的输出路径，减少重复配置，并利用 `hash` 机制优化缓存。
+
+##### **怎么做？**
+
+* 使用 `assetModuleFilename` 取代传统的加载器，配置静态资源的输出路径和名称，结合 `hash` 优化缓存。
+
+`assetModuleFilename`: 针对资源模块（如图片、字体等），你可以自定义它们的文件名和路径。
+
+Webpack 5 中的 `assetModuleFilename` 和 Asset Modules 的引入，实际上可以取代之前常用的 `file-loader` 和 `url-loader`
+
+* **`asset/resource`** :类似于 `file-loader`，会将文件单独打包并输出到指定目录。
+* **`asset/inline`** :类似于 `url-loader`，将文件以 base64 字符串的形式内联到打包的代码中，适合小文件。
+* **`asset`** :这个类型是 `asset/resource` 和 `asset/inline` 的结合，Webpack 会根据文件大小自动选择将文件打包为单独的文件还是内联到代码中。
+
+#### **5. 多页面应用的路径处理**
+
+```js
 output: {
-        filename: 'main.js',
-        path: path.resolve('./build')
-}
+  path: path.resolve(__dirname, 'dist'),
+  filename: '[name]/js/[name].[contenthash].js',  // 根据页面生成不同目录
+  publicPath: '/static/',
+},
+
 ```
 
-如果你定义的入口文件有多个，那么我们需要使用占位符来确保输出文件的唯一性
+##### **是什么？**
 
-```javascript
-output: {
-    	filename:'js/[name][contenthash].js',
-    	//此处的__dirname为/Users/bytedance/Desktop/webpack-test/config
-    	path: path.resolve(__dirname, '../dist')
-    	//path必须是绝对路径
-  
-}
+* 在多页面应用中，为每个页面生成独立的输出路径，确保各页面的资源加载路径正确。
+
+##### **为什么？**
+
+- 多页面应用通常需要为每个页面生成独立的资源路径，以避免资源冲突并确保正确的资源加载。
+
+##### **怎么做？**
+
+* 使用 `[name]` 模板结合目录结构配置 `filename`，确保每个页面的资源路径独立且有序。
+
+这种配置会生成类似于：
+
+* `/static/home/js/home.abc123.js`
+* `/static/about/js/about.abc123.js`
+
+### **6. 动态路径设置：基于环境变量**
+
+当Webpack解析到一个文件引用另一个文件时，它会将这个引用转换为相对于 `output.publicPath`的路径。
+
+举个例子，a文件中相对引用了b文件，在读取时是相对于a文件的路径。接着Webpack 会解析这个相对路径引用，并将其转换为基于 `output.publicPath` 的绝对路径。
+
+有时，开发和生产环境路径的不同是由部署环境决定的。可以使用环境变量来动态调整路径是一个常见的做法。
+
+```js
+const isProduction = process.env.NODE_ENV === 'production';
+
+module.exports = {
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'js/[name].[contenthash].js',
+    publicPath: isProduction ? '/prod_static/' : '/',  // 生产环境与开发环境路径不同
+  },
+};
+
 ```
 
-```javascript
-var path = require('path')
-    var baseConfig = {
-        entry: {
-            main:path.join(__dirname,'./src/main.js'),
-        	app:path.join(__dirname,'./src/main.js')
-        },
-        output: {
-            filename: 'main.js',
-            path: path.resolve('./build')
-        }
-    }
-    module.exports = baseConfig
-```
+#### **是什么？**
 
-![webpack.png](https://github.com/glbb666/myNote/blob/master/review/webpack/images/webpack.png?raw=true)
+- `publicPath`配置的是资源在运行时的根路径。
 
-如今这么少的配置，就能够让你运行一个服务器并在本地使用命令 `npm start`或者 `npm run build`来打包我们的代码进行发布
+* 动态设置 `publicPath`，根据当前环境（开发或生产）调整资源的加载路径。
+
+#### **为什么？**
+
+开发环境与生产环境的路径需求不同。生产环境通常需要固定的路径结构，而开发环境则需要灵活性。
+
+#### **怎么做？**
+
+* 使用环境变量来动态调整 `publicPath`，确保在开发和生产环境中路径配置合理，且不影响开发体验。
 
 # Loader
 
@@ -144,10 +348,6 @@ module.exports = {
       {
         test: /\.css$/,
         use: ['style-loader', 'css-loader']
-      },
-      {
-        test: /\.(png|jpg|gif)$/,
-        use: 'file-loader'
       },
       {
         test: /\.tsx?$/,
@@ -242,11 +442,6 @@ module.exports = {
   ```
 
   如果要把 `css`输出成单独的文件，而不是往 `DOM`里插入 `<style>`标签，那么就不能用 `style-loader`，而需要用 `MiniCssExtractPlugin`。
-
-#### File Loader
-
-- `file-loader`: 生成的默认文件名就是**文件内容的 `md5`哈希值**([hash.[ext])，并会保留所引用资源的原始扩展名。
-- `url-loader`：和 `file-loader`类似，但可以在 `options`属性中进行一个 `limit`的配置。这是因为当页面图片较多时，需要发起很多 `http`请求，会降低页面的性能，所以 `url-loader`可以把图片进行编码，打包进 `js`文件中，当然，如果图片过大，进行编码会消耗性能。所以在配置中有一个 `limit`值，如果文件的大小比 `limit`小，就会将文件转为 `dataURI`存在 `js`文件中，并返回 `DATAURI`。如果文件的大小比 `limit`大，就会用 `file-loader`进行处理。详情可以了解[详解webpack url-loader和file-loader](https://segmentfault.com/a/1190000018987483)
 - `babel-loader`： 让下一代的 `js`文件转换成现代浏览器能够支持的 `js`文件。`babel`有些复杂，所以大多数都会新建一个 `.babelrc`进行配置。
 - `less-loader`和 `sass-loader`可以加载和转译 `less`和 `sass`文件
 
