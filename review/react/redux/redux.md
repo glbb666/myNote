@@ -78,19 +78,17 @@ return {
 
 ### Action和Reducer之间的关系
 
-action没有直接dispatch到特定的reducer，而是dispatch到store，那么reducers是怎么接受到action的呢？
+**action没有直接dispatch到特定的reducer，而是dispatch到store，那么reducers是怎么接受到action的呢？**
 
 redux不会监听action。
 
 已知store内部维护了一系列reducer和当前的应用状态state。
 
-当action被dispatch到store之后，store会自动调用所有的reducer，并传入两个参数，当前的state和被呈递的action。当多个reducer需要响应同一个action时，它们各自独立处理自己的状态部分，并返回新的状态。redux会把这些返回的状态合并成一个新的状态。
+当action被dispatch到store之后，store会自动调用所有的reducer，并传入两个参数，当前的state和被呈递的action。
 
-问题：当多个reducer接收到actions，在reducer中处理的时候，会生成新的state，新的state会发生冲突吗？
+**当多个reducer接收到actions，在reducer中处理的时候，会生成新的state，新的state会发生冲突吗？**
 
-不会，因为每个reducer管理一个state。这一切都依赖于辅助函数
-
-### `combineReducers`
+不会，因为当多个reducer需要响应同一个action时，它们各自独立处理自己的状态部分，并返回新的状态。redux会把这些返回的状态合并成一个新的状态。 `combineReducers`
 
 ```jsx
 import { combineReducers } from 'redux';
