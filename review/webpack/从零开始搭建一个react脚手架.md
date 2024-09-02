@@ -70,18 +70,155 @@ module.exports = merge(common, {
   },
 ```
 
-# 配置前置：调研webpack4和webpack5和之前的版本比分别做了什么优化
-
 当我们进行配置前，我们可以看看代码中有没有做一些预先配置，这样会节约很多工作。
 
-## **Webpack 4 优化**
+# 生产模式下默认开启
 
-3.**生产模式优化（TODO: 让gpt给出例子）**
+## plugin
 
-* Tree Shaking（删除未使用的代码）
-* Scope Hoisting（作用域提升）
-* 默认启用 UglifyJS 插件进行代码压缩。不止可以压缩 `JS`代码，还可以压缩 ` HTML`、`CSS` 代码，并且在压缩 ` JS` 代码的过程中，我们还可以通过配置实现比如删除 ` console.log` 这类代码的功能。
-* 自动处理 `process.env.NODE_ENV` 变量
+### webpack.DefinePlugin
+
+#### 是什么？
+
+`webpack.DefinePlugin` 用于创建在编译时可以配置的全局常量。通过这个插件，你可以在代码中使用类似 `process.env.NODE_ENV` 这样的变量来区分不同的环境（如开发环境和生产环境）。
+
+#### 为什么？
+
+**减少运行时开销**
+
+`process.env.NODE_ENV` 这样的环境变量通常是在运行时进行的，会影响性能。
+
+`webpack.DefinePlugin` 会在编译时将源代码中的常量替换为你指定的值。比如：
+
+```js
+if (process.env.NODE_ENV === 'production') {
+  // 生产环境特定代码
+}
+
+```
+
+在使用 `webpack.DefinePlugin` 后， `process.env.NODE_ENV` 会被替换为 `'production'`，最终生成的代码类似于：
+
+```js
+if ('production' === 'production') {
+  // 生产环境特定代码
+}
+
+```
+
+这种替换方式可以帮助 Webpack 更好地进行代码优化，比如去除死代码（未被执行的代码）。
+
+**避免环境差异**
+
+开发初，我们会在 `package.json` 中，通过 `scripts` 可以设置 `NODE_ENV`：
+
+```javascript
+"scripts": {
+    "start": "NODE_ENV=development webpack-dev-server",
+    "build": "NODE_ENV=production webpack"
+}
+```
+
+但是 `NODE_ENV`只在当前的 Node.js 进程中有效，并不会自动传递到浏览器环境。因此在浏览器中执行的代码不会识别 `process.env.NODE_ENV`。直接使用 `process.env.NODE_ENV` 可能会导致报错。
+
+通过 `webpack.DefinePlugin`，你可以在编译时模拟这个变量的存在，避免环境差异带来的问题。
+
+**代码中的安全性**
+
+通过 `webpack.DefinePlugin`，你可以将一些敏感信息（如 API 密钥）通过环境变量的方式注入到代码中，而不需要直接在源码中硬编码这些信息，降低安全风险。
+
+#### 怎么做？
+
+```js
+const webpack = require('webpack');
+
+module.exports = {
+  plugins: [
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
+    })
+  ]
+};
+
+```
+
+## `optimization`
+
+### **`removeAvailableModules`**
+
+生产模式默认启用，移除父级 chunk 中已经存在的模块，减少冗余代码和提升加载性能。
+
+### **`removeEmptyChunks`**
+
+生产模式默认启用，移除打包过程中生成的空 chunk，避免生成无用的文件，进一步优化输出。
+
+以下配置全部开启，就是TreeShaking的步骤了。
+
+### concatenateModules
+
+#### **是什么** ：
+
+`concatenateModules` 用于在生产模式下默认启用 Scope Hoisting。
+
+#### **为什么** ：
+
+在 Webpack 打包过程中，每个模块通常会被包裹在一个单独的函数中，以实现模块隔离。这种做法虽然确保了模块的独立性，但会引入额外的闭包开销。
+
+通过合并模块减少闭包的数量，降低代码体积，提升性能。
+
+#### **怎么做** ：
+
+在 Webpack 4 及以上版本中，`concatenateModules` 在生产模式下默认启用。
+
+### Tree Shaking（总流程）
+
+### **是什么**
+
+Tree Shaking 用于在打包过程中移除那些代码中未被使用的部分。
+
+它通常针对 ES6 模块（`import` 和 `export`）进行工作，通过静态分析确定哪些模块或模块中的部分代码没有被引用，从而在最终打包的文件中剔除它们。
+
+### **怎么做**
+
+在 Webpack 4 及以上版本中，生产模式 (`mode: 'production'`) 会默认启用 Tree Shaking。
+
+它包含以下优化。
+
+### **`usedExports`** ：
+
+在生产模式下，Webpack 会自动启用 `usedExports`，通过静态分析来决定哪些代码是未被使用的。对于没有被使用的导出，Tree Shaking 会将其标记为“未使用”，并在打包时移除。
+
+### **`sideEffects`**：
+
+##### 是什么
+
+`sideEffects` 是一种用于告诉 Webpack 某个模块或者某些文件是否具有副作用的配置。你可以在 `package.json` 中的 `sideEffects` 字段中进行设置。
+
+##### 为什么：
+
+Tree Shaking 默认假设模块是无副作用的，可以安全地移除未使用的导入和导出。而如果某个模块的文件包含副作用，直接移除可能会导致程序行为异常。因此，正确配置 `sideEffects` 可以确保 Webpack 在移除未使用代码时不会误删有副作用的代码。
+
+##### **怎么做** ：
+
+* **检查 `sideEffects` 配置** ：Webpack 会先检查你的 `package.json` 中是否配置了 `sideEffects`，如果配置为 `false`，Webpack 会认为整个模块没有副作用，所有未被引用的导入和导出可以安全地移除。
+* **未配置 `sideEffects`** ：
+  * 如果模块在执行时可能产生副作用（例如修改全局状态、产生副作用的函数调用），Webpack 会保留这些代码，因为无法确定移除这些代码是否会影响应用的执行。
+  * 如果模块不会产生副作用，会被移除
+
+### **`minimize`** ：
+
+生产环境默认开启，用于用Terser压缩和优化输出代码。
+
+Terser更详细的配置见下面的生产环境配置 `optimization.minimizer`。
+
+# 开发环境的默认开启
+
+
+**持久缓存**
+
+* Webpack 5 引入了持久缓存机制，将缓存存储在文件系统中，使得重新构建时可以复用缓存，大幅减少构建时间，尤其是在开发环境下。
+
+
 
 ## **Webpack 5 优化**
 
@@ -101,10 +238,6 @@ module.exports = merge(common, {
 
 * Webpack 5 对模块解析机制进行了优化，使得解析速度更快，并且在大型项目中更加高效。
 * 支持基于 URL 的模块导入，以及更好的 ESM（ES Modules）支持。
-
-9.**扩展性增强**
-
-* 引入了多种新的插件钩子和 API，使得 Webpack 的扩展性和自定义能力更强。
 
 10.**改进的开发体验**
 
@@ -278,73 +411,7 @@ var baseConfig = {
 }
 ```
 
-#### webpack.DefinePlugin
-
-##### 是什么？
-
-`webpack.DefinePlugin` 用于创建在编译时可以配置的全局常量。通过这个插件，你可以在代码中使用类似 `process.env.NODE_ENV` 这样的变量来区分不同的环境（如开发环境和生产环境）。
-
-##### 为什么？
-
-**减少运行时开销**
-
-`process.env.NODE_ENV` 这样的环境变量通常是在运行时进行的，会影响性能。
-
-`webpack.DefinePlugin` 会在编译时将源代码中的常量替换为你指定的值。比如：
-
-```js
-if (process.env.NODE_ENV === 'production') {
-  // 生产环境特定代码
-}
-
-```
-
-在使用 `webpack.DefinePlugin` 后， `process.env.NODE_ENV` 会被替换为 `'production'`，最终生成的代码类似于：
-
-```js
-if ('production' === 'production') {
-  // 生产环境特定代码
-}
-
-```
-
-这种替换方式可以帮助 Webpack 更好地进行代码优化，比如去除死代码（未被执行的代码）。
-
-**避免环境差异**
-
-开发初，我们会在 `package.json` 中，通过 `scripts` 可以设置 `NODE_ENV`：
-
-```javascript
-"scripts": {
-    "start": "NODE_ENV=development webpack-dev-server",
-    "build": "NODE_ENV=production webpack"
-}
-```
-
-但是 `NODE_ENV`只在当前的 Node.js 进程中有效，并不会自动传递到浏览器环境。因此在浏览器中执行的代码不会识别 `process.env.NODE_ENV`。直接使用 `process.env.NODE_ENV` 可能会导致报错。
-
-通过 `webpack.DefinePlugin`，你可以在编译时模拟这个变量的存在，避免环境差异带来的问题。
-
-**代码中的安全性**
-
-通过 `webpack.DefinePlugin`，你可以将一些敏感信息（如 API 密钥）通过环境变量的方式注入到代码中，而不需要直接在源码中硬编码这些信息，降低安全风险。
-
-##### 怎么做？
-
-```js
-const webpack = require('webpack');
-
-module.exports = {
-  plugins: [
-    new webpack.DefinePlugin({
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
-    })
-  ]
-};
-
-```
-
-## optimization
+#### optimization
 
 ### `splitchunk`代码分割
 
@@ -360,12 +427,88 @@ module.exports = {
 
 见webpack拆分代码/`splitChunks`进行公共依赖拆分。
 
-* **`runtimeChunk`** ：用于将运行时代码提取到一个单独的 chunk 中，避免每次构建时的重复代码。
-* 适合在公共配置中使用，以提升缓存利用率。
-* **`moduleIds` 和 `chunkIds`** ：
-* `deterministic`: 避免模块 ID 和 chunk ID 的频繁变化，提升缓存命中率，通常配置在公共环境中。
+### `runtimeChunk`
 
-# 开发环境的需求
+#### **是什么**
+
+`runtimeChunk` 用于处理 运行时代码。
+
+运行时代码是 Webpack 用来管理模块化系统的代码，主要负责模块加载，缓存，依赖关系的解析，确保在浏览器中按需加载和执行代码。
+
+`runtimeChunk` 拆分出一个独立的文件，包含所有 Webpack 生成的运行时代码，而不与业务代码混在一起。
+
+#### **为什么**
+
+**减少不必要的重复打包** ：将运行时代码分离到单独的文件中，避免了每次业务代码变动时，运行时代码也需要重新下载。这样可以更好地利用浏览器缓存，减少不必要的重复打包，从而提高性能。
+
+**便于调试与维护** ：将运行时代码独立出来后，生成的代码结构更清晰，方便开发者进行调试和维护。
+
+#### **怎么做**
+
+见webpack拆分代码/代码拆分的管理。
+
+### moduleIds & chunkIds
+
+#### 是什么
+
+`moduleIds` 是 Webpack 中用于标识模块的唯一标识符。每个模块在打包时都会分配一个 `moduleId`，用于在生成的打包文件中引用和加载该模块。默认情况下，Webpack 会为每个模块分配一个递增的数字 ID（整数 ID），但你可以通过配置来改变这一行为。
+
+`chunkIds` 是 Webpack 中用于标识代码块（chunk）的唯一标识符。一个 chunk 通常包含一个或多个模块，并且可以在应用程序加载时或按需加载时使用。
+
+#### **为什么**
+
+* **优化打包文件的缓存利用率** ：默认情况下，Webpack 使用数字作为 `moduleIds` 和 `chunkIds`，但每次构建时这些 ID 可能会变化，导致浏览器缓存失效，即使代码本身没有发生变化。通过定制 `moduleIds` 和 `chunkIds`，可以更稳定地生成文件，避免不必要的缓存失效，从而提升性能。
+* **代码分割与动态导入** ：当应用程序使用代码分割或动态导入时，`chunkIds` 用于标识这些按需加载的代码块。正确的 ID 分配有助于优化代码加载顺序和资源利用。
+* **调试与可读性** ：在开发环境中，合理配置 `moduleIds` 和 `chunkIds` 可以提高打包文件的可读性和可维护性。例如，使用基于路径的 `moduleIds` 和 `chunkIds` 代替默认的数字 ID，方便开发者调试。
+
+#### **怎么做**
+
+Webpack 提供了多种方式来配置 `moduleIds` 和 `chunkIds`，以便优化和定制构建输出。
+
+#### **配置 `moduleIds`**
+
+在 Webpack 的 `optimization` 配置中，你可以通过 `optimization.moduleIds` 选项来控制 `moduleIds` 的生成方式：
+
+```js
+module.exports = {
+  // 其他配置
+  optimization: {
+    moduleIds: 'deterministic', // 'natural', 'named', 'hashed'
+  },
+};
+
+```
+
+* **`natural`** ：使用模块的默认顺序（即数字递增）作为 `moduleIds`，不稳定，适用于小型项目或开发环境。
+* **`named`** ：使用模块的相对路径作为 `moduleIds`，可读性高，适用于开发环境，但会增加打包体积。
+* **`deterministic`** ：基于模块的相对路径以及模块的顺序来生成较短的 `moduleIds`。它会确保在代码未发生变化的情况下，生成的 ID 尽可能一致，但会在保证一致性和生成较短 ID 之间做一个平衡。适用于生产环境。
+* **`hashed`** ：生成基于内容的哈希值 ID。尽管 ID 较长，但它几乎保证了在模块内容不变的情况下，ID 始终不变。适合开发环境，那些对缓存稳定性要求极高的大型项目。
+
+#### **配置 `chunkIds`**
+
+类似于 `moduleIds`，你可以通过 `optimization.chunkIds` 选项来控制 `chunkIds` 的生成方式：
+
+```js
+module.exports = {
+  // 其他配置
+  optimization: {
+    chunkIds: 'deterministic', // 'natural', 'named', 'size', 'total-size'
+  },
+};
+
+```
+
+* **`natural`** ：使用默认的递增顺序分配 `chunkIds`，简单但不稳定。
+* **`named`** ：使用 chunk 名称作为 `chunkIds`，适合开发环境，增强可读性。
+* **`deterministic`** ：Webpack 在构建每个 chunk 时，会分析这个 chunk 内的所有模块，并基于这些模块的相对路径和导入顺序生成一个确定性的 ID。这意味着 chunk 的 ID 是由其内部所有模块的组合内容决定的，而不是单一模块。如果两个 chunk 包含相同的模块集合且这些模块的导入顺序一致，那么它们的 `chunkIds` 会相同。
+* **`size`** ：Webpack 会根据每个 chunk 的文件大小进行排序。较小的 chunk 会获得较小的 ID。适用于需要按大小优化 chunk 加载顺序的场景。例如，你希望小的 chunk（通常是关键资源）优先加载，而较大的 chunk 可以稍后加载。这有助于优化初次加载性能和用户体验。
+* **`total-size`** ：Webpack 会计算整个 chunk 的最终输出大小，并根据大小来生成 ID。**实际输出大小** 包括了代码压缩、模块合并、依赖管理、运行时代码等所有经过 Webpack 处理后的最终文件大小。这个选项更为全面地考虑了 chunk 的实际加载成本。
+
+#### QA
+
+##### 为什么 `chunkIds` 没有 `hashed` 选项
+
+在实际项目中，`chunkIds` 通常不会像 `moduleIds` 那样频繁变动。`chunkIds` 更关注的是块的整体特性而不是单个模块的内容。
 
 ## Loader
 
@@ -396,12 +539,6 @@ module.exports = {
 };
 
 ```
-
-## optimization
-
-1. **`removeAvailableModules` 和 `removeEmptyChunks`** ：
-
-* 用于清理空模块和空 chunk，通常在开发环境中启用，以减少不必要的构建时间。
 
 ## webpack-dev-server
 
@@ -527,22 +664,47 @@ module.exports = {
 
 ## optimization
 
-**`minimize`** ：默认值false，在生产环境中通常设置为 `true`，用于压缩和优化输出代码。
+### `minimizer`
+
+#### **是什么**
+
+`minimizer` 是 Webpack 用于压缩和优化最终输出文件的配置项。它允许你指定用于优化 JavaScript、CSS 等资源的插件，通常用于在生产环境中减小文件大小和提高加载速度。
+
+#### **为什么**
+
+在生产环境中，减小文件大小可以显著提高页面加载速度，减少带宽消耗，提升用户体验。
+
+默认情况下，Webpack 会使用 TerserPlugin 来压缩 JavaScript 文件，但有时你可能需要使用其他压缩工具或者对 Terser 进行自定义配置，这时 `minimizer` 选项就非常重要。
+
+#### **怎么做**
+
+要使用 `minimizer` 配置，你可以在 Webpack 的配置文件中设置 `optimization.minimizer`。以下是如何配置的步骤：
+
+默认情况下 ，Webpack 在生产模式下会自动使用 TerserPlugin 来压缩 JavaScript。你不需要手动配置。
+
+自定义压缩配置如下，这种配置可以让你同时压缩 JavaScript 和 CSS 文件，并且你可以根据项目需求微调每个插件的选项。
+
+```js
+const TerserPlugin = require('terser-webpack-plugin');
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
+
+module.exports = {
+  mode: 'production',
+  optimization: {
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          compress: {
+            drop_console: true, // 移除 console.log 语句
+          },
+        },
+      }),
+      new CssMinimizerPlugin(), // 用于压缩 CSS 文件
+    ],
+  },
+};
 
 ```
-
-```
-
-**`minimizer`** ：
-
-配置代码压缩工具，比如 `TerserPlugin`（用于 JS 代码压缩）和 `CssMinimizerPlugin`（用于 CSS 代码压缩）。
-
-* **`concatenateModules`** ：
-* 启用模块的合并优化（Scope Hoisting），减少函数包装和代码体积，通常在生产环境中启用。
-* **`sideEffects`** ：
-* 开启 tree-shaking，以删除没有副作用的代码。生产环境常用。
-* **`usedExports`** ：
-* 标记使用到的导出内容以进行 tree-shaking，通常在生产环境中启用。
 
 #### Webpack优化
 

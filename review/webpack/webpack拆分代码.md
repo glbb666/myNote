@@ -259,9 +259,60 @@ module.exports = {
 
 # 代码拆分的管理
 
-runtime chunk 是 Webpack 的一个核心部分，用于处理模块加载和执行。
+要启用 `runtimeChunk`，可以在 Webpack 的配置文件中设置 `optimization.runtimeChunk` 选项。以下是一些常见的配置方式：
 
-只要有代码拆分的情况（无论是多入口点、动态导入还是显式配置 `runtimeChunk`）。Webpack 通常会生成一个 runtime chunk 来管理模块的加载和执行。runtime chunk 的存在确保了模块能够按照正确的顺序和方式加载，并且共享的依赖只会被加载一次。
+#### **（1）设置为 `true`：**
+
+将 `runtimeChunk` 设置为 `true` 时，Webpack 会为每个入口点创建一个单独的运行时文件：
+
+```js
+module.exports = {
+  // 其他配置
+  optimization: {
+    runtimeChunk: true
+  }
+};
+
+```
+
+这意味着每个入口点都会生成自己的运行时代码文件，例如 `runtime~main.js`。
+
+#### **（2）设置为 `single`：**
+
+将 `runtimeChunk` 设置为 `single` 时，Webpack 会将所有入口点的运行时代码合并到一个单独的文件中：
+
+```js
+module.exports = {
+  // 其他配置
+  optimization: {
+    runtimeChunk: 'single'
+  }
+};
+
+```
+
+#### **（3）设置为 `object`：**
+
+你还可以通过对象的形式自定义生成的运行时代码文件的名称：
+
+```js
+module.exports = {
+  // 其他配置
+  optimization: {
+    runtimeChunk: {
+      name: 'runtime'
+    }
+  }
+};
+
+```
+
+此配置将运行时代码文件命名为 `runtime.js`，而不是 Webpack 默认的名称。
+
+### 总结
+
+`runtimeChunk` 是 Webpack 用于将运行时代码从业务代码中分离出来的配置项，旨在优化构建产物、提升缓存利用率，并简化代码调试与维护。通过适当配置 `runtimeChunk`，可以显著提高 Web 应用的加载性能，尤其是在复杂的多入口项目中。
+
 
 **示例：显式配置runtimeChunk**
 
