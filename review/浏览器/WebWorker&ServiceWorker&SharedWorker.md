@@ -348,6 +348,19 @@ function fetchAndCache(request) {
 
 ```
 
+### Service Worker 的加载流程：
+
+
+* **页面首次加载时** ，如果还没有注册 Service Worker，浏览器会从服务器请求页面的 HTML 和其他资源（CSS、JS、图片等），并加载页面。与此同时，浏览器会拉取并注册 Service Worker 脚本（如果有指定）。
+* **Service Worker 注册过程** ：
+  * 浏览器会发起对 Service Worker 脚本的 HTTP 请求来获取并注册 Service Worker。
+  * 当注册成功后，Service Worker 进入  **安装阶段** ，在这个阶段它无法立即控制页面资源的请求。
+* **Service Worker 激活** ：
+  * 在成功安装之后，Service Worker 会进入 **等待激活** 的阶段。它会等待现有页面（已经加载的页面）被刷新或关闭。
+* **激活阶段** ：一旦所有已加载的页面被刷新，或在下次加载页面时，新的 Service Worker 会被激活并开始接管页面。
+* **拦截资源请求** ：
+  * **页面加载时** ，如果已经有一个激活的 Service Worker，页面的 HTTP 请求（例如 CSS、JS、图片等）就会被 Service Worker 拦截。你可以在 `fetch` 事件中对这些请求做缓存策略、网络请求或从缓存中直接返回资源。
+
 ## **Shared Worker**
 
 1. **创建：**

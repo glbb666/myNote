@@ -2,7 +2,9 @@
 
 Cache Storage 是浏览器中的一个存储机制，它允许 Service Worker 将网络请求的响应对象缓存起来。
 
-每个缓存存储项包括请求和对应的响应，这使得应用可以在离线或网络状况不佳时，直接从缓存中读取资源。
+# CacheStorage存储什么
+
+Cache Storage存储请求和对应的响应。响应是不能直接修改的，但是可以通过clone的方式进行修改。
 
 # Cache存储在哪里
 
@@ -139,39 +141,18 @@ Webpack版本管理一般和Cache版本管理一起使用。在长期缓存的�
 
 浏览器不会在写入数据时抛出错误，而是在超出配额时直接删除旧的或最少使用的数据来腾出空间。要主动进行溢出检查，可以使用以下策略：
 
-* **通过 `estimate()` 检查存储空间** ：可以使用 `navigator.storage.estimate()` 方法来估计当前的存储使用情况和总配额。
+* **通过 `estimate()` 检查存储空间** ：可以使用 `navigator.storage.estimate()` 方法来估计当前的存储使用情况和总配额。一般来说缓存空间会限制在200MB。也要考虑剩余可用空间，两者取小。
 
 ```js
 navigator.storage.estimate().then(estimate => {
   console.log(`使用空间：${estimate.usage} bytes`);
   console.log(`可用总空间：${estimate.quota} bytes`);
+  const availableSpace = total - used;  // 剩余可用空间
 });
 ```
 
-* **检查每个缓存的大小** ：你可以通过遍历缓存中的所有条目并累加它们的大小，来手动计算缓存占用的空间。
-
-```js
-async function getCacheSize(cacheName) {
-  const cache = await caches.open(cacheName);
-  const keys = await cache.keys();
-  let size = 0;
-
-  for (const request of keys) {
-    const response = await cache.match(request);
-    const blob = await response.blob();
-    size += blob.size;
-  }
-
-  return size;
-}
-
-getCacheSize('static-cache-v1').then(size => {
-  console.log(`缓存大小: ${size} bytes`);
-});
-
-```
-
-* **缓存条目数量限制** ：为了防止缓存过多数据，开发者可以设置缓存条目的数量限制，超过这个数量时删除旧的条目。
+* **缓存条目数量限制** ：为了防止缓存过多数据，开发者可以设置缓存条目的数量限制，超过这个数量时删除旧的条目。一般是设置在**50 - 100 个条目。**
+* **可以使用lru先进先出的策略：响应是不能直接修改的，但是可以通过clone的方式进行修改。在clone的时候给响应加上时间戳。每次使用或者获取到缓存，都更新时间戳。**
 
 ```js
 async function limitCacheSize(cacheName, maxItems) {
@@ -184,12 +165,11 @@ async function limitCacheSize(cacheName, maxItems) {
 
 ```
 
+一般需要把存储空间和缓存条目结合起来使用，这样可以提升用户体验 ，同时保证缓存不会过度占用用户的存储空间。
+
 ### 3. **存储空间溢出的情况**
 
-如果存储空间超出浏览器的配额限制，浏览器可能会自动清理旧数据，或拒绝新数据的存储。以下是可能发生的情况：
-
-* **自动清理** ：一些浏览器在空间不足时，会删除旧的缓存数据。这种行为通常不会通知开发者，因此缓存管理策略应该考虑到这一点。
-* **拒绝写入** ：在极端情况下，如果可用空间已被占满，浏览器可能会拒绝存储新的数据。此时，fetch 请求可能会失败，或缓存 `put` 操作无法完成。
+如果存储空间超出浏览器的配额限制，浏览器可能会自动清理旧数据，或拒绝新数据的存储。
 
 # 为什么
 
