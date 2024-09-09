@@ -75,17 +75,21 @@ ServiceWorker遵循同源策略
 
 #### Service Worker的用法
 
-Service Worker的预加载可以分为安装阶段和监听阶段，分别对应静态资源和业务请求。
+##### **MPA（多页应用）** ：
 
-- 静态资源的prefetch
-  **在安装阶段**，我们可以提前下载某一个静态资源作为缓存。
+* **`install`** 阶段：适合预取静态资源和首页的核心请求。核心请求存在cache中，页面fetch阶段拿到到相应资源之后清除。
+* **`fetch`** 阶段：可以用来预取页面内部的 AJAX 请求和业务资源。每次请求相应的页面资源时，顺带预取页面所需的 AJAX 请求数据。
 
-  `caches` 是一个全局变量，它是 Cache Storage API 的一部分，提供了一个脚本可用的缓存接口。通过这个接口，你可以在支持的浏览器中创建、读取、修改和删除特定的缓存。`caches` 对象只在 Service Worker、Web Workers 和 Window 上下文中可用（虽然在 Window 上下文中使用它是有限的）。
-- 业务请求的prefetch**在监听阶段中**，我们可以监听页面的fetch事件，但是并不对资源进行存储。
+##### **SPA（单页应用）** ：
 
-#### 静态资源的prefetch的例子
+* **`install`** 阶段：适合预取静态资源和首页的核心请求。
+* **切换路由时** ：因为SPA的资源是一次性取得的。所以可以结合 `<link rel="prefetch">` 来预取与新路由相关的静态资源，减少页面切换时的加载时间。
 
-Service Worker比较复杂，它有生命周期。下面是一个进行缓存资源的示例，通过这个例子可以体会到Service Worker生命周期的顺序。
+> 静态资源的prefetch具体见多级缓存。
+
+#### prefetch的通用流程
+
+Service Worker比较复杂，它有生命周期。
 
 接下来我们来看看流程：
 
@@ -109,26 +113,35 @@ Service Worker比较复杂，它有生命周期。下面是一个进行缓存资
 2. **安装** ：注册成功后，Service Worker进入 `install`状态。
 
    - **打开缓存** (`caches.open`)：打开一个名为 `CACHE_NAME`的缓存。如果这个缓存不存在，浏览器会创建一个新的缓存。
-   - **prefetch，添加静态资源到缓存** (`cache.addAll`)：`cache.addAll` 方法接受一个 URL 数组（这些是你想要缓存的资源的路径），然后执行网络请求去下载这些资源，并将响应对象存储在打开的缓存中。
+   - **添加核心静态资源到缓存** (`cache.addAll`)：`cache.addAll` 方法接受一个 URL 数组（这些是你想要缓存的资源的路径），然后执行网络请求去下载这些资源，并将响应对象存储在打开的缓存中。
+   - **进行核心动态请求**(`cache.put`)
    - `caches.open` 和 `cache.addAll` 都是异步的Promise。
    - **等待异步操作完成** (`event.waitUntil`)：`event.waitUntil` 它内部的任务完成之前，Service Worker 不会进入下一个生命周期阶段。这里用来等待promise执行。
 
    ```js
-   // Service Worker 文件内
-   const CACHE_NAME = 'static-cache-v1';
-   const STATIC_ASSETS = [
-     '/index.html',
-     '/styles.css',
-     '/script.js',
-     '/logo.png'
-   ];
-
-   self.addEventListener('install', event => {
+   self.addEventListener('install', (event) => {
      event.waitUntil(
-       caches.open(CACHE_NAME)
-         .then(cache => {
-           return cache.addAll(STATIC_ASSETS);
-         })
+       (async () => {
+         const cache = await caches.open('my-cache-v1');
+
+         // 1. 缓存静态资源
+         await cache.addAll([
+           '/index.html',
+           '/style.css',
+           '/script.js',
+         ]);
+
+         // 2. 缓存动态资源 (带参数的 AJAX 请求)
+         const apiUrl = 'https://api.example.com/data';
+         const params = new URLSearchParams({ userId: '123', token: 'abc' }).toString();
+         const fullUrl = `${apiUrl}?${params}`;
+
+         const response = await fetch(fullUrl);
+         if (response.ok) {
+           // 使用 cache.put 手动将请求和响应缓存
+           await cache.put(fullUrl, response.clone());
+         }
+       })()
      );
    });
 
@@ -162,7 +175,9 @@ Service Worker比较复杂，它有生命周期。下面是一个进行缓存资
    });
 ```
 
-5. **监听** ：激活后，Service Worker 能监听并响应 `fetch` 事件。更具体的见下面业务资源prefetch的例子。
+5. **监听** ：激活后，Service Worker 能监听并响应 `fetch` 事件。
+   `Service Worker` 充当了一个  **网络代理** 。如果你想要页面立即获取 `Service Worker` 内的处理结果，需要使用 `Cache Storage` 或者 `postMessage`。
+   一般只有MPA会使用fetch，MPA在fetch中同时取得静态资源和业务资源，在fetch中通过postMessage传递信息，在页面中调用自定义hook通过注册事件拿到信息。
 
 ```js
 self.addEventListener('fetch', event => {
@@ -181,75 +196,75 @@ self.addEventListener('fetch', event => {
 });
 ```
 
-6. **终止 和 更新**：回调完成之后 Service Worker 会自动终止。不过它**没有销毁**，而是在后台自动检查更新。如果 Service Worker 文件发生变化，浏览器会认为这是新的 Service Worker 并开始安装过程。更新后的 Service Worker 将经历相同的生命周期。
+6. **终止 和 更新**：回调完成之后 Service Worker 会自动终止。不过它**没有销毁**，而是在后台自动检查更新。如果 Service Worker 文件发生变化，浏览器会通过文件内容的hash值的不同检测到，并开始安装过程。更新后的 Service Worker 将经历相同的生命周期。
 
-#### 业务资源prefetch的例子
+#### MPA通过fetch实现静态资源&动态资源的prefetch
 
 区别在于：
 
-1. `Service Worker`文件内容，需要把需要进行prefetch的页面方法进行调用。
+`Service Worker`文件内容，需要把需要进行prefetch的页面方法进行调用。
 
-   这里把不同页面的 `prefetch`逻辑剥离到不同的文件中，用 `importScripts`引入。使用 `importScripts()` 引入的脚本文件需要与 Service Worker 在同一域下
+对于MPA应用，需要把不同页面的 `prefetch`逻辑剥离到不同的文件中，用 `importScripts`引入。
 
-   ```js
-   importScripts('homePreload.js');
-   importScripts('aboutPreload.js');
+使用 `importScripts()` 引入的脚本文件需要与 Service Worker 在同一域下
 
-   self.addEventListener('fetch', event => {
-     // 调用 homePreload.js 中的处理函数
-     homePreload.handleFetch(event);
-     // 调用 aboutPreload.js 中的处理函数
-     aboutPreload.handleFetch(event);
-   });
+```js
+importScripts('homePreload.js');
+importScripts('aboutPreload.js');
 
-   ```
+self.addEventListener('fetch', event => {
+  // 调用 homePreload.js 中的处理函数
+  homePreload.handleFetch(event);
+  // 调用 aboutPreload.js 中的处理函数
+  aboutPreload.handleFetch(event);
+});
 
-   这里会检测请求页面的url，在原生Service worker中，fetch能拦截的是http页面请求。在类React Native框架中，我们编写的React组建和业务逻辑代码会被打包成JavaScript代码，然后与应用的其他资源一起被打包进原生应用中。
-   自研框架实现了当跳转本地页面，也会触发Service Worker的fetch事件。
+```
 
-   这里就举一个homePreload.js的例子，其他的文件类似
+对于MPA，这里会检测请求页面的url，在相应的页面中使用自定义hook接受请求的内容。
 
-   ```js
-   const homePreload = {
-     handleFetch: function(event) {
-       if (event.request.url.includes('/api/home-data')) {
-         event.respondWith((async () => {
-           try {
-             // 假设这里有多个需要并行请求的API URLs
-             const apiUrls = ['/api/data1', '/api/data2', '/api/data3'];
+```js
+const homePreload = {
+  handleFetch: function(event) {
+    if (event.request.url.includes('/api/home-data')) {
+      event.respondWith((async () => {
+        try {
+          // 假设这里有多个需要并行请求的API URLs
+          const apiUrls = ['/api/data1', '/api/data2', '/api/data3'];
 
-             // 将每个URL映射为fetch请求的Promise
-             const fetchPromises = apiUrls.map(url => fetch(url).then(res => res.json()));
+          // 将每个URL映射为fetch请求的Promise
+          const fetchPromises = apiUrls.map(url => fetch(url).then(res => res.json()));
 
-             // 等待所有请求完成
-             const data = await Promise.all(fetchPromises);
+          // 等待所有请求完成
+          const data = await Promise.all(fetchPromises);
 
-             // 将数据通过 postMessage 发送给发起请求的页面
-             if (event.clientId) {
-               const client = await clients.get(event.clientId);
-               if (client) {
-                 client.postMessage({ url: event.request.url, data: data });
-               }
-             }
+          // 将数据通过 postMessage 发送给发起请求的页面
+          if (event.clientId) {
+            const client = await clients.get(event.clientId);
+            if (client) {
+              client.postMessage({ url: event.request.url, data: data });
+            }
+          }
 
-             // 返回一个合并后的响应
-             return new Response(JSON.stringify({ data }), {
-               headers: { 'Content-Type': 'application/json' }
-             });
-           } catch (error) {
-             return new Response('{"error": "请求失败，请稍候重试"}', {
-               headers: { 'Content-Type': 'application/json' }
-             });
-           }
-         })());
-       }
-     }
-   };
+          // 返回一个合并后的响应
+          return new Response(JSON.stringify({ data }), {
+            headers: { 'Content-Type': 'application/json' }
+          });
+        } catch (error) {
+          return new Response('{"error": "请求失败，请稍候重试"}', {
+            headers: { 'Content-Type': 'application/json' }
+          });
+        }
+      })());
+    }
+  }
+};
 
-   self.homePreload = homePreload;
+self.homePreload = homePreload;
 
-   ```
-2. 页面，使用自定义hook注册监听事件，对Service Worker返回的数据进行监听。
+```
+
+1. 页面，使用自定义hook注册监听事件，对Service Worker返回的数据进行监听。
 
 ```js
    import { useState, useEffect } from 'react';
@@ -349,7 +364,6 @@ function fetchAndCache(request) {
 ```
 
 ### Service Worker 的加载流程：
-
 
 * **页面首次加载时** ，如果还没有注册 Service Worker，浏览器会从服务器请求页面的 HTML 和其他资源（CSS、JS、图片等），并加载页面。与此同时，浏览器会拉取并注册 Service Worker 脚本（如果有指定）。
 * **Service Worker 注册过程** ：

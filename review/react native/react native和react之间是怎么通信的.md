@@ -22,7 +22,7 @@ JS Bridge 是 React Native 最初使用的通信机制。它充当了 JavaScript
 
 ### JavaScript Interface (JSI)
 
-随着 React Native 的发展，引入了 JavaScript Interface。它减少了序列化和反序列化的需要，提供了更直接的 JavaScript 和原生代码之间的交互方式。
+随着 React Native 的发展，引入了 JavaScript Interface。
 
 #### 工作原理：
 
