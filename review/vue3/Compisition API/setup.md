@@ -4,7 +4,9 @@
 
 `setup()` 钩子是在组件中使用组合式 API 的入口。
 
-## 基本使用
+# 怎么做
+
+## 使用场景
 
 `setup`通常只在以下情况下使用：
 
@@ -15,11 +17,11 @@
 
 对于结合单文件组件使用的组合式 API，推荐通过 [`<script setup>`](https://cn.vuejs.org/api/sfc-script-setup.html) 以获得更加简洁及符合人体工程学的语法。
 
-我们可以使用[响应式 API](https://cn.vuejs.org/api/reactivity-core.html) 来声明响应式的状态，在 `setup()` 函数中返回的对象会暴露给模板和组件实例。其他的选项也可以通过组件实例来获取 `setup()` 暴露的属性：
+我们可以使用响应式 API来声明响应式的状态，在 `setup()` 函数中返回的对象会暴露给模板和组件实例。
 
-**vue**
+其他的选项也可以通过组件实例来获取 `setup()` 暴露的属性：
 
-```
+```html
 <script>
 import { ref } from 'vue'
 
@@ -43,8 +45,6 @@ export default {
   <button @click="count++">{{ count }}</button>
 </template>
 ```
-
-在模板中访问从 `setup` 返回的 [ref](https://cn.vuejs.org/api/reactivity-core.html#ref) 时，它会[自动浅层解包](https://cn.vuejs.org/guide/essentials/reactivity-fundamentals.html#deep-reactivity)，因此你无须再在模板中为它写 `.value`。当通过 `this` 访问时也会同样如此解包。
 
 `setup()` 自身并不含对组件实例的访问权，即在 `setup()` 中访问 `this` 会是 `undefined`。你可以在选项式 API 中访问组合式 API 暴露的值，但反过来则不行。
 
