@@ -1190,7 +1190,7 @@ state.value = { count: 2 }
 function shallowReactive<T extends object>(target: T): T
 ```
 
-示例：
+### 怎么做
 
 ```js
 const state = shallowReactive({
