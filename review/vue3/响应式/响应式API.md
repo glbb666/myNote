@@ -251,80 +251,122 @@ function mutateDeeply() {
 
 ### 是什么
 
-返回一个对象的响应式代理。
+与将内部值包装在特殊对象中的 ref 不同，`reactive()` 将使对象本身具有响应性。
+
+响应式转换是“深层”的：它会影响到所有嵌套的属性。
+
+一个响应式对象也将深层地解包任何 [ref](https://cn.vuejs.org/api/reactivity-core#ref) 属性，同时保持响应性。
+
+返回的对象以及其中嵌套的对象都会通过 [ES Proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) 包裹，因此**不等于**源对象，建议只使用响应式代理，避免使用原始对象。
+
+### 怎么做
+
+#### 代理
+
+响应式对象是 [JavaScript 代理](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy)，其行为就和普通对象一样。不同的是，Vue 能够拦截对响应式对象所有属性的访问和修改，以便进行依赖追踪和触发更新。
+
+```js
+const raw = {}
+const proxy = reactive(raw)
+
+// 代理对象和原始对象不是全等的
+console.log(proxy === raw) // false
+```
+
+只有代理对象是响应式的，更改原始对象不会触发更新。因此，使用 Vue 的响应式系统的最佳实践是 **仅使用你声明对象的代理版本** 。
+
+为保证访问代理的一致性，对同一个原始对象调用 `reactive()` 会总是返回同样的代理对象，而对一个已存在的代理对象调用 `reactive()` 会返回其本身。
+
+这个规则对嵌套对象也适用。依靠深层响应性，响应式对象内的嵌套对象依然是代理
+
+```js
+const proxy = reactive({})
+
+const raw = {}
+proxy.nested = raw
+
+console.log(proxy.nested === raw) // false
+```
+
+#### 解包
+
+##### 作为 reactive 对象的属性
+
+一个 ref 会在作为响应式对象的属性被访问或修改时自动解包。换句话说，它的行为就像一个普通的属性：
+
+```js
+const count = ref(0)
+const state = reactive({
+  count
+})
+
+console.log(state.count) // 0
+
+state.count = 1
+console.log(count.value) // 1
+```
+
+如果将一个新的 ref 赋值给一个关联了已有 ref 的属性，那么它会替换掉旧的 ref：
+
+```js
+const otherCount = ref(2)
+
+state.count = otherCount
+console.log(state.count) // 2
+// 原始 ref 现在已经和 state.count 失去联系
+console.log(count.value) // 1
+```
+
+只有当嵌套在一个深层响应式对象内时，才会发生 ref 解包。
+
+若要避免深层响应式转换，只想保留对这个对象顶层次访问的响应性，请使用 shallowReactive 作替代。
+
+##### 数组和集合的注意事项
+
+与 reactive 对象不同的是，当 ref 作为响应式数组或原生集合类型 (如 `Map`) 中的元素被访问时，它**不会**被解包：
+
+```js
+const books = reactive([ref('Vue 3 Guide')])
+// 这里需要 .value
+console.log(books[0].value)
+
+const map = reactive(new Map([['count', ref(0)]]))
+// 这里需要 .value
+console.log(map.get('count').value)
+```
+
+### 局限性
+
+1. **有限的值类型** ：它只能用于对象类型 (对象、数组和如 `Map`、`Set` 这样的[集合类型](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects#keyed_collections))。它不能持有如 `string`、`number` 或 `boolean` 这样的[原始类型](https://developer.mozilla.org/en-US/docs/Glossary/Primitive)。
+2. **不能替换整个对象** ：由于 Vue 的响应式跟踪是通过属性访问实现的，因此我们必须始终保持对响应式对象的相同引用。这意味着我们不能轻易地“替换”响应式对象，因为这样的话与第一个引用的响应性连接将丢失：
+
+```js
+   let state = reactive({ count: 0 })
+
+   // 上面的 ({ count: 0 }) 引用将不再被追踪
+   // (响应性连接已丢失！)
+   state = reactive({ count: 1 })
+```
+
+3. **对解构操作不友好** ：当我们将响应式对象的原始类型属性解构为本地变量时，或者将该属性传递给函数时，我们将丢失响应性连接：
+
+```js
+   const state = reactive({ count: 0 })
+
+   // 当解构时，count 已经与 state.count 断开连接
+   let { count } = state
+   // 不会影响原始的 state
+   count++
+
+   // 该函数接收到的是一个普通的数字
+   // 并且无法追踪 state.count 的变化
+   // 我们必须传入整个对象以保持响应性
+   callSomeFunction(state.count)
+```
+
+由于这些限制，我们建议使用 `ref()` 作为声明响应式状态的主要 API。
 
 
-
-* **类型**
-  **ts**
-
-  ```
-  function reactive<T extends object>(target: T): UnwrapNestedRefs<T>
-  ```
-* **详细信息**
-  响应式转换是“深层”的：它会影响到所有嵌套的属性。一个响应式对象也将深层地解包任何 [ref](https://cn.vuejs.org/api/reactivity-core#ref) 属性，同时保持响应性。
-  值得注意的是，当访问到某个响应式数组或 `Map` 这样的原生集合类型中的 ref 元素时，不会执行 ref 的解包。
-  若要避免深层响应式转换，只想保留对这个对象顶层次访问的响应性，请使用 [shallowReactive()](https://cn.vuejs.org/api/reactivity-advanced.html#shallowreactive) 作替代。
-  返回的对象以及其中嵌套的对象都会通过 [ES Proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) 包裹，因此**不等于**源对象，建议只使用响应式代理，避免使用原始对象。
-* **示例**
-  创建一个响应式对象：
-  **js**
-
-  ```
-  const obj = reactive({ count: 0 })
-  obj.count++
-  ```
-
-  ref 的解包：
-  **ts**
-
-  ```
-  const count = ref(1)
-  const obj = reactive({ count })
-
-  // ref 会被解包
-  console.log(obj.count === count.value) // true
-
-  // 会更新 `obj.count`
-  count.value++
-  console.log(count.value) // 2
-  console.log(obj.count) // 2
-
-  // 也会更新 `count` ref
-  obj.count++
-  console.log(obj.count) // 3
-  console.log(count.value) // 3
-  ```
-
-  注意当访问到某个响应式数组或 `Map` 这样的原生集合类型中的 ref 元素时，**不会**执行 ref 的解包：
-  **js**
-
-  ```
-  const books = reactive([ref('Vue 3 Guide')])
-  // 这里需要 .value
-  console.log(books[0].value)
-
-  const map = reactive(new Map([['count', ref(0)]]))
-  // 这里需要 .value
-  console.log(map.get('count').value)
-  ```
-
-  将一个 [ref](https://cn.vuejs.org/api/reactivity-core#ref) 赋值给一个 `reactive` 属性时，该 ref 会被自动解包：
-  **ts**
-
-  ```
-  const count = ref(1)
-  const obj = reactive({})
-
-  obj.count = count
-
-  console.log(obj.count) // 1
-  console.log(obj.count === count.value) // true
-  ```
-* **参考**
-
-  * [指南 - 响应式基础](https://cn.vuejs.org/guide/essentials/reactivity-fundamentals.html)
-  * [指南 - 为 `reactive()` 标注类型](https://cn.vuejs.org/guide/typescript/composition-api.html#typing-reactive) ^^
 
 ## readonly()
 
@@ -706,7 +748,7 @@ function mutateDeeply() {
   * [指南 - 侦听器](https://cn.vuejs.org/guide/essentials/watchers.html)
   * [指南 - 侦听器调试](https://cn.vuejs.org/guide/extras/reactivity-in-depth.html#watcher-debugging)
 
-## onWatcherCleanup() 
+## onWatcherCleanup()
 
 注册一个清理函数，在当前侦听器即将重新运行时执行。只能在 `watchEffect` 作用函数或 `watch` 回调函数的同步执行期间调用 (即不能在异步函数的 `await` 语句之后调用)。
 
@@ -1005,40 +1047,37 @@ function mutateDeeply() {
   function isReadonly(value: unknown): boolean
   ```
 
-
-
 # 进阶API
 
 ## shallowRef()
 
-[`ref()`](https://cn.vuejs.org/api/reactivity-core.html#ref) 的浅层作用形式。
+### 是什么
 
-* **类型**
-  **ts**
-  ```
-  function shallowRef<T>(value: T): ShallowRef<T>
+`shallowRef` 只会对其持有的值，即 `.value` 进行浅层的响应式处理。如果这个值本身是一个对象，改变这个对象的属性不会触发响应式更新。
 
-  interface ShallowRef<T> {
-    value: T
-  }
-  ```
-* **详细信息**
-  和 `ref()` 不同，浅层 ref 的内部值将会原样存储和暴露，并且不会被深层递归地转为响应式。只有对 `.value` 的访问是响应式的。
-  `shallowRef()` 常常用于对大型数据结构的性能优化或是与外部的状态管理系统集成。
-* **示例**
-  **js**
-  ```
-  const state = shallowRef({ count: 1 })
+```ts
+function shallowRef<T>(value: T): ShallowRef<T>
 
-  // 不会触发更改
-  state.value.count = 2
+interface ShallowRef<T> {
+  value: T
+}
+```
 
-  // 会触发更改
-  state.value = { count: 2 }
-  ```
-* **参考**
-  * [指南 - 减少大型不可变结构的响应性开销](https://cn.vuejs.org/guide/best-practices/performance.html#reduce-reactivity-overhead-for-large-immutable-structures)
-  * [指南 - 与其他状态系统集成](https://cn.vuejs.org/guide/extras/reactivity-in-depth.html#integration-with-external-state-systems)
+### 为什么
+
+`shallowRef()` 常常用于对大型数据结构的性能优化或是与外部的状态管理系统集成。
+
+### 怎么做
+
+```js
+const state = shallowRef({ count: 1 })
+
+// 不会触发更改
+state.value.count = 2
+
+// 会触发更改
+state.value = { count: 2 }
+```
 
 ## triggerRef()
 
@@ -1141,39 +1180,35 @@ function mutateDeeply() {
 
 ## shallowReactive()
 
-[`reactive()`](https://cn.vuejs.org/api/reactivity-core.html#reactive) 的浅层作用形式。
+### 是什么
 
-* **类型**
-  **ts**
+`shallowReactive` 只会对对象的顶层属性进行响应式处理，不会递归处理嵌套的对象属性。
 
-  ```
-  function shallowReactive<T extends object>(target: T): T
-  ```
-* **详细信息**
-  和 `reactive()` 不同，这里没有深层级的转换：一个浅层响应式对象里只有根级别的属性是响应式的。属性的值会被原样存储和暴露，这也意味着值为 ref 的属性**不会**被自动解包了。
-  谨慎使用
+这也意味着值为 ref 的属性**不会**被自动解包了。
 
-  浅层数据结构应该只用于组件中的根级状态。请避免将其嵌套在深层次的响应式对象中，因为它创建的树具有不一致的响应行为，这可能很难理解和调试。
-* **示例**
-  **js**
+```ts
+function shallowReactive<T extends object>(target: T): T
+```
 
-  ```
-  const state = shallowReactive({
-    foo: 1,
-    nested: {
-      bar: 2
-    }
-  })
+示例：
 
-  // 更改状态自身的属性是响应式的
-  state.foo++
+```js
+const state = shallowReactive({
+  foo: 1,
+  nested: {
+    bar: 2
+  }
+})
 
-  // ...但下层嵌套对象不会被转为响应式
-  isReactive(state.nested) // false
+// 更改状态自身的属性是响应式的
+state.foo++
 
-  // 不是响应式的
-  state.nested.bar++
-  ```
+// ...但下层嵌套对象不会被转为响应式
+isReactive(state.nested) // false
+
+// 不是响应式的
+state.nested.bar++
+```
 
 ## shallowReadonly()
 
