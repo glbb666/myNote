@@ -4,10 +4,35 @@ Yarn 是一个 JavaScript 的包管理工具。
 
 # 为什么重要
 
-1. **快速安装** ：Yarn 使用缓存机制，能够加快依赖包的安装速度，特别是在重复安装时。
-2. **一致性** ：通过 `yarn.lock` 文件，确保所有环境中的依赖版本一致，避免因版本不一致导致的问题。
-3. **离线模式** ：Yarn 支持离线安装，能够从本地缓存中快速安装已下载的包。
-4. **并行安装** ：Yarn 同时处理多个包的安装，进一步提高效率。
+- 下载速度快：
+
+  - 并行安装：`npm`按照队列执行 `package`，前面的安装完成才会安装后面的。`yarn`同步执行所有任务，提高了性能。
+  - 离线模式：`yarn`有一个全局本地缓存。安装依赖优先从缓存中获取
+
+```nginx
+// 查看yarn本地缓存
+yarn cache dir
+```
+
+- 安装版本统一：
+
+  - `yarn`默认会生成 `yarn.lock`，记录确切安装的版本号。
+    - 新增模块：创建（更新）`yarn.lock`文件
+    - 拉取同一个依赖：使用之前的版本。
+  - `npm`其实也有这样的文件存在，但是不会默认生成，需要运行 `npm shrinkwrap`。
+- 更简洁的输出：
+
+  - `yarn`只打必要信息，`npm`会输出所有依赖。
+- 语义化：`yarn`明令比 `npm`命令更加语义化
+
+  ```
+  npm install === yarn 
+  npm install taco === yarn add taco
+  npm uninstall taco === yarn remove taco
+  npm install taco --save-dev === yarn add taco --dev
+  npm update === yarn upgrade
+  ```
+
 
 # 怎么做
 
