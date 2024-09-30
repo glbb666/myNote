@@ -15,19 +15,9 @@ ViteTest 是一个为 Vite 生态系统设计的测试框架，可以提供单�
 
 在项目根目录下创建 `vitest.config.js`，可以配置测试选项。
 
-```js
-import { defineConfig } from 'vitest/config';
+具体见配置。
 
-export default defineConfig({
-  test: {
-    globals: true,
-    environment: 'jsdom',
-  },
-});
-
-```
-
-## **编写测试** 
+## **编写测试**
 
 在 `tests` 目录下编写测试文件，例如 `example.test.js`。
 
@@ -41,7 +31,6 @@ describe('Example Test', () => {
 });
 
 ```
-
 
 #### **运行测试** ：
 
