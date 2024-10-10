@@ -176,76 +176,190 @@ function mutateDeeply() {
 
 ## computed()
 
-接受一个 [getter 函数](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Functions/get#description)，返回一个只读的响应式 [ref](https://cn.vuejs.org/api/reactivity-core#ref) 对象。该 ref 通过 `.value` 暴露 getter 函数的返回值。它也可以接受一个带有 `get` 和 `set` 函数的对象来创建一个可写的 ref 对象。
+### 是什么
 
-* **类型**
-  **ts**
+`computed()` 函数用于创建计算属性。计算属性是基于其他响应式数据进行计算的属性，它们的值会根据依赖的数据自动更新。`computed()` 函数可以返回一个只读的计算属性，也可以返回一个可读写的计算属性。
 
-  ```
-  // 只读
-  function computed<T>(
-    getter: (oldValue: T | undefined) => T,
-    // 查看下方的 "计算属性调试" 链接
-    debuggerOptions?: DebuggerOptions
-  ): Readonly<Ref<Readonly<T>>>
+### 为什么
 
-  // 可写的
-  function computed<T>(
-    options: {
-      get: (oldValue: T | undefined) => T
-      set: (value: T) => void
-    },
-    debuggerOptions?: DebuggerOptions
-  ): Ref<T>
-  ```
-* **示例**
-  创建一个只读的计算属性 ref：
-  **js**
+模板中的表达式虽然方便，但也只能用来做简单的操作。如果在模板中写太多逻辑，会让模板变得臃肿，难以维护。
 
-  ```
-  const count = ref(1)
-  const plusOne = computed(() => count.value + 1)
+比如说，我们有这样一个包含嵌套数组的对象：
 
-  console.log(plusOne.value) // 2
+```js
+const author = reactive({
+  name: 'John Doe',
+  books: [
+    'Vue 2 - Advanced Guide',
+    'Vue 3 - Basic Guide',
+    'Vue 4 - The Mystery'
+  ]
+})
+```
 
-  plusOne.value++ // 错误
-  ```
+我们想根据 `author` 是否已有一些书籍来展示不同的信息：
 
-  创建一个可写的计算属性 ref：
-  **js**
+```template
+<p>Has published books:</p>
+<span>{{ author.books.length > 0 ? 'Yes' : 'No' }}</span>
+```
 
-  ```
-  const count = ref(1)
+这里的模板看起来有些复杂。我们必须认真看好一会儿才能明白它的计算依赖于 `author.books`。更重要的是，如果在模板中需要不止一次这样的计算，我们可不想将这样的代码在模板里重复好多遍。
+
+因此我们推荐使用**计算属性**来描述依赖响应式状态的复杂逻辑。这是重构后的示例：
+
+```html
+<script setup>
+import { reactive, computed } from 'vue'
+
+const author = reactive({
+  name: 'John Doe',
+  books: [
+    'Vue 2 - Advanced Guide',
+    'Vue 3 - Basic Guide',
+    'Vue 4 - The Mystery'
+  ]
+})
+
+// 一个计算属性 ref
+const publishedBooksMessage = computed(() => {
+  return author.books.length > 0 ? 'Yes' : 'No'
+})
+</script>
+
+<template>
+  <p>Has published books:</p>
+  <span>{{ publishedBooksMessage }}</span>
+</template>
+```
+
+我们在这里定义了一个计算属性 `publishedBooksMessage`。`computed()` 方法期望接收一个getter 函数，返回值为一个 **计算属性 ref** 。和其他一般的 ref 类似，你可以通过 `publishedBooksMessage.value` 访问计算结果。计算属性 ref 也会在模板中自动解包，因此在模板表达式中引用时无需添加 `.value`。
+
+Vue 的计算属性会自动追踪响应式依赖。它会检测到 `publishedBooksMessage` 依赖于 `author.books`，所以当 `author.books` 改变时，任何依赖于 `publishedBooksMessage` 的绑定都会同时更新。
+
+### 怎么做
+
+#### 1. 只读计算属性
+
+通过提供一个 getter 函数给 `computed()`，可以创建一个只读的计算属性。这个计算属性是一个响应式的 `ref` 对象。
+
+```js
+  const count = ref(1);
+  const plusOne = computed(() => count.value + 1);
+
+  console.log(plusOne.value); // 输出 2，因为 count 是 1，所以 plusOne 是 1 + 1 = 2
+
+  plusOne.value++; // 错误：plusOne 是只读的，不能直接修改它的值
+```
+
+  在这个示例中，`plusOne` 是一个计算属性，它依赖于 `count` 的值。每当 `count` 的值变化时，`plusOne` 的值会自动更新。
+
+#### 2. 可写计算属性
+
+通过提供一个包含 `get` 和 `set` 方法的对象给 `computed()`，可以创建一个可写的计算属性。
+
+```js
+  const count = ref(1);
   const plusOne = computed({
     get: () => count.value + 1,
     set: (val) => {
-      count.value = val - 1
+      count.value = val - 1;
     }
-  })
+  });
 
-  plusOne.value = 1
-  console.log(count.value) // 0
-  ```
+  plusOne.value = 1;
+  console.log(count.value); // 输出 0，因为 plusOne 的值被设置为 1，所以 count 被设置为 1 - 1 = 0
+```
 
-  调试：
-  **js**
+  在这个示例中，`plusOne` 是一个可写的计算属性。通过 `set` 方法，可以间接地改变 `count` 的值。
 
-  ```
+#### 3. 调试计算属性
+
+ `computed()` 还可以接收一个 `debuggerOptions` 对象，用于调试计算属性的依赖追踪和触发行为。
+
+```js
   const plusOne = computed(() => count.value + 1, {
     onTrack(e) {
-      debugger
+      // 当 count.value 被追踪为依赖时触发
+      debugger; 
     },
     onTrigger(e) {
-      debugger
+      // 当 count.value 被更改时触发
+      debugger; 
     }
-  })
-  ```
-* **参考**
+  });
+```
 
-  * [指南 - 计算属性](https://cn.vuejs.org/guide/essentials/computed.html)
-  * [指南 - 计算属性调试](https://cn.vuejs.org/guide/extras/reactivity-in-depth.html#computed-debugging)
-  * [指南 - 为 `computed()` 标注类型](https://cn.vuejs.org/guide/typescript/composition-api.html#typing-computed) ^^
-  * [指南 - 性能优化 - 计算属性稳定性](https://cn.vuejs.org/guide/best-practices/performance.html#computed-stability)
+计算属性的 `onTrack` 和 `onTrigger` 选项仅会在开发模式下工作。
+
+#### 4. 为 `computed()` 标注类型
+
+`computed()` 会自动从其计算函数的返回值上推导出类型：
+
+```ts
+import { ref, computed } from 'vue'
+
+const count = ref(0)
+
+// 推导得到的类型：ComputedRef<number>
+const double = computed(() => count.value * 2)
+
+// => TS Error: Property 'split' does not exist on type 'number'
+const result = double.value.split('')
+```
+
+你还可以通过泛型参数显式指定类型：
+
+```ts
+const double = computed<number>(() => {
+  // 若返回值不是 number 类型则会报错
+})
+```
+
+#### 5. 计算属性稳定性
+
+在 Vue 3.4 及更高版本中，计算属性仅在其计算值较前一个值发生更改时才会触发副作用。
+
+例如，以下 `isEven` 计算属性仅在返回值从 `true` 更改为 `false` 时才会触发副作用，反之亦然：
+
+```js
+const count = ref(0)
+const isEven = computed(() => count.value % 2 === 0)
+
+watchEffect(() => console.log(isEven.value)) // true
+
+// 这将不会触发新的输出，因为计算属性的值依然为 `true`
+count.value = 2
+count.value = 4
+```
+
+这减少了非必要副作用的触发。但不幸的是，如果计算属性在每次计算时都创建一个新对象，则不起作用：
+
+```js
+const computedObj = computed(() => {
+  return {
+    isEven: count.value % 2 === 0
+  }
+})
+```
+
+由于每次都会创建一个新对象，因此从技术上讲，新旧值始终不同。即使 `isEven` 属性保持不变，Vue 也无法知道，除非它对旧值和新值进行深度比较。这种比较可能代价高昂，并不值得。
+
+相反，我们可以通过手动比较新旧值来优化。如果我们知道没有变化，则有条件地返回旧值：
+
+```js
+const computedObj = computed((oldValue) => {
+  const newValue = {
+    isEven: count.value % 2 === 0
+  }
+  if (oldValue && oldValue.isEven === newValue.isEven) {
+    return oldValue
+  }
+  return newValue
+})
+```
+
+值得注意的是，你应该始终在比较和返回旧值之前执行完整计算，以便在每次运行时都可以收集到相同的依赖项。
 
 ## reactive()
 
@@ -365,8 +479,6 @@ console.log(map.get('count').value)
 ```
 
 由于这些限制，我们建议使用 `ref()` 作为声明响应式状态的主要 API。
-
-
 
 ## readonly()
 
