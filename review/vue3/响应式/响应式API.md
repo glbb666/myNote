@@ -359,7 +359,24 @@ const computedObj = computed((oldValue) => {
 })
 ```
 
-值得注意的是，你应该始终在比较和返回旧值之前执行完整计算，以便在每次运行时都可以收集到相同的依赖项。
+值得注意的是，你应该确保每次计算时都访问所有依赖项，即使最后返回旧值，Vue 才能正确维护依赖关系。
+
+为什么需要完整计算？
+
+1. **依赖追踪** ：Vue 的响应式系统需要在计算属性的计算过程中追踪所有使用到的响应式依赖项。在上面的例子中，`count.value` 是计算属性的依赖项。即使最后返回的是旧值，也必须在计算过程中访问 `count.value`，这样 Vue 才能知道 `computedObj` 依赖于 `count`。
+2. **依赖更新** ：如果某次计算中未访问某个依赖项，那么该依赖项的更新将不会触发计算属性的重新计算。例如，如果在某次计算中由于优化逻辑跳过了对 `count.value` 的访问，Vue 就可能认为 `computedObj` 不再依赖于 `count`，从而导致后续 `count` 更新时 `computedObj` 不再更新。
+
+假设在某次计算中，因为条件满足而未访问 `count.value`：
+
+```
+if (someCondition) {
+  return oldValue; // 未计算 newValue
+}
+```
+
+这会导致 `count.value` 未被访问，所以 Vue 不会将 `count` 视为 `computedObj` 的依赖。在 `count` 更新时，`computedObj` 不会重新计算，这会导致数据不一致的问题。
+
+通过确保每次计算时都访问所有依赖项，即使最后返回旧值，Vue 才能正确维护依赖关系。
 
 ## reactive()
 
@@ -656,209 +673,175 @@ console.log(map.get('count').value)
 
 ## watch()
 
+### 是什么
+
 侦听一个或多个响应式数据源，并在数据源变化时调用所给的回调函数。
 
-* **类型**
-  **ts**
+### `watch()` 的基本用法
 
-  ```
-  // 侦听单个来源
-  function watch<T>(
-    source: WatchSource<T>,
-    callback: WatchCallback<T>,
-    options?: WatchOptions
-  ): WatchHandle
+#### 类型
 
-  // 侦听多个来源
-  function watch<T>(
-    sources: WatchSource<T>[],
-    callback: WatchCallback<T[]>,
-    options?: WatchOptions
-  ): WatchHandle
+```ts
+function watch<T>(
+  source: WatchSource<T> | WatchSource<T>[],
+  callback: WatchCallback<T> ｜ WatchCallback<T[]>,
+  options?: WatchOptions
+): WatchHandle
+```
 
-  type WatchCallback<T> = (
-    value: T,
-    oldValue: T,
-    onCleanup: (cleanupFn: () => void) => void
-  ) => void
+#### 参数
 
-  type WatchSource<T> =
-    | Ref<T> // ref
-    | (() => T) // getter
-    | T extends object
-    ? T
-    : never // 响应式对象
+**数据源** ：
 
-  interface WatchOptions extends WatchEffectOptions {
-    immediate?: boolean // 默认：false
-    deep?: boolean | number // 默认：false
-    flush?: 'pre' | 'post' | 'sync' // 默认：'pre'
-    onTrack?: (event: DebuggerEvent) => void
-    onTrigger?: (event: DebuggerEvent) => void
-    once?: boolean // 默认：false (3.4+)
-  }
+* 可以是一个 `ref` 或 `reactive` 对象。
+* 可以是一个返回值的函数（getter）。
+* 可以是以上类型组成的数组。（即WatchSource `<T>`[]）
 
-  interface WatchHandle {
-    (): void // 可调用，与 `stop` 相同
-    pause: () => void
-    resume: () => void
-    stop: () => void
-  }
-  ```
+```ts
+type WatchSource<T> =
+  | Ref<T> // ref
+  | (() => T) // getter
+  | T extends object
+  ? T
+  : never // 响应式对象
+```
 
-  > 为了便于阅读，对类型进行了简化。
-  >
-* **详细信息**
-  `watch()` 默认是懒侦听的，即仅在侦听源发生变化时才执行回调函数。
-  第一个参数是侦听器的 **源** 。这个来源可以是以下几种：
+**回调函数** ：
 
-  * 一个函数，返回一个值
-  * 一个 ref
-  * 一个响应式对象
-  * ...或是由以上类型的值组成的数组
+在数据源变化时调用，接收三个参数：新值、旧值，以及一个用于注册清理函数的 `onCleanup` 函数。
 
-  第二个参数是在发生变化时要调用的回调函数。这个回调函数接受三个参数：新值、旧值，以及一个用于注册副作用清理的回调函数。该回调函数会在副作用下一次重新执行前调用，可以用来清除无效的副作用，例如等待中的异步请求。
-  当侦听多个来源时，回调函数接受两个数组，分别对应来源数组中的新值和旧值。
-  第三个可选的参数是一个对象，支持以下这些选项：
+```ts
+type WatchCallback<T> = (
+  value: T,
+  oldValue: T,
+  onCleanup: (cleanupFn: () => void) => void
+) => void
+```
 
-  * **`immediate`** ：在侦听器创建时立即触发回调。第一次调用时旧值是 `undefined`。
-  * **`deep`** ：如果源是对象，强制深度遍历，以便在深层级变更时触发回调。在 3.5+ 中，此参数还可以是指示最大遍历深度的数字。参考[深层侦听器](https://cn.vuejs.org/guide/essentials/watchers.html#deep-watchers)。
-  * **`flush`** ：调整回调函数的刷新时机。参考[回调的刷新时机](https://cn.vuejs.org/guide/essentials/watchers.html#callback-flush-timing)及 [`watchEffect()`](https://cn.vuejs.org/api/reactivity-core.html#watcheffect)。
-  * **`onTrack / onTrigger`** ：调试侦听器的依赖。参考[调试侦听器](https://cn.vuejs.org/guide/extras/reactivity-in-depth.html#watcher-debugging)。
-  * **`once`** ：(3.4+) 回调函数只会运行一次。侦听器将在回调函数首次运行后自动停止。
+**选项** ：
 
-  与 [`watchEffect()`](https://cn.vuejs.org/api/reactivity-core#watcheffect) 相比，`watch()` 使我们可以：
+```ts
+interface WatchOptions extends WatchEffectOptions {
+  immediate?: boolean // 默认：false，立即执行回调函数。
+  deep?: boolean | number // 默认：false，深度监听对象内部的变化。
+  flush?: 'pre' | 'post' | 'sync' // 默认：'pre'，指定回调函数的执行时机。
+  onTrack?: (event: DebuggerEvent) => void//用于调试。
+  onTrigger?: (event: DebuggerEvent) => void/用于调试。
+  once?: boolean // 默认：false (3.4+)//是否只执行一次
+}
 
-  * 懒执行副作用；
-  * 更加明确是应该由哪个状态触发侦听器重新执行；
-  * 可以访问所侦听状态的前一个值和当前值。
-* **示例**
-  侦听一个 getter 函数：
-  **js**
+```
 
-  ```
-  const state = reactive({ count: 0 })
-  watch(
-    () => state.count,
-    (count, prevCount) => {
-      /* ... */
-    }
-  )
-  ```
+`flush` 选项有几个可选值，每个值都对应不同的刷新时机：
 
-  侦听一个 ref：
-  **js**
+**`'pre'`** （默认值）：
 
-  ```
-  const count = ref(0)
-  watch(count, (count, prevCount) => {
+* 在组件更新之前同步调用回调函数。
+* 这种情况下，回调函数会在依赖的响应式数据发生变化之后，组件更新之前被调用。
+* 它是同步的，因此可以在调用时立即获得更新之前的 DOM 状态。
+
+**`'post'`** ：
+
+* 在组件更新之后调用回调函数。
+* 这种情况下，回调函数会在组件渲染更新之后被调用，因此可以确保 DOM 已经更新。
+* 适用于需要在视图更新后执行操作的场景。
+
+**`'sync'`** ：
+
+* 同步调用回调函数，不等待组件更新。
+* 这种情况下，回调函数会在响应式数据发生变化的立即被调用。
+* 适用于希望在数据变化时立即执行某些逻辑的场景。
+
+#### 返回值
+
+**类型**
+
+```ts
+interface WatchHandle {
+  (): void // 可调用，与 `stop` 相同
+  pause: () => void
+  resume: () => void
+  stop: () => void
+}
+```
+
+### 怎么做
+
+**侦听一个 getter 函数**
+
+回调只在此函数的返回值变化时才会触发。
+
+如果你想让回调在深层级变更时也能触发，你需要使用 `{ deep: true }` 强制侦听器进入深层级模式。
+
+在深层级模式时，如果回调函数由于深层级的变更而被触发，那么新值和旧值将是同一个对象。
+
+```js
+const state = reactive({ count: 0 })
+watch(
+  () => state.count,
+  (count, prevCount) => {
     /* ... */
-  })
-  ```
+  }
+)
+```
 
-  当侦听多个来源时，回调函数接受两个数组，分别对应来源数组中的新值和旧值：
-  **js**
+**监听一个reactive对象**
 
-  ```
-  watch([fooRef, barRef], ([foo, bar], [prevFoo, prevBar]) => {
-    /* ... */
-  })
-  ```
+当直接侦听一个响应式对象时，侦听器会自动启用深层模式：
 
-  当使用 getter 函数作为源时，回调只在此函数的返回值变化时才会触发。如果你想让回调在深层级变更时也能触发，你需要使用 `{ deep: true }` 强制侦听器进入深层级模式。在深层级模式时，如果回调函数由于深层级的变更而被触发，那么新值和旧值将是同一个对象。
-  **js**
+```js
+const state = reactive({ count: 0 })
+watch(state, () => {
+  /* 深层级变更状态所触发的回调 */
+})
+```
 
-  ```
-  const state = reactive({ count: 0 })
-  watch(
-    () => state,
-    (newValue, oldValue) => {
-      // newValue === oldValue
-    },
-    { deep: true }
-  )
-  ```
+**监听一个 `ref` 对象** ：
 
-  当直接侦听一个响应式对象时，侦听器会自动启用深层模式：
-  **js**
+```js
+   const count = ref(0);
+   watch(count, (newCount, oldCount) => {
+     console.log(`Count changed from ${oldCount} to ${newCount}`);
+   });
+```
 
-  ```
-  const state = reactive({ count: 0 })
-  watch(state, () => {
-    /* 深层级变更状态所触发的回调 */
-  })
-  ```
+**监听多个来源** ：
 
-  `watch()` 和 [`watchEffect()`](https://cn.vuejs.org/api/reactivity-core#watcheffect) 享有相同的刷新时机和调试选项：
-  **js**
+```ts
+   watch([fooRef, barRef], ([newFoo, newBar], [oldFoo, oldBar]) => {
+     console.log(`Foo changed from ${oldFoo} to ${newFoo}`);
+     console.log(`Bar changed from ${oldBar} to ${newBar}`);
+   });
+```
 
-  ```
-  watch(source, callback, {
-    flush: 'post',
-    onTrack(e) {
-      debugger
-    },
-    onTrigger(e) {
-      debugger
-    }
-  })
-  ```
+**副作用清理** ：
+当执行异步操作时，你可能需要在数据变化时取消之前的异步请求。可以通过 `onCleanup` 注册清理函数。
 
-  停止侦听器：
-  **js**
+```js
+ watch(id, async (newId, oldId, onCleanup) => {
+  const { response, cancel } = doAsyncWork(newId)
+  // 当 `id` 变化时，`cancel` 将被调用，
+  // 取消之前的未完成的请求
+  onCleanup(cancel)
+  data.value = await response
+})
+```
 
-  ```
-  const stop = watch(source, callback)
+**暂停和恢复监听** ：
 
-  // 当已不再需要该侦听器时：
-  stop()
-  ```
+```js
+   const { stop, pause, resume } = watchEffect(() => {
+     // some effect
+   });
 
-  暂停/恢复侦听器：^^
-  **js**
+   pause();  // 暂停监听
+   resume(); // 恢复监听
+   stop();   // 停止监听
+```
 
-  ```
-  const { stop, pause, resume } = watchEffect(() => {})
+- [指南 - 侦听器](https://cn.vuejs.org/guide/essentials/watchers.html)
 
-  // 暂停侦听器
-  pause()
-
-  // 稍后恢复
-  resume()
-
-  // 停止
-  stop()
-  ```
-
-  副作用清理：
-  **js**
-
-  ```
-  watch(id, async (newId, oldId, onCleanup) => {
-    const { response, cancel } = doAsyncWork(newId)
-    // 当 `id` 变化时，`cancel` 将被调用，
-    // 取消之前的未完成的请求
-    onCleanup(cancel)
-    data.value = await response
-  })
-  ```
-
-  3.5+ 中的副作用清理：
-  **js**
-
-  ```
-  import { onWatcherCleanup } from 'vue'
-
-  watch(id, async (newId) => {
-    const { response, cancel } = doAsyncWork(newId)
-    onWatcherCleanup(cancel)
-    data.value = await response
-  })
-  ```
-* **参考**
-
-  * [指南 - 侦听器](https://cn.vuejs.org/guide/essentials/watchers.html)
-  * [指南 - 侦听器调试](https://cn.vuejs.org/guide/extras/reactivity-in-depth.html#watcher-debugging)
+- [指南 - 侦听器调试](https://cn.vuejs.org/guide/extras/reactivity-in-depth.html#watcher-debugging)
 
 ## onWatcherCleanup()
 
