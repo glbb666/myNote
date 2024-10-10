@@ -55,104 +55,120 @@ async function increment() {
 
 ## defineComponent()
 
+### 是什么
+
 在定义 Vue 组件时提供类型推导的辅助函数。
 
-* **类型**
-  **ts**
+#### 1. 选项式 API
 
-  ```
-  // 选项语法
-  function defineComponent(
-    component: ComponentOptions
-  ): ComponentConstructor
+这是 Vue 传统的组件定义方式，使用一个组件选项对象：
 
-  // 函数语法 (需要 3.3+)
-  function defineComponent(
-    setup: ComponentOptions['setup'],
-    extraOptions?: ComponentOptions
-  ): () => any
-  ```
+##### 语法
 
-  > 为了便于阅读，对类型进行了简化。
-  >
-* **详细信息**
-  第一个参数是一个组件选项对象。返回值将是该选项对象本身，因为该函数实际上在运行时没有任何操作，仅用于提供类型推导。
-  注意返回值的类型有一点特别：它会是一个构造函数类型，它的实例类型是根据选项推断出的组件实例类型。这是为了能让该返回值在 TSX 中用作标签时提供类型推导支持。
-  你可以像这样从 `defineComponent()` 的返回类型中提取出一个组件的实例类型 (与其选项中的 `this` 的类型等价)：
-  **ts**
+```ts
+function defineComponent(
+  component: ComponentOptions
+): ComponentConstructor
+```
 
-  ```
-  const Foo = defineComponent(/* ... */)
+> 为了便于阅读，对类型进行了简化。
 
-  type FooInstance = InstanceType<typeof Foo>
-  ```
+##### 例子
 
-  ### 函数签名
+```js
+import { defineComponent } from 'vue';
 
-
-  * 仅在 3.3+ 中支持
-
-  `defineComponent()` 还有一种备用签名，旨在与组合式 API 和[渲染函数或 JSX](https://cn.vuejs.org/guide/extras/render-function.html) 一起使用。
-  与传递选项对象不同的是，它需要传入一个函数。这个函数的工作方式与组合式 API 的 [`setup()`](https://cn.vuejs.org/api/composition-api-setup.html#composition-api-setup) 函数相同：它接收 props 和 setup 上下文。返回值应该是一个渲染函数——支持 `h()` 和 JSX：
-  **js**
-
-  ```
-  import { ref, h } from 'vue'
-
-  const Comp = defineComponent(
-    (props) => {
-      // 就像在 <script setup> 中一样使用组合式 API
-      const count = ref(0)
-
-      return () => {
-        // 渲染函数或 JSX
-        return h('div', count.value)
-      }
-    },
-    // 其他选项，例如声明 props 和 emits。
-    {
-      props: {
-        /* ... */
-      }
+const MyComponent = defineComponent({
+  data() {
+    return {
+      message: 'Hello World'
+    };
+  },
+  methods: {
+    greet() {
+      console.log(this.message);
     }
-  )
-  ```
+  }
+});
+```
 
-  此签名的主要用例是使用 TypeScript (特别是使用 TSX)，因为它支持泛型：
-  **tsx**
+#### 2. 组合式 API (需要 Vue 3.3+)
 
-  ```
-  const Comp = defineComponent(
-    <T extends string | number>(props: { msg: T; list: T[] }) => {
-      // 就像在 <script setup> 中一样使用组合式 API
-      const count = ref(0)
+这种方式更适合与组合式 API 和渲染函数或 JSX 一起使用：
 
-      return () => {
-        // 渲染函数或 JSX
-        return <div>{count.value}</div>
-      }
-    },
-    // 目前仍然需要手动声明运行时的 props
-    {
-      props: ['msg', 'list']
+##### 语法
+
+```ts
+// 函数语法 (需要 3.3+)
+function defineComponent(
+  setup: ComponentOptions['setup'],
+  extraOptions?: ComponentOptions
+): () => any
+```
+
+> 为了便于阅读，对类型进行了简化。
+
+##### 例子
+
+```ts
+import { defineComponent, ref, h } from 'vue';
+
+const MyComponent = defineComponent(
+  (props) => {
+    const count = ref(0);
+
+    return () => h('div', count.value);
+  },
+  {
+    props: {
+      // 声明 props
     }
-  )
-  ```
+  }
+);
+```
 
-  在将来，我们计划提供一个 Babel 插件，自动推断并注入运行时 props (就像在单文件组件中的 `defineProps` 一样)，以便省略运行时 props 的声明。
+在将来，我们计划提供一个 Babel 插件，自动推断并注入运行时 props (就像在单文件组件中的 `defineProps` 一样)，以便省略运行时 props 的声明。
 
-  ### webpack Treeshaking 的注意事项
 
-  因为 `defineComponent()` 是一个函数调用，所以它可能被某些构建工具认为会产生副作用，如 webpack。即使一个组件从未被使用，也有可能不被 tree-shake。
-  为了告诉 webpack 这个函数调用可以被安全地 tree-shake，我们可以在函数调用之前添加一个 `/*#__PURE__*/` 形式的注释：
-  **js**
+### 为什么
 
-  ```
-  export default /*#__PURE__*/ defineComponent(/* ... */)
-  ```
+defineComponent返回值的类型是一个构造函数类型，它的实例类型是根据选项推断出的组件实例类型。
 
-  请注意，如果你的项目中使用的是 Vite，就不需要这么做，因为 Rollup (Vite 底层使用的生产环境打包工具) 可以智能地确定 `defineComponent()` 实际上并没有副作用，所以无需手动注释。
-* **参考**[指南 - 配合 TypeScript 使用 Vue](https://cn.vuejs.org/guide/typescript/overview.html#general-usage-notes)
+这是为了能让该返回值在使用 TypeScript 时提供类型推导支持。
+
+### 怎么做
+
+#### 泛型支持
+
+在组合式 API 的用法中，`defineComponent()` 可以支持泛型：
+
+```ts
+const Comp = defineComponent(
+  <T extends string | number>(props: { msg: T; list: T[] }) => {
+    const count = ref(0);
+
+    return () => <div>{count.value}</div>;
+  },
+  {
+    props: ['msg', 'list']
+  }
+);
+```
+
+* **功能** ：通过泛型，可以在组件中使用更灵活的类型定义，确保类型安全。
+* **未来展望** ：Vue 计划提供一个 Babel 插件，自动推断并注入运行时 props，从而在未来可以省略手动声明运行时 props。
+
+#### webpack Treeshaking 的注意事项
+
+因为 `defineComponent()` 是一个函数调用，所以它可能被某些构建工具认为会产生副作用，如 webpack。即使一个组件从未被使用，也有可能不被 tree-shake。
+为了告诉 webpack 这个函数调用可以被安全地 tree-shake，我们可以在函数调用之前添加一个 `/*#__PURE__*/` 形式的注释：
+**js**
+
+```
+export default /*#__PURE__*/ defineComponent(/* ... */)
+```
+
+请注意，如果你的项目中使用的是 Vite，就不需要这么做，因为 Rollup (Vite 底层使用的生产环境打包工具) 可以智能地确定 `defineComponent()` 实际上并没有副作用，所以无需手动注释。
 
 ## defineAsyncComponent()
 
