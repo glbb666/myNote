@@ -168,11 +168,17 @@ import { myDirective as vMyDirective } from './MyDirective.js'
 
 ## defineProps() 和 defineEmits()
 
-为了在声明 `props` 和 `emits` 选项时获得完整的类型推导支持，我们可以使用 `defineProps` 和 `defineEmits` API，它们将自动地在 `<script setup>` 中可用：
+# 是什么
 
-**vue**
+`defineProps` 和 `defineEmits` 是只能在 `<script setup>` 中使用的 **编译器宏**。用于在选项传入后，供恰当的类型推导。
 
-```
+他们不需要导入，且会随着 `<script setup>` 的处理过程一同被编译掉。
+
+`defineProps` 接收与 `props` 选项相同的值，`defineEmits` 接收与 `emits` 选项相同的值。
+
+# 怎么做
+
+```html
 <script setup>
 const props = defineProps({
   foo: String
@@ -183,18 +189,39 @@ const emit = defineEmits(['change', 'delete'])
 </script>
 ```
 
-* `defineProps` 和 `defineEmits` 都是只能在 `<script setup>` 中使用的 **编译器宏** 。他们不需要导入，且会随着 `<script setup>` 的处理过程一同被编译掉。
-* `defineProps` 接收与 `props` 选项相同的值，`defineEmits` 接收与 `emits` 选项相同的值。
-* `defineProps` 和 `defineEmits` 在选项传入后，会提供恰当的类型推导。
-* 传入到 `defineProps` 和 `defineEmits` 的选项会从 setup 中提升到模块的作用域。因此，传入的选项不能引用在 setup 作用域中声明的局部变量。这样做会引起编译错误。但是，它*可以*引用导入的绑定，因为它们也在模块作用域内。
+传入到 `defineProps` 和 `defineEmits` 的选项会从 setup 中提升到模块的作用域。这有几个重要的影响：
 
-### 针对类型的 props/emit 声明^^
+* **不能使用局部变量** ：由于选项在编译时提升到模块作用域，如果你在 `setup` 函数内定义一个局部变量，并尝试在 `defineProps` 或 `defineEmits` 的选项中引用它，会导致编译错误。因为在编译阶段，局部变量还不存在。
+
+```html
+  <script setup>
+  const localVar = 'example';
+
+  // 这会导致编译错误，因为 localVar 是一个局部变量
+  const props = defineProps({
+    foo: localVar
+  });
+  </script>
+```
+
+* **可以使用模块作用域的变量** ：你可以引用从模块作用域（例如导入的模块）中来的变量，因为它们在编译时已经定义。
+
+```html
+  <script setup>
+  import { someType } from './types';
+
+  // 这是可以的，因为 someType 是从模块作用域导入的
+  const props = defineProps({
+    foo: someType
+  });
+  </script>
+```
+
+### 针对类型的 props/emit 声明
 
 props 和 emit 也可以通过给 `defineProps` 和 `defineEmits` 传递纯类型参数的方式来声明：
 
-**ts**
-
-```
+```ts
 const props = defineProps<{
   foo: string
   bar?: number
@@ -261,13 +288,20 @@ interface Props {
 const { msg = 'hello', labels = ['one', 'two'] } = defineProps<Props>()
 ```
 
-### 使用类型声明时的默认 props 值 ^^
+### 使用类型声明时的默认 props 值 
 
-在 3.5 及以上版本中，当使用响应式 Props 解构时，可以自然地声明默认值。但在 3.4 及以下版本中，默认情况下并未启用响应式 Props 解构。为了用基于类型声明的方式声明 props 的默认值，需要使用 `withDefaults` 编译器宏：
+在 3.5 及以上版本中，当使用响应式 Props 解构时，可以自然地声明默认值。
 
-**ts**
+但在 3.4 及以下版本中，默认情况下并未启用响应式 Props 解构。
 
-```
+为了用基于类型声明的方式声明 props 的默认值，需要使用 `withDefaults` 编译器宏：
+
+**`withDefaults`** ：接受两个参数。
+
+* **`defineProps`** ：用于定义组件的 props 类型和结构。
+* 第二个是一个对象，指定 props 的默认值。默认值只会在未提供相应 prop 时生效。
+
+```ts
 interface Props {
   msg?: string
   labels?: string[]
@@ -280,8 +314,6 @@ const props = withDefaults(defineProps<Props>(), {
 ```
 
 上面代码会被编译为等价的运行时 props 的 `default` 选项。此外，`withDefaults` 辅助函数提供了对默认值的类型检查，并确保返回的 `props` 的类型删除了已声明默认值的属性的可选标志。
-
-INFO
 
 请注意，在使用 `withDefaults` 时，默认值为可变引用类型 (如数组或对象) 应该封装在函数中，以避免意外修改和外部副作用。这样可以确保每个组件实例都获得默认值的自己的副本。在使用默认值解构时，这**不**是必要的。
 
