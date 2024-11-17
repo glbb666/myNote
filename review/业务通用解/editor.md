@@ -2,7 +2,7 @@
 
 # 状态管理
 
-通过provider对pc端还是app端，编辑态还是预览态进行全局注入。
+通过app.provider进行全局状态管理。如app/pc，editor/preview
 
 # 编辑效果实现
 
