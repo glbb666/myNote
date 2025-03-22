@@ -239,3 +239,23 @@ Node 要求 `ES6` 模块采用 `.mjs`后缀文件名。`import`或者 `export`�
 
 - `commonJs`是被加载的时候运行，`esModule`是编译的时候运行，效率要比 ` CommonJS` 高，但是没法引用 ` ES6` 模块本身，因为它不是对象。
 - `esModule`输出接口与模块内的值动态绑定，所以可以取到模块内部实时的值。`commentJS `在第一次被加载时，会完整运行整个文件并输出一个对象的浅拷贝，缓存在内存中。下次加载文件时，直接从内存中取值。
+
+### cmd
+
+主要用于浏览器端的模块化开发，强调**按需加载**和 **延迟执行** 。
+
+* 使用 `define` 定义模块。
+* 使用 `require` 同步加载依赖。
+* 模块是**延迟执行**的，只有在真正用到时才会执行。
+
+```javascript
+// 定义模块
+define(function(require, exports, module) {
+    var moduleA = require('./moduleA'); // 同步加载依赖
+    exports.result = moduleA.add(1, 2); // 导出结果
+});
+```
+### CMD 的局限性
+不支持 Tree Shaking：CMD 是动态加载的，无法在构建时静态分析依赖关系，因此不支持 Tree Shaking。
+
+现代替代方案：CMD 已经逐渐被 ES Module 取代，ES Module 支持静态分析和 Tree Shaking，更适合现代开发。
