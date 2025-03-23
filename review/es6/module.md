@@ -222,6 +222,17 @@ export default {
 let { stat, exists, readFile } = require('fs');
 ```
 
+### 导入方式对treeshaking效果的影响
+
+* 只有 ES Module 支持 Tree Shaking。
+* CommonJS 不支持 Tree Shaking。
+* **`import * as` 通常不支持 Tree Shaking** ，或者支持的效果有限，因为打包工具无法确定你是否会动态访问模块的其他部分。
+* 为了确保 Tree Shaking 生效， **尽量使用命名导入** （`import { foo } from 'module'`），并确保模块使用命名导出。
+* 检查打包工具的配置，确保 Tree Shaking 功能已启用。例如，在 Webpack 中：
+
+  * 设置 `mode: 'production'`。
+  * 确保 `optimization.usedExports: true`。
+
 ### 浏览器加载和 `node`加载
 
 浏览器加载 `ES6`模块，也使用 `<script>`标签，但是要加入 `type="module"`属性。
@@ -255,7 +266,9 @@ define(function(require, exports, module) {
     exports.result = moduleA.add(1, 2); // 导出结果
 });
 ```
+
 ### CMD 的局限性
+
 不支持 Tree Shaking：CMD 是动态加载的，无法在构建时静态分析依赖关系，因此不支持 Tree Shaking。
 
 现代替代方案：CMD 已经逐渐被 ES Module 取代，ES Module 支持静态分析和 Tree Shaking，更适合现代开发。
