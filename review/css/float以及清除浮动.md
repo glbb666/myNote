@@ -47,17 +47,16 @@
   ```
 - 伪元素清除浮动：（最通用）
 
+在父元素的末尾添加一个看不见的块级元素来清除浮动，不破坏 HTML 结构。
+
 ```css
-.father::after {
-    content: '';
-    display: block;//clear 很特殊，想让他生效，必须是块级元素才可以，而::after 是行级元素
-    clear: both;
-    width: 0;
-    height: 0;
-    visibility:hidden;//允许浏览器渲染它，但是不显示出来，这样才能实现清楚浮动。
-}
-.father{
-     zoom:1;  /*==for IE6/7 Maxthon2==*/
+.parent::after {
+  content: "";
+  display: block;
+  clear: both;
+  // 以下用来实现看不到
+   width: 0;
+   height: 0;
 }
 ```
 
