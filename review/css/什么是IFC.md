@@ -8,6 +8,12 @@ IFC是行内级格式化上下文。
 
 行内级盒子包括行内盒子(display: inline)和原子行内级盒子(display:inline-block)两种。
 
+# IFC范围
+
+IFC 存在于块级容器（display: blockl / display: inline-block)内部，作用域是它的子行内级元素(display: inline-block / display: inline)。
+
+当然，它的内部的行内级元素如果是行内块，那么行内块内部还有一个BFC。BFC内部的元素与IFC完全隔离。
+
 # 行内盒子和原子行内级盒子的区别
 
 ## 一、本质区别：是否参与 IFC 的“行内格式化”过程
